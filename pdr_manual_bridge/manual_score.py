@@ -30,7 +30,7 @@ warnings.filterwarnings("ignore")
 # -------------------------------------------------------------
 # CONFIGURATION
 # -------------------------------------------------------------
-MODEL_PATH   = os.path.join(os.path.dirname(__file__), "..", "pdr_model.pkl")
+MODEL_PATH   = os.path.join(os.path.dirname(__file__), "..", "pdr_model_realistic.pkl")
 PROFILE_PATH = os.path.join(os.path.dirname(__file__), "defaulter_profile.json")
 
 if len(sys.argv) > 1:

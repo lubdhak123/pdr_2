@@ -17,7 +17,7 @@ SETU_BASE_URL = "https://fiu-sandbox.setu.co" # Sandbox environment [cite: 335]
 
 # --- LOAD ML MODEL ---
 # Loading your clean model and SHAP explainer [cite: 301, 463]
-model = joblib.load('pdr_model.pkl')
+model = joblib.load('pdr_model_realistic.pkl')
 explainer = shap.TreeExplainer(model)
 
 # The exact 30 features from your finalized schema [cite: 415, 462]
