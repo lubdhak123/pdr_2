@@ -1,0 +1,64 @@
+{
+  "_comment": "PDR Manual Test Case — HIGH RISK DEFAULTER (Grade D/E expected)",
+
+  "user_profile": {
+    "name": "Rajan Mehta",
+    "phone": "9876543210",
+    "business_vintage_months": 8,
+    "academic_background_tier": 3,
+    "purpose_of_loan_encoded": 4,
+    "telecom_number_vintage_days": 90,
+    "gst_filing_consistency_score": 2,
+    "city": "Indore",
+    "business_type": "Retail Trader"
+  },
+
+  "transactions": [
+    {"date": "2023-10-01", "amount":  80000, "type": "CREDIT",  "narration": "UPI/TRANSFER FROM UNKNOWN PARTY",      "balance": 82000},
+    {"date": "2023-10-02", "amount":  -80000,"type": "DEBIT",   "narration": "UPI/TRANSFER TO SURESH SHROFF",        "balance": 2000},
+    {"date": "2023-10-03", "amount":  80000, "type": "CREDIT",  "narration": "UPI/TRANSFER FROM SURESH SHROFF",      "balance": 82000},
+    {"date": "2023-10-04", "amount":  -79500,"type": "DEBIT",   "narration": "UPI/TRANSFER TO UNKNOWN PARTY",        "balance": 2500},
+    {"date": "2023-10-05", "amount":  3000,  "type": "CREDIT",  "narration": "ELECTRICITY BILL REVERSAL",             "balance": 5500},
+    {"date": "2023-10-07", "amount":  -5000, "type": "DEBIT",   "narration": "CASH WITHDRAWAL ATM",                  "balance": 500},
+    {"date": "2023-10-10", "amount":  -500,  "type": "DEBIT",   "narration": "BOUNCE CHG - CHQ 4521",                "balance": 0},
+    {"date": "2023-10-12", "amount":  12000, "type": "CREDIT",  "narration": "NEFT FROM CUSTOMER INVOICE 201",       "balance": 12000},
+    {"date": "2023-10-15", "amount":  -12000,"type": "DEBIT",   "narration": "CASH WITHDRAWAL ATM",                  "balance": 0},
+    {"date": "2023-10-18", "amount":  -500,  "type": "DEBIT",   "narration": "CHEQUE RETURN CHARGES",                "balance": -500},
+    {"date": "2023-10-20", "amount":  50000, "type": "CREDIT",  "narration": "UPI/PAYTM MERCHANT BULK",              "balance": 49500},
+    {"date": "2023-10-21", "amount":  -50000,"type": "DEBIT",   "narration": "UPI/TRANSFER TO RAJESH GUPTA",         "balance": -500},
+    {"date": "2023-10-25", "amount":  15000, "type": "CREDIT",  "narration": "CUSTOMER PAYMENT INVOICE 202",         "balance": 14500},
+    {"date": "2023-10-28", "amount":  -14000,"type": "DEBIT",   "narration": "CASH WITHDRAWAL",                      "balance": 500},
+    {"date": "2023-11-01", "amount":  100000,"type": "CREDIT",  "narration": "UPI/TRANSFER BULK ROUND AMOUNT",       "balance": 100500},
+    {"date": "2023-11-02", "amount":  -100000,"type":"DEBIT",   "narration": "UPI/TRANSFER TO MOHAN VERMA",          "balance": 500},
+    {"date": "2023-11-05", "amount":  5000,  "type": "CREDIT",  "narration": "RECHARGE REVERSAL JIO",                "balance": 5500},
+    {"date": "2023-11-08", "amount":  -2500, "type": "DEBIT",   "narration": "ELECTRICITY BILL BSES",                "balance": 3000},
+    {"date": "2023-11-10", "amount":  -3500, "type": "DEBIT",   "narration": "RENT PAYMENT HOUSE",                   "balance": -500},
+    {"date": "2023-11-12", "amount":  -500,  "type": "DEBIT",   "narration": "BOUNCE CHG - CHQ 5102",                "balance": -1000},
+    {"date": "2023-11-15", "amount":  20000, "type": "CREDIT",  "narration": "NEFT CUSTOMER PAYMENT",                "balance": 19000},
+    {"date": "2023-11-17", "amount":  -20000,"type": "DEBIT",   "narration": "CASH WITHDRAWAL ATM",                  "balance": -1000},
+    {"date": "2023-11-20", "amount":  200000,"type": "CREDIT",  "narration": "IMPS BULK CREDIT UNKNOWN",             "balance": 199000},
+    {"date": "2023-11-21", "amount":  -200000,"type":"DEBIT",   "narration": "IMPS BULK DEBIT TRANSFER",             "balance": -1000},
+    {"date": "2023-11-25", "amount":  8000,  "type": "CREDIT",  "narration": "INVOICE PAYMENT PARTIAL",              "balance": 7000},
+    {"date": "2023-11-28", "amount":  -7500, "type": "DEBIT",   "narration": "CASH WITHDRAWAL",                      "balance": -500},
+    {"date": "2023-12-01", "amount":  500000,"type": "CREDIT",  "narration": "NEFT BULK ROUND CREDIT",               "balance": 499500},
+    {"date": "2023-12-02", "amount":  -500000,"type":"DEBIT",   "narration": "NEFT BULK DEBIT OUT",                  "balance": -500},
+    {"date": "2023-12-05", "amount":  6000,  "type": "CREDIT",  "narration": "GST REFUND PARTIAL",                   "balance": 5500},
+    {"date": "2023-12-08", "amount":  -2500, "type": "DEBIT",   "narration": "ELECTRICITY BILL PAID",                "balance": 3000},
+    {"date": "2023-12-10", "amount":  -1000, "type": "DEBIT",   "narration": "WATER BOARD BILL",                     "balance": 2000},
+    {"date": "2023-12-12", "amount":  -500,  "type": "DEBIT",   "narration": "CHEQUE RETURN FEE",                    "balance": 1500},
+    {"date": "2023-12-15", "amount":  18000, "type": "CREDIT",  "narration": "CUSTOMER INVOICE 210",                 "balance": 19500},
+    {"date": "2023-12-17", "amount":  -18000,"type": "DEBIT",   "narration": "CASH WITHDRAWAL ATM",                  "balance": 1500},
+    {"date": "2023-12-20", "amount":  300000,"type": "CREDIT",  "narration": "UPI LARGE ROUND CREDIT",               "balance": 301500},
+    {"date": "2023-12-21", "amount":  -300000,"type":"DEBIT",   "narration": "UPI LARGE DEBIT OUT",                  "balance": 1500},
+    {"date": "2023-12-25", "amount":  10000, "type": "CREDIT",  "narration": "PAYMENT FROM CUSTOMER",                "balance": 11500},
+    {"date": "2023-12-28", "amount":  -10000,"type": "DEBIT",   "narration": "CASH WITHDRAWAL",                      "balance": 1500},
+    {"date": "2024-01-02", "amount":  25000, "type": "CREDIT",  "narration": "CUSTOMER PAYMENT INVOICE 215",         "balance": 26500},
+    {"date": "2024-01-03", "amount":  -24500,"type": "DEBIT",   "narration": "CASH WITHDRAWAL ATM NIGHT",            "balance": 2000},
+    {"date": "2024-01-05", "amount":  -2000, "type": "DEBIT",   "narration": "BROADBAND BILL AIRTEL",                "balance": 0}
+  ],
+
+  "gst_data": {
+    "available": false,
+    "declared_turnover": 0
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "user_profile": {
+    "phone": "9999999999",
+    "business_vintage_months": 24,
+    "academic_background_tier": 2
+  },
+  "transactions": [
+    {"date": "2024-01-01", "amount": 50000, "type": "CREDIT", "narration": "Invoiced Payment", "category": "REVENUE", "balance": 60000},
+    {"date": "2024-01-05", "amount": -15000, "type": "DEBIT", "narration": "OFFICE RENT", "category": "RENT", "balance": 45000},
+    {"date": "2024-01-10", "amount": -2500, "type": "DEBIT", "narration": "ELECTRICITY BILL", "category": "UTILITY", "balance": 42500},
+    {"date": "2024-01-12", "amount": -500, "type": "DEBIT", "narration": "BOUNCE CHG - CHQ 123", "category": "PENALTY", "balance": 42000}
+  ]
+}

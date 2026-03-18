@@ -1,0 +1,12 @@
+*.csv
+*.gz
+*.pkl
+__pycache__/
+*.pyc
+.env
+.DS_Store
+.venv/
+venv/
+env/
+test_batch.json
+pdr_manual_bridge/__pycache__/
