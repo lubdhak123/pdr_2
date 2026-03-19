@@ -374,7 +374,8 @@ def compute_features(transactions, profile, gst_data):
     features['benford_anomaly_score'] = float(np.sum(np.abs(benford_obs - benford_exp))) if len(first_digits) > 10 else 0.05
     features['round_number_spike_ratio'] = len(df[df['amount'].abs() % 1000 == 0]) / len(df) if len(df) > 0 else 0.0
 
-    features['turnover_inflation_spike'] = int(features['round_number_spike_ratio'] > 0.6 and features['gst_to_bank_variance'] > 0.3)
+    features['turnover_inflation_spike'] = int(features['round_number_spike_ratio'] > 
+    0.6 and features['gst_to_bank_variance'] > 0.3)
     features['identity_device_mismatch'] = int(features['p2p_circular_loop_flag'] == 1 and features['bounced_transaction_count'] > 0)
 
     return features
