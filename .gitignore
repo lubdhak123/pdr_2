@@ -1,6 +1,5 @@
 *.csv
 *.gz
-*.pkl
 __pycache__/
 *.pyc
 .env
