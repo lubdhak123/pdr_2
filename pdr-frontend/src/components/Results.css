@@ -124,26 +124,92 @@
   margin-left: 16px;
 }
 
-.r-reason-card {
+.r-verdict-card {
   background: #f8f9fa;
   border-radius: 8px;
   padding: 24px;
   margin-top: 24px;
 }
 
-.r-reason-label {
-  font-size: 12px;
+.r-verdict-top {
+  display: flex;
+  gap: 16px;
+}
+
+.r-verdict-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.r-verdict-text {
+  flex: 1;
+}
+
+.r-verdict-headline {
+  font-size: 16px;
+  color: #111827;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.r-verdict-para {
+  font-size: 14px;
+  color: #4b5563;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.r-verdict-mini-chart {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.mini-chart-label {
+  font-size: 11px;
   text-transform: uppercase;
   color: #9ca3af;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   font-weight: 500;
 }
 
-.r-reason-text {
-  font-size: 16px;
-  color: #111827;
-  line-height: 1.6;
-  font-weight: 500;
+.mini-chart-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.mini-chart-name {
+  width: 140px;
+  color: #4b5563;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 12px;
+}
+
+.mini-chart-bar-area {
+  flex: 1;
+  display: flex;
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 3px;
+  position: relative;
+}
+
+.mini-bar-strength, .mini-bar-risk {
+  position: relative;
+  height: 100%;
+  border-radius: 3px;
+}
+
+.mini-bar-strength {
+  background: #22c55e;
+}
+
+.mini-bar-risk {
+  background: #ef4444;
 }
 
 .r-section {
@@ -154,6 +220,20 @@
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 16px;
+}
+
+.shap-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .r-shap-list {
@@ -200,6 +280,27 @@
   font-family: monospace;
 }
 
+.r-shap-bar-wrapper {
+  flex: 1;
+  max-width: 150px;
+  min-width: 80px;
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 3px;
+  position: relative;
+  display: flex;
+}
+
+.r-shap-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+}
+
+.bar-strength { background: #22c55e; }
+.bar-risk { background: #ef4444; }
+
 .r-shap-impact {
   padding: 2px 8px;
   border-radius: 4px;
@@ -239,14 +340,83 @@
   border-radius: 6px;
   padding: 16px;
   border: 1px solid #e5e7eb;
+  position: relative;
+}
+
+.tooltip-container:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  width: 200px;
+  background-color: #111827;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 10;
+  bottom: 105%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  line-height: 1.4;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #111827 transparent transparent transparent;
+}
+
+.r-f-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
 }
 
 .r-f-label {
   font-size: 11px;
   text-transform: uppercase;
   color: #9ca3af;
-  margin-bottom: 4px;
   font-weight: 500;
+}
+
+.r-f-chip {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chip-strong {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.chip-watch {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.chip-risk {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .r-f-value {
@@ -308,3 +478,9 @@
 .r-btn-solid:hover {
   background: #374151;
 }
+
+.r-charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; }
+.r-chart-box { background: #f8f9fa; border-radius: 8px; padding: 20px; border: 1px solid #e5e7eb; }
+.r-chart-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+.r-chart-subtitle { font-size: 11px; color: #9ca3af; margin-bottom: 16px; }
+@media (max-width: 768px) { .r-charts-grid { grid-template-columns: 1fr; } }
