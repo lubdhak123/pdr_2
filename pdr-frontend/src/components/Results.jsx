@@ -9,7 +9,18 @@ const PROFILE_DETAILS = {
   'DEMO_005': { name: 'Arjun Nair', city: 'Kochi', persona: 'NRI Remittance Receiver' }
 };
 
-export default function Results({ result, onBack }) {
+export default function Results({ result, error, onBack }) {
+  if (error) {
+    return (
+      <div className="results-container">
+        <button className="r-back-btn" onClick={onBack}>&larr; Back to select</button>
+        <div className="error-banner" style={{marginTop: '20px', fontSize: '16px', padding: '20px', background: '#fef2f2', color: '#991b1b', borderRadius: '8px'}}>
+          <h3 style={{margin: '0 0 8px 0'}}>Error Occurred</h3>
+          <p style={{margin: 0}}>{error}</p>
+        </div>
+      </div>
+    );
+  }
   if (!result) return null;
 
   const profile =
@@ -169,10 +180,11 @@ export default function Results({ result, onBack }) {
     ].map(s => Math.round(s));
 
     const grade = (result.grade || 'C').toUpperCase();
-    let bg = 'rgba(146, 64, 14, 0.2)';
-    let bc = '#92400e';
+    let bg = 'rgba(202, 138, 4, 0.2)';
+    let bc = '#ca8a04';
     if (grade === 'A') { bg = 'rgba(22, 101, 52, 0.2)'; bc = '#166534'; }
     else if (grade === 'B') { bg = 'rgba(29, 78, 216, 0.2)'; bc = '#1d4ed8'; }
+    else if (grade === 'C') { bg = 'rgba(202, 138, 4, 0.2)'; bc = '#ca8a04'; }
     else if (grade === 'D') { bg = 'rgba(154, 52, 18, 0.2)'; bc = '#9a3412'; }
     else if (grade === 'E') { bg = 'rgba(153, 27, 27, 0.2)'; bc = '#991b1b'; }
 
@@ -345,6 +357,9 @@ export default function Results({ result, onBack }) {
               {result.grade}
             </div>
             <div className="r-grade-label">Risk Grade</div>
+            <div className={`r-model-tag ${result.pd_msme === null ? 'tag-ntc' : 'tag-msme'}`}>
+              {result.pd_msme === null ? 'NTC Model' : 'MSME Ensemble (60/40)'}
+            </div>
           </div>
         </div>
 
@@ -353,12 +368,12 @@ export default function Results({ result, onBack }) {
         <div className={`r-source-banner ${getSourceClass(result.decision_source)}`}>
           <div className="r-source-left">
             <span className="r-source-label">
-              {result.decision_source === 'pre_layer' ? 'Rule Engine Decision' : 'ML Model Decision'}
+              {result.decision_source === 'pre_layer' ? 'Rule-based Decision' : 'XGBoost + CatBoost Ensemble'}
             </span>
             <span className="r-source-desc">
               {result.decision_source === 'pre_layer'
                 ? 'Triggered by hard business rule — no model consultation required'
-                : 'Scored by XGBoost model with SHAP explainability'}
+                : 'Scored by machine learning model ensemble with SHAP explainability'}
             </span>
           </div>
           <div className="r-source-right">
@@ -429,7 +444,6 @@ export default function Results({ result, onBack }) {
                   <div className={`r-shap-dot ${shap.direction === 'risk' ? 'dot-risk' : 'dot-strength'}`}></div>
                   <div className="r-shap-mid">
                     <div className="r-shap-reason">{shap.reason}</div>
-                    <div className="r-shap-feature">{shap.feature}</div>
                   </div>
                   <div className="r-shap-bar-wrapper">
                     {shap.direction === 'strength' ? (

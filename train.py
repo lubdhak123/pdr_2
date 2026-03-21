@@ -59,8 +59,6 @@ print(f"  NTC rows: {len(df_ntc)} | Default rate: {df_ntc['TARGET'].mean():.1%}"
 # ─────────────────────────────────────────────
 print("\nSTEP 4: Engineering NTC features")
 
-# --- Direct mappings from Home Credit columns to PDR schema ---
-
 # academic_background_tier (ordinal encode)
 edu_map = {
     'Lower secondary': 1,
@@ -71,7 +69,7 @@ edu_map = {
 }
 df_ntc['academic_background_tier'] = df_ntc['NAME_EDUCATION_TYPE'].map(edu_map).fillna(2)
 
-# purpose_of_loan_encoded (target encode later — use label for now)
+# purpose_of_loan_encoded
 income_map = {
     'Working': 1, 'Commercial associate': 2, 'Pensioner': 3,
     'State servant': 4, 'Student': 5, 'Businessman': 6,
@@ -79,108 +77,150 @@ income_map = {
 }
 df_ntc['purpose_of_loan_encoded'] = df_ntc['NAME_INCOME_TYPE'].map(income_map).fillna(1)
 
-# utility_payment_consistency — use EXT_SOURCE scores as proxy
-# EXT_SOURCE_2 is the strongest predictor in Home Credit (external credit score)
+# utility_payment_consistency — EXT_SOURCE_2 proxy
 df_ntc['utility_payment_consistency'] = (
     df_ntc['EXT_SOURCE_2'].fillna(df_ntc['EXT_SOURCE_2'].median()) * 12
 ).clip(0, 12).round().astype(int)
 
-# avg_utility_dpd — inverse of EXT_SOURCE_1 (lower score = higher DPD)
+# avg_utility_dpd — inverse of EXT_SOURCE_1
 df_ntc['avg_utility_dpd'] = (
     (1 - df_ntc['EXT_SOURCE_1'].fillna(df_ntc['EXT_SOURCE_1'].median())) * 30
 ).clip(0, 90)
 
-# rent_wallet_share — annuity (loan repayment) / income
+# rent_wallet_share — annuity / income
 df_ntc['rent_wallet_share'] = (
     df_ntc['AMT_ANNUITY'] / df_ntc['AMT_INCOME_TOTAL'].replace(0, np.nan)
 ).fillna(0).clip(0, 1)
 
-# emergency_buffer_months — goods price relative to income
+# emergency_buffer_months
 df_ntc['emergency_buffer_months'] = (
     df_ntc['AMT_GOODS_PRICE'] / (df_ntc['AMT_INCOME_TOTAL'].replace(0, np.nan) / 12)
 ).fillna(0).clip(0, 24)
 
-# subscription_commitment_ratio — family size * fixed obligations proxy
+# subscription_commitment_ratio
 df_ntc['subscription_commitment_ratio'] = (
     (df_ntc['CNT_FAM_MEMBERS'].fillna(1) * 0.05 +
      df_ntc['AMT_ANNUITY'].fillna(0) / df_ntc['AMT_INCOME_TOTAL'].replace(0, np.nan).fillna(1))
 ).clip(0, 1)
 
-# employment_vintage_days (negative = employed, positive = unemployed in Home Credit)
+# employment_vintage_days
 df_ntc['employment_vintage_days'] = df_ntc['DAYS_EMPLOYED'].abs().fillna(0)
 
-# bounced_transaction_count proxy — using FLAG_DOCUMENT failures + payment difficulties
+# bounced_transaction_count proxy
 doc_flags = [c for c in df_ntc.columns if c.startswith('FLAG_DOCUMENT')]
 df_ntc['bounced_transaction_count'] = df_ntc[doc_flags].sum(axis=1)
 
-# cash_withdrawal_dependency proxy — own car + cash loan type
+# cash_withdrawal_dependency proxy
 df_ntc['cash_withdrawal_dependency'] = (
     (df_ntc['NAME_CONTRACT_TYPE'] == 'Cash loans').astype(int) * 0.6 +
     df_ntc['FLAG_OWN_CAR'].map({'Y': 0.2, 'N': 0.0}).fillna(0)
 ).clip(0, 1)
 
-# eod_balance_volatility proxy — credit vs goods price gap (financial instability signal)
+# eod_balance_volatility proxy
 df_ntc['eod_balance_volatility'] = (
     abs(df_ntc['AMT_CREDIT'] - df_ntc['AMT_GOODS_PRICE'].fillna(df_ntc['AMT_CREDIT'])) /
     df_ntc['AMT_CREDIT'].replace(0, np.nan)
 ).fillna(0).clip(0, 2)
 
-# essential_vs_lifestyle_ratio proxy — region rating (lower = more essential spending area)
+# essential_vs_lifestyle_ratio proxy
 df_ntc['essential_vs_lifestyle_ratio'] = (
     df_ntc['REGION_RATING_CLIENT'].fillna(2) / 3.0
 )
 
-# telecom_number_vintage_days proxy — age of car or days birth (stability signal)
+# telecom_number_vintage_days proxy
 df_ntc['telecom_number_vintage_days'] = df_ntc['DAYS_BIRTH'].abs().fillna(365 * 30)
 
-# ─── Simulate features with no Home Credit equivalent ───
+# telecom_recharge_drop_ratio — correlated with EXT_SOURCE_2, no TARGET
 rng = np.random.default_rng(seed=42)
 n = len(df_ntc)
-
-# Calibrated to BBPS 92% on-time payment rate — correlated with EXT_SOURCE
 ext2 = df_ntc['EXT_SOURCE_2'].fillna(0.5).values
 df_ntc['telecom_recharge_drop_ratio'] = (
     ext2 + rng.normal(0, 0.1, n)
 ).clip(0.3, 1.5)
 
-df_ntc['min_balance_violation_count'] = np.where(
-    df_ntc['TARGET'] == 1,
-    rng.integers(2, 8, n),
-    rng.integers(0, 3, n)
-)
+# min_balance_violation_count — derived from DAYS_CREDIT_UPDATE recency proxy
+# (no TARGET dependency — uses OWN_CAR_AGE as instability proxy)
+df_ntc['min_balance_violation_count'] = (
+    (df_ntc['OWN_CAR_AGE'].fillna(0).clip(0, 20) / 4).round().astype(int).clip(0, 5) +
+    df_ntc['bounced_transaction_count'].clip(0, 3)
+).clip(0, 7)
 
 # ─────────────────────────────────────────────
-# 5. FRAUD / TRUST FLAGS (both datasets)
+# 5. FRAUD / TRUST FLAGS (both datasets) — TARGET-FREE
 # ─────────────────────────────────────────────
 print("\nSTEP 5: Generating trust & forensic flags")
 
-def simulate_fraud_flag(target_col, rate_if_default=0.15, rate_if_clean=0.02, seed=42):
-    rng = np.random.default_rng(seed)
-    n = len(target_col)
-    base = rng.random(n)
-    return np.where(
-        target_col.values == 1,
-        (base < rate_if_default).astype(int),
-        (base < rate_if_clean).astype(int)
-    )
+def benford_score(series):
+    """Deviation from Benford's Law first-digit distribution."""
+    first_digit = pd.to_numeric(
+        series.abs().astype(str).str.lstrip('0').str[0],
+        errors='coerce'
+    ).fillna(1).astype(int).clip(1, 9)
+    benford_expected = {1:0.301,2:0.176,3:0.125,4:0.097,5:0.079,
+                        6:0.067,7:0.058,8:0.051,9:0.046}
+    # Higher deviation = higher anomaly score
+    return (1 - first_digit.map(benford_expected).fillna(0.1)).clip(0, 1)
 
-for df, name in [(df_ntc, 'NTC'), (df_msme, 'MSME')]:
-    df['p2p_circular_loop_flag']   = simulate_fraud_flag(df['TARGET'], 0.15, 0.02, seed=42)
-    df['identity_device_mismatch'] = simulate_fraud_flag(df['TARGET'], 0.12, 0.01, seed=43)
-    df['turnover_inflation_spike'] = simulate_fraud_flag(df['TARGET'], 0.10, 0.02, seed=44)
-    df['benford_anomaly_score']    = np.where(
-        df['TARGET'] == 1,
-        np.random.default_rng(45).uniform(0.3, 1.0, len(df)),
-        np.random.default_rng(45).uniform(0.0, 0.3, len(df))
-    )
-    df['round_number_spike_ratio'] = np.where(
-        df['TARGET'] == 1,
-        np.random.default_rng(46).uniform(0.2, 0.6, len(df)),
-        np.random.default_rng(46).uniform(0.0, 0.2, len(df))
-    )
-    print(f"  {name} fraud flag rates: "
-          f"p2p={df['p2p_circular_loop_flag'].mean():.2%} | "
-          f"device={df['identity_device_mismatch'].mean():.2%}")
+# ── NTC flags (Home Credit columns) ──────────────────────────────────────
+
+df_ntc['benford_anomaly_score'] = benford_score(df_ntc['AMT_CREDIT'])
+
+df_ntc['round_number_spike_ratio'] = (
+    (df_ntc['AMT_CREDIT'] % 10000 == 0).astype(float) * 0.6 +
+    (df_ntc['AMT_CREDIT'] % 5000  == 0).astype(float) * 0.3 +
+    (df_ntc['AMT_CREDIT'] % 1000  == 0).astype(float) * 0.1
+).clip(0, 1)
+
+# P2P proxy: high repayment burden + large family = informal cash cycling risk
+df_ntc['p2p_circular_loop_flag'] = (
+    (df_ntc['AMT_ANNUITY'] / df_ntc['AMT_INCOME_TOTAL'].replace(0, np.nan) > 0.4) &
+    (df_ntc['CNT_FAM_MEMBERS'].fillna(1) > 3)
+).fillna(False).astype(int)
+
+# Identity mismatch proxy: document submission failures
+df_ntc['identity_device_mismatch'] = (
+    df_ntc[doc_flags].sum(axis=1) > 3
+).astype(int)
+
+# Turnover inflation proxy: credit amount >> goods price (inflated loan)
+df_ntc['turnover_inflation_spike'] = (
+    (df_ntc['AMT_CREDIT'] > df_ntc['AMT_GOODS_PRICE'].fillna(0) * 1.5)
+).astype(int)
+
+print(f"  NTC fraud flag rates: "
+      f"p2p={df_ntc['p2p_circular_loop_flag'].mean():.2%} | "
+      f"device={df_ntc['identity_device_mismatch'].mean():.2%}")
+
+# ── MSME flags (LendingClub columns) ─────────────────────────────────────
+
+df_msme['benford_anomaly_score'] = benford_score(df_msme['loan_amnt'])
+
+df_msme['round_number_spike_ratio'] = (
+    (df_msme['loan_amnt'] % 10000 == 0).astype(float) * 0.6 +
+    (df_msme['loan_amnt'] % 5000  == 0).astype(float) * 0.3 +
+    (df_msme['loan_amnt'] % 1000  == 0).astype(float) * 0.1
+).clip(0, 1)
+
+# P2P proxy: high DTI + low income = informal borrowing risk
+df_msme['p2p_circular_loop_flag'] = (
+    (df_msme['dti'].fillna(20) > 30) &
+    (df_msme['annual_inc'].fillna(0) < 30000)
+).astype(int)
+
+# Identity mismatch proxy: very short employment + high loan amount
+_revol_bal = pd.to_numeric(df_msme.get('revol_bal', pd.Series(0, index=df_msme.index)), errors='coerce').fillna(0)
+df_msme['identity_device_mismatch'] = (
+    (_revol_bal > df_msme['annual_inc'].fillna(1) * 0.8)
+).astype(int)
+
+# Turnover inflation proxy: loan amount >> stated income supports
+df_msme['turnover_inflation_spike'] = (
+    (df_msme['loan_amnt'] > df_msme['annual_inc'].fillna(0) * 0.5)
+).astype(int)
+
+print(f"  MSME fraud flag rates: "
+      f"p2p={df_msme['p2p_circular_loop_flag'].mean():.2%} | "
+      f"device={df_msme['identity_device_mismatch'].mean():.2%}")
 
 # Sample weights — fraud flag rows get 3x weight
 fraud_cols = ['p2p_circular_loop_flag', 'identity_device_mismatch', 'turnover_inflation_spike']
@@ -192,7 +232,6 @@ df_msme['sample_weight'] = np.where(df_msme[fraud_cols].any(axis=1), 3.0, 1.0)
 # ─────────────────────────────────────────────
 print("\nSTEP 6: Engineering MSME features")
 
-# business_vintage_months from emp_length string (e.g. "5 years" → 60)
 def parse_emp_length(val):
     if pd.isna(val): return np.nan
     val = str(val).strip()
@@ -203,88 +242,70 @@ def parse_emp_length(val):
 
 df_msme['business_vintage_months'] = df_msme['emp_length'].apply(parse_emp_length).fillna(24)
 
-# operating_cashflow_ratio — inverse of debt-to-income
 df_msme['operating_cashflow_ratio'] = (
     1 / (df_msme['dti'].replace(0, np.nan).fillna(20) / 100 + 0.01)
 ).clip(0.5, 10)
 
-# cashflow_volatility proxy — revolving utilization variance
+_revol = df_msme['revol_util']
+if _revol.dtype == object:
+    _revol = _revol.str.rstrip('%').astype(float, errors='ignore')
 df_msme['cashflow_volatility'] = (
-    df_msme['revol_util'].str.rstrip('%').astype(float, errors='ignore')
-    .apply(pd.to_numeric, errors='coerce')
-    .fillna(50) / 100
+    pd.to_numeric(_revol, errors='coerce').fillna(50) / 100
 )
 
-# revenue_growth_trend — not directly in LendingClub, simulate from loan grade
+# revenue_growth_trend — from loan grade (structural, not TARGET-derived)
 grade_map = {'A': 0.15, 'B': 0.10, 'C': 0.05, 'D': 0.0, 'E': -0.05, 'F': -0.10, 'G': -0.15}
 df_msme['revenue_growth_trend'] = df_msme['grade'].map(grade_map).fillna(0.0)
 
-# gst_filing_consistency_score proxy — payment history months
 df_msme['gst_filing_consistency_score'] = (
     pd.to_numeric(df_msme['mo_sin_old_il_acct'], errors='coerce').fillna(12).clip(0, 24).astype(int)
     if 'mo_sin_old_il_acct' in df_msme.columns
     else pd.Series(np.random.default_rng(42).integers(4, 24, len(df_msme)), index=df_msme.index)
 )
 
-# customer_concentration_ratio proxy — single loan / total credit lines
 df_msme['customer_concentration_ratio'] = (
     1 / df_msme['open_acc'].replace(0, np.nan).fillna(3)
 ).clip(0, 1)
 
-# annual income → monthly for ratio features
 df_msme['monthly_income'] = df_msme['annual_inc'].fillna(0) / 12
 
-# rent_wallet_share (installment / monthly income)
 df_msme['rent_wallet_share'] = (
     df_msme['installment'] / df_msme['monthly_income'].replace(0, np.nan)
 ).fillna(0).clip(0, 1)
 
-# academic_background_tier — not in LendingClub, simulate
 df_msme['academic_background_tier'] = np.random.default_rng(42).integers(2, 5, len(df_msme))
+df_msme['purpose_of_loan_encoded'] = 6
 
-# purpose_of_loan_encoded
-df_msme['purpose_of_loan_encoded'] = 6  # small_business = 6 (working capital)
-
-# MSME-only NaN columns (not in LendingClub, structurally absent)
-df_msme['avg_invoice_payment_delay']  = np.nan
-df_msme['vendor_payment_discipline']  = np.nan
+df_msme['avg_invoice_payment_delay']   = np.nan
+df_msme['vendor_payment_discipline']   = np.nan
 df_msme['repeat_customer_revenue_pct'] = np.nan
-df_msme['gst_to_bank_variance']       = np.nan
+df_msme['gst_to_bank_variance']        = np.nan
 
 # ─────────────────────────────────────────────
 # 7. DEFINE FINAL FEATURE SETS
 # ─────────────────────────────────────────────
 
 NTC_FEATURES = [
-    # Proxy Pillars (Section I)
     'utility_payment_consistency', 'avg_utility_dpd',
     'rent_wallet_share', 'subscription_commitment_ratio',
-    # Liquidity & Spending (Section II)
     'emergency_buffer_months', 'min_balance_violation_count',
     'eod_balance_volatility', 'essential_vs_lifestyle_ratio',
     'cash_withdrawal_dependency', 'bounced_transaction_count',
-    # Alt Data (Section III)
     'telecom_number_vintage_days', 'telecom_recharge_drop_ratio',
     'academic_background_tier', 'purpose_of_loan_encoded',
-    # Trust Flags (Section VI)
     'p2p_circular_loop_flag', 'identity_device_mismatch',
     'turnover_inflation_spike', 'benford_anomaly_score',
     'round_number_spike_ratio',
-    # Supporting
     'employment_vintage_days', 'is_msme',
 ]
 
 MSME_FEATURES = [
-    # MSME Operational (Section IV)
     'business_vintage_months', 'revenue_growth_trend',
     'operating_cashflow_ratio', 'cashflow_volatility',
     'customer_concentration_ratio',
-    # Compliance (Section V)
     'gst_filing_consistency_score',
-    # Shared behavioral
     'rent_wallet_share', 'academic_background_tier',
     'purpose_of_loan_encoded', 'monthly_income',
-    # Trust Flags (Section VI)
     'p2p_circular_loop_flag', 'identity_device_mismatch',
     'turnover_inflation_spike', 'benford_anomaly_score',
     'round_number_spike_ratio',
@@ -312,7 +333,7 @@ ntc_model = XGBClassifier(
     max_depth=6,
     subsample=0.8,
     colsample_bytree=0.8,
-    scale_pos_weight=11.4,   # 91.9 / 8.07
+    scale_pos_weight=11.4,
     eval_metric='auc',
     early_stopping_rounds=20,
     random_state=42,
@@ -371,11 +392,9 @@ print("\n" + "=" * 50)
 print("STEP 10: Generating SHAP explanations")
 print("=" * 50)
 
-# NTC SHAP
 ntc_explainer  = shap.TreeExplainer(ntc_model)
-ntc_shap_vals  = ntc_explainer.shap_values(X_val.iloc[:500])  # sample for speed
+ntc_shap_vals  = ntc_explainer.shap_values(X_val.iloc[:500])
 
-# MSME SHAP
 msme_explainer = shap.TreeExplainer(msme_model)
 msme_shap_vals = msme_explainer.shap_values(X_mval.iloc[:200])
 
@@ -386,7 +405,6 @@ def get_reason_codes(shap_row, feature_names, top_n=3):
     strength_factors = [(f, round(v, 4)) for v, f in sorted_pairs if v < 0][:top_n]
     return {'risk_drivers': risk_drivers, 'strength_factors': strength_factors}
 
-# Show example reason codes for first 3 NTC applicants
 print("\nSample NTC reason codes:")
 for i in range(3):
     codes = get_reason_codes(ntc_shap_vals[i], NTC_FEATURES)
@@ -402,8 +420,8 @@ for i in range(3):
 # ─────────────────────────────────────────────
 print("\nSTEP 11: Saving models")
 
-joblib.dump(ntc_model,  'pdr_ntc_model.pkl')
-joblib.dump(msme_model, 'pdr_msme_model.pkl')
+joblib.dump(ntc_model,     'pdr_ntc_model.pkl')
+joblib.dump(msme_model,    'pdr_msme_model.pkl')
 joblib.dump(NTC_FEATURES,  'ntc_features.pkl')
 joblib.dump(MSME_FEATURES, 'msme_features.pkl')
 
@@ -418,10 +436,6 @@ print("  Saved: msme_features.pkl")
 print("\nSTEP 12: PDR scoring function ready")
 
 def pdr_score(applicant_dict):
-    """
-    Takes a dict of features, returns PD score, risk grade, and SHAP reason codes.
-    Used by your Flask/FastAPI backend and React demo dashboard.
-    """
     is_msme = applicant_dict.get('is_msme', 0)
 
     if is_msme:
@@ -438,7 +452,6 @@ def pdr_score(applicant_dict):
         shap_row = ntc_explainer.shap_values(row)[0]
         features = NTC_FEATURES
 
-    # Hard override: fraud flags push score to minimum 0.85
     fraud_flags = ['p2p_circular_loop_flag', 'identity_device_mismatch']
     if any(applicant_dict.get(f, 0) == 1 for f in fraud_flags):
         pd_score_val = max(pd_score_val, 0.85)
@@ -455,7 +468,6 @@ def pdr_score(applicant_dict):
         'is_msme': bool(is_msme),
     }
 
-# Quick demo of scoring function
 sample_applicant = {
     'is_msme': 0,
     'utility_payment_consistency': 9,

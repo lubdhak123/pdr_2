@@ -560,3 +560,23 @@
 .r-chart-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 4px; }
 .r-chart-subtitle { font-size: 11px; color: #9ca3af; margin-bottom: 16px; }
 @media (max-width: 768px) { .r-charts-grid { grid-template-columns: 1fr; } }
+
+.r-model-tag {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+.tag-ntc {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+.tag-msme {
+  background: #ede9fe;
+  color: #6d28d9;
+  border: 1px solid #c4b5fd;
+}
