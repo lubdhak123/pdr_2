@@ -1,5 +1,8 @@
 *.csv
 *.gz
+*.zip
+*.tar
+*.tar.gz
 __pycache__/
 *.pyc
 .env
@@ -9,3 +12,9 @@ venv/
 env/
 test_batch.json
 pdr_manual_bridge/__pycache__/
+# Large datasets
+data/
+datasets/
+*.pkl
+*.joblib
+datasets.zip
