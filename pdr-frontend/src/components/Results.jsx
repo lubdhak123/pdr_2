@@ -12,8 +12,11 @@ const PROFILE_DETAILS = {
 export default function Results({ result, onBack }) {
   if (!result) return null;
 
-  const profile = result.user_id ? PROFILE_DETAILS[result.user_id]
-    : Object.values(PROFILE_DETAILS)[0];
+  const profile =
+    result.profile ||
+    (result.user_id
+      ? PROFILE_DETAILS[result.user_id]
+      : Object.values(PROFILE_DETAILS)[0]);
 
   const getOutcomeClass = (outcome) => {
     switch (outcome) {
@@ -418,7 +421,11 @@ export default function Results({ result, onBack }) {
             </div>
             <div className="r-shap-list">
               {normalizedShaps.map((shap, idx) => (
-                <div className="r-shap-row" key={idx}>
+                <div
+                  className="r-shap-row"
+                  key={idx}
+                  style={{ animationDelay: `${idx * 70}ms` }}
+                >
                   <div className={`r-shap-dot ${shap.direction === 'risk' ? 'dot-risk' : 'dot-strength'}`}></div>
                   <div className="r-shap-mid">
                     <div className="r-shap-reason">{shap.reason}</div>

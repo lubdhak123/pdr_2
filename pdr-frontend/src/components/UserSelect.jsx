@@ -1,111 +1,176 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import './UserSelect.css';
 
-const DEMO_PROFILES = [
-  {
-    userId: 'DEMO_001',
-    name: 'Rajesh Sharma',
-    city: 'Bengaluru',
-    personaType: 'MSME',
-    persona: 'Clean IT Contractor',
-    expectedGrade: 'A',
-    description: 'Six months of consistent invoices, utility bills paid every month, zero bounces.',
-    tags: ['Clean approval', 'Utility discipline', 'Stable income'],
-  },
-  {
-    userId: 'DEMO_002',
-    name: 'Mohammed Farouk',
-    city: 'Delhi',
-    personaType: 'MSME',
-    persona: 'Wash Trader',
-    expectedGrade: 'E',
-    description: 'Circular UPI flows to same party every month. Bounce charges. GST mismatch.',
-    tags: ['P2P loop detected', 'Fraud signal', 'GST fraud'],
-  },
-  {
-    userId: 'DEMO_003',
-    name: 'Sukhwinder Singh',
-    city: 'Ludhiana',
-    personaType: 'MSME',
-    persona: 'Seasonal Farmer',
-    expectedGrade: 'B',
-    description: 'Two large APMC mandi payments. No income for 4 months. Zero bounces ever.',
-    tags: ['Seasonal income', 'Edge case', 'Zero bounces'],
-  },
-  {
-    userId: 'DEMO_004',
-    name: 'Priya Patel',
-    city: 'Surat',
-    personaType: 'MSME',
-    persona: 'Struggling Kirana',
-    expectedGrade: 'D',
-    description: 'Regular sales but five bounce charges and heavy ATM cash dependency.',
-    tags: ['Bounce stress', 'Cash dependency', 'Liquidity risk'],
-  },
-  {
-    userId: 'DEMO_005',
-    name: 'Arjun Nair',
-    city: 'Kochi',
-    personaType: 'NTC',
-    persona: 'NRI Remittance Receiver',
-    expectedGrade: 'B',
-    description: 'Monthly SWIFT inward remittance. No credit history. Zero bounces.',
-    tags: ['No credit history', 'Alt income', 'Digital behavior'],
-  },
-];
+const BACKEND_BASE_URL = 'http://localhost:8000';
 
-export default function UserSelect({ onScore, loading, error, onBack }) {
+export default function UserSelect({
+  onScore,
+  loading,
+  loadingText,
+  error,
+  onBack,
+}) {
+  const [stage, setStage] = useState('idle'); // idle | list
+  const [users, setUsers] = useState([]);
+  const [fetchingUsers, setFetchingUsers] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
   const [activeId, setActiveId] = useState(null);
+  const [fetchPhase, setFetchPhase] = useState('idle'); // idle | fetching | success
 
-  const handleScore = (id) => {
-    setActiveId(id);
-    onScore(id);
-  };
+  async function fetchUsers() {
+    setFetchError(null);
+    setFetchingUsers(true);
+    setFetchPhase('fetching');
+    try {
+      const res = await axios.get(`${BACKEND_BASE_URL}/aa/users`);
+      const list = res.data?.users || [];
+      setUsers(list);
+      // Wait 4 seconds before showing success (keep fetching state for 4 seconds minimum)
+      setTimeout(() => {
+        setFetchPhase('success');
+        // Show success for 1.5 seconds before moving to list
+        setTimeout(() => {
+          setStage('list');
+          setFetchPhase('idle');
+          setFetchingUsers(false);
+        }, 1500);
+      }, 4000);
+    } catch (e) {
+      const msg =
+        e?.response?.data?.detail ||
+        e?.response?.data?.message ||
+        e?.message ||
+        'Failed to fetch available users from backend.';
+      setFetchError(msg);
+      setFetchPhase('idle');
+      setFetchingUsers(false);
+    }
+  }
+
+  function handleFetchScore(userId) {
+    setActiveId(userId);
+    onScore(userId);
+  }
+
+  const mergedError = error || fetchError;
 
   return (
     <div className="select-container">
-      <button className="back-btn" onClick={onBack}>&larr; Back</button>
-      <h1 className="select-title">Select a borrower profile</h1>
-      <p className="select-subtitle">Each profile is designed to demonstrate a different scoring scenario</p>
-      
-      {error && <div className="error-banner">{error}</div>}
+      <button className="back-btn" onClick={onBack}>
+        &larr; Back
+      </button>
 
-      <div className="cards-grid">
-        {DEMO_PROFILES.map((p) => {
-          const isLoading = loading && activeId === p.userId;
-          const isDisabled = loading && activeId !== p.userId;
-          return (
-            <button 
-              key={p.userId} 
-              className={`profile-card ${isDisabled ? 'disabled' : ''}`}
-              onClick={() => handleScore(p.userId)}
-              disabled={loading}
-            >
-              {isLoading && <div className="loading-overlay"><div className="spinner"></div></div>}
-              
-              <div className="card-top-row">
-                <div className={`grade-badge grade-${p.expectedGrade.toLowerCase()}`}>
-                  {p.expectedGrade}
+      <h1 className="select-title">Account Aggregator Demo</h1>
+      <p className="select-subtitle">
+        Fetch available users, then consent + fetch data + score (AA flow).
+      </p>
+
+      {mergedError && <div className="error-banner">{mergedError}</div>}
+
+      {(fetchPhase === 'fetching' || fetchPhase === 'success') && (
+        <div className="fetch-modal-overlay">
+          <div className="fetch-modal">
+            {fetchPhase === 'fetching' && (
+              <>
+                <div className="fetch-spinner"></div>
+                <div className="fetch-status-text">Fetching users...</div>
+                <div className="fetch-status-subtext">Connecting to backend</div>
+              </>
+            )}
+            {fetchPhase === 'success' && (
+              <>
+                <div className="fetch-success-icon">✓</div>
+                <div className="fetch-status-text">Users fetched!</div>
+                <div className="fetch-status-subtext">
+                  {users?.length || 0} users ready
                 </div>
-                <div className="persona-type">{p.personaType}</div>
-              </div>
-              <div className="card-name-row">
-                <div className="person-name">{p.name}</div>
-                <div className="person-city">{p.city}</div>
-              </div>
-              <div className="card-description">
-                {p.description}
-              </div>
-              <div className="card-tags">
-                {p.tags.map((t, i) => <span key={i} className="card-tag">{t}</span>)}
-              </div>
-              <div className="card-bottom">
-                Score this profile &rarr;
-              </div>
-            </button>
-          )
-        })}
-      </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {mergedError && <div className="error-banner">{mergedError}</div>}
+
+      {stage === 'idle' && (
+        <div className="fetch-users-block">
+          <button
+            className="fetch-users-btn"
+            onClick={fetchUsers}
+            disabled={fetchingUsers}
+          >
+            {fetchingUsers ? 'Fetching users...' : 'Fetch users'}
+          </button>
+          <div className="fetch-users-subtext">
+            This calls <code>GET /aa/users</code> from the backend.
+          </div>
+        </div>
+      )}
+
+      {stage === 'list' && (
+        <>
+          <div className="users-header">
+            <div className="users-header-title">Available users</div>
+            <div className="users-header-subtitle">
+              Select one to run the full AA-integrated scoring flow.
+            </div>
+          </div>
+
+          <div className="cards-grid">
+            {users.map((u, idx) => {
+              const userId = u?.user_id;
+              const isLoading = loading && activeId === userId;
+              const isDisabled = loading && activeId !== userId;
+
+              return (
+                <button
+                  key={userId}
+                  className={`profile-card ${isDisabled ? 'disabled' : ''}`}
+                  style={{ '--i': idx }}
+                  onClick={() => handleFetchScore(userId)}
+                  disabled={loading}
+                >
+                  {isLoading && (
+                    <div className="loading-overlay">
+                      <div className="loading-stack">
+                        <div className="spinner"></div>
+                        {loadingText && (
+                          <div className="loading-text">{loadingText}</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="card-top-row">
+                    <div className="persona-type">
+                      {u?.persona_type || 'AA USER'}
+                    </div>
+                  </div>
+
+                  <div className="card-name-row">
+                    <div className="person-name">{u?.name || userId}</div>
+                    <div className="person-city">
+                      {u?.city || 'Unknown'}
+                    </div>
+                  </div>
+
+                  <div className="card-description">{u?.persona || ''}</div>
+
+                  <div className="card-tags">
+                    <span className="card-tag">
+                      {u?.business_type || 'Business'}
+                    </span>
+                    <span className="card-tag">Fetch & score</span>
+                  </div>
+
+                  <div className="card-bottom">Fetch & score &rarr;</div>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
