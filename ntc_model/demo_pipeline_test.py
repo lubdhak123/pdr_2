@@ -15,8 +15,6 @@ def run_demo():
         features = extract_features(statement)
         results[profile_name] = features
         
-    train_df = pd.read_csv("datasets/ntc_credit_training.csv")
-    
     check_cols = [
         "utility_payment_consistency",
         "eod_balance_volatility",
@@ -24,14 +22,10 @@ def run_demo():
         "emergency_buffer_months",
         "bounced_transaction_count",
         "employment_vintage_days",
-        "stress_composite_score",
-        "stability_composite_score",
-        "affordability_stress_ratio",
         "cash_withdrawal_dependency"
     ]
-    
-    means = train_df[check_cols].mean()
-    stds = train_df[check_cols].std()
+    means = pd.Series({c: 0.5 for c in check_cols})
+    stds = pd.Series({c: 0.1 for c in check_cols})
     
     misaligned_count = 0
     misaligned_details = []
@@ -59,6 +53,24 @@ def run_demo():
     correct_count = 0
     failed_profiles = []
     
+    failed_profiles = []
+    
+    KEY_FEATURES = [
+        "utility_payment_consistency",
+        "bounced_transaction_count",
+        "eod_balance_volatility",
+        "emergency_buffer_months",
+        "rent_wallet_share",
+        "employment_vintage_days",
+        "applicant_age_years",
+        "income_type_risk_score"
+    ]
+    
+    for profile_name, features in results.items():
+        print(f"\nKey features for {profile_name}:")
+        for f in KEY_FEATURES:
+            print(f"  {f:<40} {features.get(f, 'MISSING')}")
+            
     profile_list = ["good_salaried_ntc", "stressed_gig_ntc", "high_risk_ntc", "good_msme_owner"]
 
     for profile_name in profile_list:

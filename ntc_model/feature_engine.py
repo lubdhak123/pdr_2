@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
-from datetime import datetime
-
+from datetime import datetime, date
+import calendar
+from collections import Counter
 def _get_months_in_statement(statement) -> float:
     try:
         start = datetime.strptime(statement["statement_start"], "%Y-%m-%d")
@@ -19,23 +20,102 @@ def extract_features(statement: dict) -> dict:
         start_date = datetime.strptime(statement["statement_start"], "%Y-%m-%d")
     except:
         start_date = datetime.now()
+        
+    metadata = statement.get("applicant_metadata", {})
 
-    # 1. utility_payment_consistency & 2. avg_utility_dpd
-    utils = [t for t in transactions if t["category"] == "UTILITY" and t["type"] == "DR"]
-    if not utils:
+    # Get all utility payments sorted by date
+    utility_txns = sorted(
+        [t for t in transactions
+         if t["category"] == "UTILITY"
+         and t["type"] == "DR"],
+        key=lambda x: x["date"]
+    )
+
+    if len(utility_txns) == 0:
         utility_payment_consistency = 0.75
         avg_utility_dpd = 5.0
     else:
-        on_time = 0
-        dpds = []
-        for t in utils:
-            d = datetime.strptime(t["date"], "%Y-%m-%d")
-            # inferred due date is 10th. on_time if payment <= 15
-            if d.day <= 15:
-                on_time += 1
-            dpds.append(max(0, d.day - 15))
-        utility_payment_consistency = on_time / len(utils)
-        avg_utility_dpd = sum(dpds) / len(dpds)
+        # Group utility payments by billing month
+        # Billing month = the month BEFORE payment
+        # if payment is after 20th, it belongs to
+        # that month's bill
+        # if payment is before 20th, it belongs to
+        # previous month's bill
+
+        on_time_count = 0
+        total_count   = 0
+        dpd_values    = []
+
+        # Track which billing months we have seen
+        # to avoid counting same month twice
+        seen_billing_months = set()
+
+        for txn in utility_txns:
+            pay_date = datetime.strptime(
+                txn["date"], "%Y-%m-%d"
+            ).date()
+
+            # Determine billing month
+            # If paid on or before 20th →
+            #   bill is from same month
+            # If paid after 20th →
+            #   bill is from same month but very late
+            #   OR it crossed from previous month
+
+            # Simple rule: due date is always 10th
+            # of the month the payment occurred in
+            # UNLESS payment day < 10, meaning it
+            # crossed from previous month
+
+            if pay_date.day < 10:
+                # Payment is early in month
+                # This is likely a late payment from
+                # previous month's bill
+                # Due date was previous month's 10th
+                if pay_date.month == 1:
+                    due_year  = pay_date.year - 1
+                    due_month = 12
+                else:
+                    due_year  = pay_date.year
+                    due_month = pay_date.month - 1
+
+                due_date = date(due_year, due_month, 10)
+                billing_key = (due_year, due_month)
+            else:
+                # Payment is mid or late month
+                # Due date is 10th of same month
+                due_date    = date(
+                    pay_date.year, pay_date.month, 10
+                )
+                billing_key = (
+                    pay_date.year, pay_date.month
+                )
+
+            # Skip if we already counted this
+            # billing month (avoid duplicates)
+            if billing_key in seen_billing_months:
+                continue
+            seen_billing_months.add(billing_key)
+
+            # Compute DPD
+            dpd = max(0, (pay_date - due_date).days)
+            dpd_values.append(dpd)
+            total_count += 1
+
+            # On time = paid within 5 days of due date
+            if dpd <= 5:
+                on_time_count += 1
+
+        if total_count == 0:
+            utility_payment_consistency = 0.75
+            avg_utility_dpd = 5.0
+        else:
+            utility_payment_consistency = round(
+                on_time_count / total_count, 4
+            )
+            avg_utility_dpd = round(
+                sum(dpd_values) / len(dpd_values), 2
+            )
 
     # 3. rent_wallet_share
     rent_emi = sum(t["amount"] for t in transactions if t["category"] in ["RENT", "EMI"] and t["type"] == "DR")
@@ -101,20 +181,25 @@ def extract_features(statement: dict) -> dict:
     # 10. telecom_number_vintage_days
     tel_kws = ["jio", "airtel", "vi", "bsnl", "telecom", "postpaid", "prepaid"]
     tel_txs = [t for t in transactions if any(k in str(t.get("description", "")).lower() for k in tel_kws)]
-    if tel_txs:
+    if metadata.get("telecom_number_vintage_days"):
+        telecom_number_vintage_days = metadata["telecom_number_vintage_days"]
+    elif tel_txs:
         first_t = min(datetime.strptime(t["date"], "%Y-%m-%d") for t in tel_txs)
         telecom_number_vintage_days = max(0, (first_t - start_date).days)
     else:
         telecom_number_vintage_days = 365
 
     # 11-12
-    academic_background_tier = 2
+    academic_background_tier = metadata.get("academic_background_tier", 2)
     purpose_of_loan_encoded = 1
 
     # 13. employment_vintage_days
     sal_kws = ["sal", "salary", "payroll"]
     sal_txs = [t for t in transactions if t["category"] == "INCOME" and t["type"] == "CR" and any(k in str(t.get("description", "")).lower() for k in sal_kws)]
-    if sal_txs:
+    
+    if metadata.get("employment_vintage_days"):
+        employment_vintage_days = metadata["employment_vintage_days"]
+    elif sal_txs:
         end_date = datetime.strptime(statement["statement_end"], "%Y-%m-%d")
         first_s = min(datetime.strptime(t["date"], "%Y-%m-%d") for t in sal_txs)
         employment_vintage_days = max(0, (end_date - first_s).days)
@@ -149,44 +234,194 @@ def extract_features(statement: dict) -> dict:
     min_balance_violation_count = max(0, min(8, sum(1 for v in mon_bal.values() if v < 1000)))
 
     # 16-23
-    applicant_age_years = 35.0
-    owns_property = 0
-    owns_car = 0
-    region_risk_tier = 2
-    address_stability_years = 3.0
-    id_document_age_years = 5.0
-    family_burden_ratio = 0.2
-    has_email_flag = 1
+    applicant_age_years = metadata.get("applicant_age_years", 35.0)
+    owns_property = metadata.get("owns_property", 0)
+    owns_car = metadata.get("owns_car", 0)
+    region_risk_tier = metadata.get("region_risk_tier", 2)
+    address_stability_years = metadata.get("address_stability_years", 3.0)
+    id_document_age_years = metadata.get("id_document_age_years", 5.0)
+    family_burden_ratio = metadata.get("family_burden_ratio", 0.2)
+    has_email_flag = metadata.get("has_email_flag", 1)
 
     # 24. income_type_risk_score
-    descs = " ".join([str(t.get("description", "")).lower() for t in transactions])
-    if "sal" in descs or "salary" in descs: income_type_risk_score = 1
-    elif "pension" in descs: income_type_risk_score = 2
-    else: income_type_risk_score = 3
+    if metadata.get("income_type_risk_score"):
+        income_type_risk_score = metadata["income_type_risk_score"]
+    else:
+        descs = " ".join([str(t.get("description", "")).lower() for t in transactions])
+        if "sal" in descs or "salary" in descs: income_type_risk_score = 1
+        elif "pension" in descs: income_type_risk_score = 2
+        else: income_type_risk_score = 3
     
     # 25-29
-    family_status_stability_score = 2
-    contactability_score = 2
-    car_age_years = 99
-    region_city_risk_score = 2
-    address_work_mismatch = 0
+    family_status_stability_score = metadata.get("family_status_stability_score", 2)
+    contactability_score = metadata.get("contactability_score", 2)
+    car_age_years = metadata.get("car_age_years", 99)
+    region_city_risk_score = metadata.get("region_city_risk_score", 2)
+    address_work_mismatch = metadata.get("address_work_mismatch", 0)
 
     # 30. employment_to_age_ratio
-    wld = max(1.0, (applicant_age_years - 18) * 365)
-    employment_to_age_ratio = max(0.0, min(1.0, employment_vintage_days / wld))
+    employment_to_age_ratio = max(0.0, employment_vintage_days / max(1.0, (applicant_age_years - 18) * 365))
 
-    # 31. stress_composite_score
-    scs = eod_balance_volatility * 0.4 + rent_wallet_share * 0.3 + (bounced_transaction_count / 10) * 0.3
-    stress_composite_score = max(0.0, min(1.0, scs))
+    # 31. income_stability_score — coefficient of variation of monthly income
+    # 1.0 = perfectly stable salary, 0.0 = wildly erratic / seasonal
+    monthly_credits = {}
+    for t in transactions:
+        if t["type"] == "CR":
+            d = datetime.strptime(t["date"], "%Y-%m-%d")
+            k = f"{d.year}-{d.month:02d}"
+            monthly_credits[k] = monthly_credits.get(k, 0) + t["amount"]
 
-    # 32. stability_composite_score
-    stc = owns_property * 0.35 + owns_car * 0.15 + employment_to_age_ratio * 0.35 + (address_stability_years / 30) * 0.15
-    stability_composite_score = max(0.0, min(1.0, stc))
+    # Fill zero-income months
+    if monthly_credits:
+        all_months_sorted = sorted(monthly_credits.keys())
+        first_m = datetime.strptime(all_months_sorted[0] + "-01", "%Y-%m-%d")
+        last_m = datetime.strptime(all_months_sorted[-1] + "-01", "%Y-%m-%d")
+        cur = first_m
+        while cur <= last_m:
+            k = f"{cur.year}-{cur.month:02d}"
+            if k not in monthly_credits:
+                monthly_credits[k] = 0.0
+            if cur.month == 12:
+                cur = cur.replace(year=cur.year + 1, month=1)
+            else:
+                cur = cur.replace(month=cur.month + 1)
 
-    # 33. affordability_stress_ratio
-    asr = rent_wallet_share / (emergency_buffer_months + 1)
-    affordability_stress_ratio = max(0.0, min(1.0, asr))
+    if len(monthly_credits) >= 2:
+        inc_values = list(monthly_credits.values())
+        inc_mean = sum(inc_values) / len(inc_values)
+        if inc_mean > 0:
+            inc_std = (sum((v - inc_mean) ** 2 for v in inc_values) / len(inc_values)) ** 0.5
+            cv = inc_std / inc_mean
+            income_stability_score = round(max(0.0, min(1.0, 1.0 - cv)), 4)
+        else:
+            income_stability_score = 0.0
+    else:
+        income_stability_score = 0.5
 
+    # 32. income_seasonality_flag — 1 if income concentrated in <= 2 months
+    if len(monthly_credits) >= 3:
+        inc_values = sorted(monthly_credits.values(), reverse=True)
+        total_inc = sum(inc_values)
+        if total_inc > 0:
+            top2_share = sum(inc_values[:2]) / total_inc
+            income_seasonality_flag = 1 if top2_share > 0.75 else 0
+        else:
+            income_seasonality_flag = 1
+    else:
+        income_seasonality_flag = 0
+
+    # 33. p2p_circular_loop_flag — detects wash trading
+    # If same counterparty appears in both large credits AND large debits
+    # Counter imported at top of file
+    credit_counterparties = []
+    debit_counterparties = []
+    for t in transactions:
+        desc = str(t.get("description", "")).upper()
+        # Extract counterparty name (last 2-3 words typically)
+        words = [w for w in desc.split() if len(w) > 3]
+        if len(words) >= 2:
+            counterparty = " ".join(words[-2:])
+        elif len(words) == 1:
+            counterparty = words[0]
+        else:
+            continue
+
+        if t["type"] == "CR" and t["amount"] > 5000:
+            credit_counterparties.append(counterparty)
+        elif t["type"] == "DR" and t["amount"] > 5000:
+            debit_counterparties.append(counterparty)
+
+    credit_set = set(credit_counterparties)
+    debit_set = set(debit_counterparties)
+    circular_matches = credit_set & debit_set
+    p2p_circular_loop_flag = 1 if len(circular_matches) > 0 else 0
+
+    # 34. gst_to_bank_variance — from metadata / user_profile
+    gst_to_bank_variance = float(metadata.get("gst_to_bank_variance", 0.0))
+
+    # 35. customer_concentration_ratio — fraction of income from top customer
+    if credit_counterparties:
+        cp_counts = Counter(credit_counterparties)
+        top_count = cp_counts.most_common(1)[0][1]
+        customer_concentration_ratio = round(top_count / len(credit_counterparties), 4)
+    else:
+        customer_concentration_ratio = 0.5
+
+    # 36. turnover_inflation_spike — from metadata
+    turnover_inflation_spike = int(metadata.get("turnover_inflation_spike", 0))
+
+    # 37. identity_device_mismatch — from metadata
+    identity_device_mismatch = int(metadata.get("identity_device_mismatch", 0))
+
+    # 38. business_vintage_months — from metadata
+    business_vintage_months = int(metadata.get("business_vintage_months", employment_vintage_days / 30))
+
+    # 39. gst_filing_consistency_score — from metadata
+    gst_filing_consistency_score = int(metadata.get("gst_filing_consistency_score", 0))
+
+    # 40. revenue_seasonality_index — Gini coefficient of monthly income
+    # 0.0 = perfectly even income across months
+    # 1.0 = all income in a single month (extreme seasonality)
+    if len(monthly_credits) >= 2 and sum(monthly_credits.values()) > 0:
+        sorted_vals = sorted(monthly_credits.values())
+        n = len(sorted_vals)
+        cumulative = []
+        running = 0
+        for v in sorted_vals:
+            running += v
+            cumulative.append(running)
+        total = cumulative[-1]
+        area = sum(c / total for c in cumulative) / n
+        revenue_seasonality_index = round(
+            max(0.0, min(1.0, 1.0 - 2.0 * area + 1.0 / n)), 4
+        )
+    else:
+        revenue_seasonality_index = 0.0
+
+    # 41. revenue_growth_trend — recent income vs earlier income
+    # Positive = growing, negative = declining
+    # < -0.30 means income dropped more than 30%
+    if len(monthly_credits) >= 3:
+        mc_keys_sorted = sorted(monthly_credits.keys())
+        mc_values = [monthly_credits[k] for k in mc_keys_sorted]
+        recent_avg = sum(mc_values[-2:]) / 2.0
+        earlier_vals = mc_values[:-2]
+        if len(earlier_vals) > 0:
+            earlier_avg = sum(earlier_vals) / len(earlier_vals)
+            if earlier_avg > 0:
+                revenue_growth_trend = round(
+                    max(-1.0, min(2.0, (recent_avg - earlier_avg) / earlier_avg)), 4
+                )
+            else:
+                revenue_growth_trend = 0.0
+        else:
+            revenue_growth_trend = 0.0
+    else:
+        revenue_growth_trend = 0.0
+
+    # 42. cashflow_volatility — CV of daily net cashflow
+    # Higher = more unpredictable daily cash movements
+    daily_nets = {}
+    for t in transactions:
+        d = t["date"]
+        if d not in daily_nets:
+            daily_nets[d] = 0.0
+        if t["type"] == "CR":
+            daily_nets[d] += t["amount"]
+        else:
+            daily_nets[d] -= t["amount"]
+
+    if len(daily_nets) >= 5:
+        net_values = list(daily_nets.values())
+        net_mean = sum(net_values) / len(net_values)
+        if abs(net_mean) > 0:
+            net_std = (sum((v - net_mean) ** 2 for v in net_values) / len(net_values)) ** 0.5
+            cashflow_volatility = round(min(1.0, net_std / abs(net_mean)), 4)
+        else:
+            cashflow_volatility = 1.0
+    else:
+        cashflow_volatility = 0.5
+    
     features = {
         "utility_payment_consistency": float(utility_payment_consistency),
         "avg_utility_dpd": float(avg_utility_dpd),
@@ -218,21 +453,28 @@ def extract_features(statement: dict) -> dict:
         "region_city_risk_score": int(region_city_risk_score),
         "address_work_mismatch": int(address_work_mismatch),
         "employment_to_age_ratio": float(employment_to_age_ratio),
-        "stress_composite_score": float(stress_composite_score),
-        "stability_composite_score": float(stability_composite_score),
-        "affordability_stress_ratio": float(affordability_stress_ratio)
+        "neighbourhood_default_rate_30": float(metadata.get("neighbourhood_default_rate_30", 0.05)),
+        "neighbourhood_default_rate_60": float(metadata.get("neighbourhood_default_rate_60", 0.05)),
+        "income_stability_score": float(income_stability_score),
+        "income_seasonality_flag": int(income_seasonality_flag),
+        "p2p_circular_loop_flag": int(p2p_circular_loop_flag),
+        "gst_to_bank_variance": float(gst_to_bank_variance),
+        "customer_concentration_ratio": float(customer_concentration_ratio),
+        "turnover_inflation_spike": int(turnover_inflation_spike),
+        "identity_device_mismatch": int(identity_device_mismatch),
+        "business_vintage_months": int(business_vintage_months),
+        "gst_filing_consistency_score": int(gst_filing_consistency_score),
+        "revenue_seasonality_index": float(revenue_seasonality_index),
+        "revenue_growth_trend": float(revenue_growth_trend),
+        "cashflow_volatility": float(cashflow_volatility),
     }
     
-    # Actually wait! The user prompt says for essential_vs_lifestyle_ratio:
-    # result = essential / total if total > 0 else 0.85
-    # THEN bin into 5 buckets.
-    # I should write exactly what they asked for in `feature_engine.py` prompt unless otherwise noted. But the revert says "No binning. Raw continuous value." on the training set. If the training set uses continuous values and I evaluate on demo users... wait. I will just output raw continuous `raw` to ensure alignment with the pipeline without failure.
     features["essential_vs_lifestyle_ratio"] = float(raw)
 
     for k, v in features.items():
         if v is None: raise ValueError(f"{k} is None")
         if pd.isna(v) or np.isinf(v): raise ValueError(f"{k} is NaN or inf")
-    if len(features) != 33: raise ValueError(f"Expected 33 features, got {len(features)}")
+    if len(features) != 44: raise ValueError(f"Expected 44 features, got {len(features)}")
     return features
 
 if __name__ == "__main__":
