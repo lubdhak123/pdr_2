@@ -7,16 +7,6 @@ Returns None if no rule fires - send to ML model.
 """
 
 def apply_pre_layer(features: dict) -> tuple | None:
-    # EARLY BYPASSES TO SATISFY EXACT GRADES FOR DEMO
-    bvm = features.get('business_vintage_months', 0)
-    # Priya Patel - Struggling Kirana -> Expected D
-    if bvm == 14 and features.get('bounced_transaction_count', 0) >= 5:
-        return ('D', 'REJECTED', 'Struggling Kirana - liquidity stress')
-    # Rajesh Sharma - Clean IT Contractor -> Expected A from Model
-    # Allow Rajesh to reach model by completely skipping pre_layer
-    if bvm == 48 and features.get('telecom_number_vintage_days', 0) == 2100:
-        return None
-
     # TYPE 1: HARD REJECTION
     if features.get('p2p_circular_loop_flag', 0) == 1 and features.get('bounced_transaction_count', 0) >= 3:
         return ('E', 'REJECTED', 'Circular fund flow detected with repeated bounce charges - funds cycling between same counterparties with payment failures')
@@ -24,16 +14,27 @@ def apply_pre_layer(features: dict) -> tuple | None:
     if features.get('gst_to_bank_variance', 0) > 1.5:
         return ('E', 'REJECTED', 'Declared GST turnover does not match actual bank credits - possible inflation of turnover to appear eligible for larger loan')
 
-    if features.get('bounced_transaction_count', 0) >= 6:
-        return ('E', 'REJECTED', 'Excessive payment failures - six or more bounce charges indicate chronic inability to meet obligations')
+    if features.get('bounced_transaction_count', 0) >= 5:
+        return ('E', 'REJECTED', 'Excessive payment failures - five or more bounce charges indicate chronic inability to meet obligations')
 
-    if features.get('min_balance_violation_count', 0) >= 4:
-        return ('E', 'REJECTED', 'Account balance critically depleted four or more times - severe and recurring liquidity failure')
+    if features.get('min_balance_violation_count', 0) >= 3:
+        return ('E', 'REJECTED', 'Account balance critically depleted three or more times - severe and recurring liquidity failure')
 
-    if features.get('cash_withdrawal_dependency', 0) > 0.85 and features.get('bounced_transaction_count', 0) >= 6:
+    if features.get('cash_withdrawal_dependency', 0) > 0.80 and features.get('bounced_transaction_count', 0) >= 3:
         return ('E', 'REJECTED', 'Extreme off-book cash dependency combined with payment failures - high probability of undisclosed financial obligations')
 
     # TYPE 2: EDGE CASE PROTECTION
+
+    # Clean established business — strong multi-signal trust across utility, telecom, GST, and banking
+    if (features.get('bounced_transaction_count', 0) == 0 and
+        features.get('p2p_circular_loop_flag', 0) == 0 and
+        features.get('identity_device_mismatch', 0) == 0 and
+        features.get('min_balance_violation_count', 0) == 0 and
+        features.get('telecom_number_vintage_days', 0) > 1000 and
+        features.get('gst_filing_consistency_score', 0) >= 6 and
+        features.get('utility_payment_consistency', 0) >= 6 and
+        features.get('cash_withdrawal_dependency', 0) < 0.15):
+        return ('A', 'APPROVED', 'Established business with strong multi-signal trust - zero payment failures, long identity vintage, consistent GST filing, high utility discipline, and minimal cash dependency confirm exceptional creditworthiness')
     if (features.get('bounced_transaction_count', 0) == 0 and 
         features.get('telecom_number_vintage_days', 0) > 1000 and 
         features.get('p2p_circular_loop_flag', 0) == 0 and 
@@ -58,8 +59,11 @@ def apply_pre_layer(features: dict) -> tuple | None:
         return ('B', 'APPROVED WITH CONDITIONS', 'Stable pension or fixed income profile - consistent low-volatility credits with strong savings buffer and zero payment failures confirm reliable repayment capacity')
 
     # TYPE 3: MANUAL REVIEW
-    if features.get('customer_concentration_ratio', 0) > 0.85:
-        return ('C', 'MANUAL REVIEW', 'Revenue concentrated in fewer than three customers - single client dependency creates repayment vulnerability')
+    if (features.get('customer_concentration_ratio', 0) > 0.85 and
+        (features.get('telecom_number_vintage_days', 0) < 500 or
+         features.get('gst_to_bank_variance', 0) > 0.3 or
+         features.get('bounced_transaction_count', 0) > 0)):
+        return ('C', 'MANUAL REVIEW', 'Revenue concentrated in fewer than three customers with additional risk signals - single client dependency requires verification')
 
     if features.get('turnover_inflation_spike', 0) == 1:
         return ('C', 'MANUAL REVIEW', 'Possible turnover inflation - round number transactions with GST variance requires verification')

@@ -4,7 +4,7 @@ Label-blind — no default_label anywhere in this file.
 """
 import pandas as pd
 import numpy as np
-import random
+
 import math
 
 def compute_features(
@@ -56,10 +56,9 @@ def compute_features(
 
     # 2. avg_utility_dpd
     try:
-        if result['utility_payment_consistency'] >= 4:
-            result['avg_utility_dpd'] = random.uniform(0, 5)
-        else:
-            result['avg_utility_dpd'] = random.uniform(10, 40)
+        # deterministic formula — higher utility count => lower DPD
+        upc = result.get('utility_payment_consistency', 0)
+        result['avg_utility_dpd'] = float(max(0.0, 30.0 - upc * 5.0))
     except Exception:
         result['avg_utility_dpd'] = 20.0
 
@@ -244,10 +243,12 @@ def compute_features(
 
     # 20. avg_invoice_payment_delay
     try:
-        if len(credits) >= 4:
-            result['avg_invoice_payment_delay'] = random.uniform(3, 15)
+        # deterministic formula — more regular credits => lower delay
+        n_credits = len(credits)
+        if n_credits >= 4:
+            result['avg_invoice_payment_delay'] = float(max(3.0, 15.0 - n_credits * 1.0))
         else:
-            result['avg_invoice_payment_delay'] = random.uniform(20, 50)
+            result['avg_invoice_payment_delay'] = float(50.0 - n_credits * 10.0)
     except Exception:
         result['avg_invoice_payment_delay'] = 30.0
 
@@ -277,10 +278,12 @@ def compute_features(
 
     # 23. vendor_payment_discipline
     try:
-        if result.get('bounced_transaction_count', 0) == 0:
-            result['vendor_payment_discipline'] = random.uniform(1, 10)
+        # deterministic formula — bounces increase delay score
+        bounces = result.get('bounced_transaction_count', 0)
+        if bounces == 0:
+            result['vendor_payment_discipline'] = 5.0  # deterministic default — no bounces
         else:
-            result['vendor_payment_discipline'] = random.uniform(15, 45)
+            result['vendor_payment_discipline'] = float(15.0 + bounces * 5.0)
     except Exception:
         result['vendor_payment_discipline'] = 10.0
 
@@ -302,12 +305,26 @@ def compute_features(
 
     # 26. p2p_circular_loop_flag
     try:
-        flag = 0
-        if not df.empty:
-            narrations = df['narration'].astype(str).str.upper()
-            if narrations.str.contains('SHYAM|UNKNOWN|CIRCULAR|SELF TRANSFER', na=False).any():
-                flag = 1
-        result['p2p_circular_loop_flag'] = float(flag)
+        def detect_circular_flow(df_in):
+            credits_df = df_in[df_in['type'] == 'CREDIT'].copy()
+            debits_df  = df_in[df_in['type'] == 'DEBIT'].copy()
+            if len(credits_df) == 0 or len(debits_df) == 0:
+                return 0
+            loop_count = 0
+            for _, cr in credits_df.iterrows():
+                cr_root = cr['narration'].strip().split()[-1].upper()
+                if len(cr_root) < 3:
+                    continue
+                matching_debits = debits_df[
+                    (debits_df['narration'].str.upper().str.contains(cr_root, na=False, regex=False)) &
+                    (abs((debits_df['date'] - cr['date']).dt.days) <= 3) &
+                    (debits_df['amount'].abs() >= cr['amount'] * 0.80)
+                ]
+                if len(matching_debits) > 0:
+                    loop_count += 1
+            return int(loop_count >= 3)
+            
+        result['p2p_circular_loop_flag'] = float(detect_circular_flow(df))
     except Exception:
         result['p2p_circular_loop_flag'] = 0.0
 
@@ -354,6 +371,36 @@ def compute_features(
     except Exception:
         result['identity_device_mismatch'] = 0.0
 
+    # 31. employment_vintage_days
+    try:
+        if not df.empty and 'narration' in df.columns:
+            salary_tx = df[df['narration'].str.contains('SALARY|EMPLOYER|NEFT FROM.*PAYMENT', case=False, na=False)]
+            if not salary_tx.empty and 'date' in df.columns:
+                first_salary = salary_tx['date'].min()
+                last_date = df['date'].max()
+                result['employment_vintage_days'] = float((last_date - first_salary).days)
+            else:
+                result['employment_vintage_days'] = 0.0  # deterministic default — no salary transactions found
+        else:
+            result['employment_vintage_days'] = 0.0
+    except Exception:
+        result['employment_vintage_days'] = 0.0
+
+    # 32. monthly_income
+    try:
+        if not credits.empty and 'date' in df.columns:
+            credit_df = df[df['type'] == 'CREDIT']
+            credit_df = credit_df[credit_df['date'].notna()]
+            if not credit_df.empty:
+                months_span = max(1, (credit_df['date'].max() - credit_df['date'].min()).days / 30.0)
+                result['monthly_income'] = float(credits.sum() / months_span)
+            else:
+                result['monthly_income'] = 0.0
+        else:
+            result['monthly_income'] = 0.0
+    except Exception:
+        result['monthly_income'] = 0.0
+
     keys_in_order = [
         'utility_payment_consistency',
         'avg_utility_dpd',
@@ -384,7 +431,9 @@ def compute_features(
         'benford_anomaly_score',
         'round_number_spike_ratio',
         'turnover_inflation_spike',
-        'identity_device_mismatch'
+        'identity_device_mismatch',
+        'employment_vintage_days',
+        'monthly_income',
     ]
 
     final_result = {k: float(result.get(k, 0.0)) for k in keys_in_order}
@@ -392,5 +441,5 @@ def compute_features(
 
 if __name__ == "__main__":
     result = compute_features([], {}, {})
-    assert len(result) == 30
+    assert len(result) == 32, f"Expected 32 features, got {len(result)}"
     print("[OK] feature_engine.py")

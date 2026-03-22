@@ -1,0 +1,291 @@
+{
+    "user_id": "USR_GOOD_SALARIED_NTC_180",
+    "account_number": "6983657708",
+    "bank": "HDFC BANK",
+    "ifsc": "HDFC0000123",
+    "currency": "INR",
+    "statement_start": "2025-09-01",
+    "statement_end": "2026-03-02",
+    "total_credits": 269734.1,
+    "total_debits": 83693.38,
+    "transaction_count": 30,
+    "transactions": [
+        {
+            "date": "2025-09-01",
+            "type": "CR",
+            "amount": 45717.2,
+            "description": "NEFT-SALARY-WIPRO LTD",
+            "category": "INCOME",
+            "balance": 57300.37,
+            "txn_id": "20d3d849-34ca-4653-bfe3-93488154cfa6"
+        },
+        {
+            "date": "2025-09-28",
+            "type": "DR",
+            "amount": 11250.0,
+            "description": "UPI/RENT/LANDLORD",
+            "category": "RENT",
+            "balance": 45271.44,
+            "txn_id": "9ac6ca27-0198-48dc-b633-71097e9feb4a"
+        },
+        {
+            "date": "2025-10-01",
+            "type": "CR",
+            "amount": 44741.6,
+            "description": "NEFT-SALARY-WIPRO LTD",
+            "category": "INCOME",
+            "balance": 88457.0,
+            "txn_id": "a52191c5-b810-4cd8-bdff-28d37283bd18"
+        },
+        {
+            "date": "2025-10-03",
+            "type": "DR",
+            "amount": 778.94,
+            "description": "UPI/BILLPAY/TNEB WATER",
+            "category": "UTILITY",
+            "balance": 56521.44,
+            "txn_id": "4cd167c5-9695-405c-ae35-6250ab77fc42"
+        },
+        {
+            "date": "2025-10-13",
+            "type": "DR",
+            "amount": 1189.48,
+            "description": "UPI/NETFLIX",
+            "category": "LIFESTYLE",
+            "balance": 44081.95,
+            "txn_id": "8e91d770-01d7-461d-a5bf-f317386bbcc7"
+        },
+        {
+            "date": "2025-10-16",
+            "type": "DR",
+            "amount": 366.55,
+            "description": "UPI/AMAZON PAY",
+            "category": "LIFESTYLE",
+            "balance": 43715.41,
+            "txn_id": "804a12ee-dda4-4c68-88d4-95597d017784"
+        },
+        {
+            "date": "2025-10-28",
+            "type": "DR",
+            "amount": 11250.0,
+            "description": "UPI/RENT/LANDLORD",
+            "category": "RENT",
+            "balance": 75383.66,
+            "txn_id": "020a3255-ddc6-4b0b-96b5-a3b71ace123d"
+        },
+        {
+            "date": "2025-11-01",
+            "type": "CR",
+            "amount": 45263.33,
+            "description": "NEFT-SALARY-WIPRO LTD",
+            "category": "INCOME",
+            "balance": 119868.61,
+            "txn_id": "bd824039-f0a5-47e5-b707-fec90b02d02a"
+        },
+        {
+            "date": "2025-11-02",
+            "type": "DR",
+            "amount": 1823.34,
+            "description": "UPI/BILLPAY/JIO PREPAID",
+            "category": "UTILITY",
+            "balance": 86633.66,
+            "txn_id": "b98297f8-8e96-4ed3-a88b-b1b9ffc4af2e"
+        },
+        {
+            "date": "2025-11-07",
+            "type": "DR",
+            "amount": 282.96,
+            "description": "UPI/STARBUCKS",
+            "category": "LIFESTYLE",
+            "balance": 74605.29,
+            "txn_id": "cafdeafb-6154-4b4d-95db-209bf3fdf0c6"
+        },
+        {
+            "date": "2025-11-15",
+            "type": "DR",
+            "amount": 495.41,
+            "description": "UPI/SWIGGY",
+            "category": "LIFESTYLE",
+            "balance": 74888.25,
+            "txn_id": "96ba3895-15fd-484d-9b9e-cbb890d3fbce"
+        },
+        {
+            "date": "2025-11-27",
+            "type": "DR",
+            "amount": 11250.0,
+            "description": "UPI/RENT/LANDLORD",
+            "category": "RENT",
+            "balance": 107345.02,
+            "txn_id": "7bcd53ac-54cb-40b5-a9ca-b796bc79d3cd"
+        },
+        {
+            "date": "2025-12-01",
+            "type": "CR",
+            "amount": 44087.61,
+            "description": "NEFT-SALARY-WIPRO LTD",
+            "category": "INCOME",
+            "balance": 149618.53,
+            "txn_id": "35ae37fb-b6af-450c-81e1-d9a70c3627a8"
+        },
+        {
+            "date": "2025-12-02",
+            "type": "DR",
+            "amount": 1273.6,
+            "description": "UPI/BILLPAY/TNEB WATER",
+            "category": "UTILITY",
+            "balance": 118595.02,
+            "txn_id": "67dd2008-f0aa-4413-a216-980bed1e2a06"
+        },
+        {
+            "date": "2025-12-02",
+            "type": "DR",
+            "amount": 453.03,
+            "description": "UPI/AMAZON PAY",
+            "category": "LIFESTYLE",
+            "balance": 105530.93,
+            "txn_id": "354f48c5-e0d1-4ed7-a73e-5902e1079fa2"
+        },
+        {
+            "date": "2025-12-11",
+            "type": "DR",
+            "amount": 1361.06,
+            "description": "UPI/NETFLIX",
+            "category": "LIFESTYLE",
+            "balance": 105983.96,
+            "txn_id": "39a5e1dd-05ac-40ae-a018-7ddf40f4a399"
+        },
+        {
+            "date": "2025-12-27",
+            "type": "DR",
+            "amount": 11250.0,
+            "description": "UPI/RENT/LANDLORD",
+            "category": "RENT",
+            "balance": 136470.74,
+            "txn_id": "137096c0-6e6a-41dc-9895-385ec8cb1416"
+        },
+        {
+            "date": "2026-01-01",
+            "type": "DR",
+            "amount": 1897.79,
+            "description": "UPI/BILLPAY/TNEB WATER",
+            "category": "UTILITY",
+            "balance": 147720.74,
+            "txn_id": "43d24309-662f-4a2d-80dc-fe9730cfdfaa"
+        },
+        {
+            "date": "2026-01-01",
+            "type": "CR",
+            "amount": 44259.84,
+            "description": "NEFT-SALARY-WIPRO LTD",
+            "category": "INCOME",
+            "balance": 179296.59,
+            "txn_id": "0697a3e3-c3fa-4e30-b68f-b4a6c61cdc87"
+        },
+        {
+            "date": "2026-01-02",
+            "type": "DR",
+            "amount": 810.42,
+            "description": "UPI/NETFLIX",
+            "category": "LIFESTYLE",
+            "balance": 135036.75,
+            "txn_id": "6a4d26f8-e9dd-4934-ba0c-db49d2b91937"
+        },
+        {
+            "date": "2026-01-12",
+            "type": "DR",
+            "amount": 623.57,
+            "description": "UPI/STARBUCKS",
+            "category": "LIFESTYLE",
+            "balance": 135847.17,
+            "txn_id": "6c8bde49-a696-41c5-bab7-1ca566fc57ab"
+        },
+        {
+            "date": "2026-01-24",
+            "type": "DR",
+            "amount": 1110.34,
+            "description": "UPI/ZOMATO",
+            "category": "LIFESTYLE",
+            "balance": 165136.82,
+            "txn_id": "98388b2c-8f5b-46e5-9ca9-7e65378ea002"
+        },
+        {
+            "date": "2026-01-26",
+            "type": "DR",
+            "amount": 11250.0,
+            "description": "UPI/RENT/LANDLORD",
+            "category": "RENT",
+            "balance": 167015.46,
+            "txn_id": "f34867cf-da80-4c8d-9d1d-bdf8ae8f2210"
+        },
+        {
+            "date": "2026-01-26",
+            "type": "DR",
+            "amount": 768.3,
+            "description": "UPI/NETFLIX",
+            "category": "LIFESTYLE",
+            "balance": 166247.16,
+            "txn_id": "6a876421-9789-48b7-9073-b5a1bbff86f2"
+        },
+        {
+            "date": "2026-01-31",
+            "type": "DR",
+            "amount": 1031.13,
+            "description": "UPI/BILLPAY/BESCOM ELECTRICITY",
+            "category": "UTILITY",
+            "balance": 178265.46,
+            "txn_id": "c4732b03-1930-4c07-ac3b-933cb71cb5c4"
+        },
+        {
+            "date": "2026-02-01",
+            "type": "CR",
+            "amount": 45664.52,
+            "description": "NEFT-SALARY-WIPRO LTD",
+            "category": "INCOME",
+            "balance": 210801.34,
+            "txn_id": "27ef925a-a08a-493a-9450-67648f1a1f48"
+        },
+        {
+            "date": "2026-02-25",
+            "type": "DR",
+            "amount": 11250.0,
+            "description": "UPI/RENT/LANDLORD",
+            "category": "RENT",
+            "balance": 198215.13,
+            "txn_id": "9c3a11ef-521a-4b8d-8d4d-e284c4c2cb23"
+        },
+        {
+            "date": "2026-02-26",
+            "type": "DR",
+            "amount": 209.57,
+            "description": "UPI/NETFLIX",
+            "category": "LIFESTYLE",
+            "balance": 197623.88,
+            "txn_id": "a482d7f2-a031-4e60-a334-58e80d51954e"
+        },
+        {
+            "date": "2026-02-28",
+            "type": "DR",
+            "amount": 381.68,
+            "description": "UPI/NETFLIX",
+            "category": "LIFESTYLE",
+            "balance": 197833.45,
+            "txn_id": "0252b89a-563e-484a-ad38-2798589a3137"
+        },
+        {
+            "date": "2026-03-02",
+            "type": "DR",
+            "amount": 1336.21,
+            "description": "UPI/BILLPAY/TNEB WATER",
+            "category": "UTILITY",
+            "balance": 209465.13,
+            "txn_id": "55148035-b40f-43de-a14f-d37e3df0f38e"
+        }
+    ],
+    "_test_expected_features": {
+        "utility_payment_consistency": 1.0,
+        "bounced_transaction_count": 0,
+        "emergency_buffer_months": 2.25,
+        "cash_withdrawal_dependency": 0.05
+    },
+    "_profile_description": "Stable salaried employee with clean utility and zero bounces."
+}

@@ -1,6 +1,6 @@
 """Main scoring orchestrator for PDR.
-Loads NTC (XGBoost) and MSME (CatBoost) models at module level.
-Pipeline: feature_engine -> pre_layer -> model (routed on is_msme) -> SHAP -> output.
+Loads NTC and MSME XGBoost models at module level.
+Pipeline: feature_engine -> pre_layer -> model -> SHAP -> output.
 """
 import pathlib
 import numpy as np
@@ -16,35 +16,44 @@ from feature_engine import compute_features
 from pre_layer import apply_pre_layer
 
 # ─────────────────────────────────────────────
-# FEATURE SETS — must match train.py exactly
+# MODEL LOADING
 # ─────────────────────────────────────────────
 
-NTC_FEATURES = [
-    'utility_payment_consistency', 'avg_utility_dpd',
-    'rent_wallet_share', 'subscription_commitment_ratio',
-    'emergency_buffer_months', 'min_balance_violation_count',
-    'eod_balance_volatility', 'essential_vs_lifestyle_ratio',
-    'cash_withdrawal_dependency', 'bounced_transaction_count',
-    'telecom_number_vintage_days', 'telecom_recharge_drop_ratio',
-    'academic_background_tier', 'purpose_of_loan_encoded',
-    'p2p_circular_loop_flag', 'identity_device_mismatch',
-    'turnover_inflation_spike', 'benford_anomaly_score',
-    'round_number_spike_ratio',
-    'employment_vintage_days', 'is_msme',
-]
+_base = pathlib.Path(__file__).parent
 
-MSME_FEATURES = [
-    'business_vintage_months', 'revenue_growth_trend',
-    'operating_cashflow_ratio', 'cashflow_volatility',
-    'customer_concentration_ratio',
-    'gst_filing_consistency_score',
-    'rent_wallet_share', 'academic_background_tier',
-    'purpose_of_loan_encoded', 'monthly_income',
-    'p2p_circular_loop_flag', 'identity_device_mismatch',
-    'turnover_inflation_spike', 'benford_anomaly_score',
-    'round_number_spike_ratio',
-    'is_msme',
-]
+def _load(filename):
+    p = _base / filename
+    try:
+        obj = joblib.load(p)
+        print(f"[OK] Loaded {filename}")
+        return obj
+    except Exception as e:
+        print(f"[ERROR] Failed to load {filename}: {e}")
+        return None
+
+ntc_model  = _load('pdr_ntc_model.pkl')
+msme_model = _load('pdr_msme_model.pkl')
+
+# ─────────────────────────────────────────────
+# FEATURE LISTS — derived from trained model (never hardcoded)
+# ─────────────────────────────────────────────
+
+if ntc_model is not None:
+    NTC_FEATURES = ntc_model.get_booster().feature_names
+else:
+    NTC_FEATURES = []
+
+if msme_model is not None:
+    MSME_FEATURES = msme_model.get_booster().feature_names
+else:
+    MSME_FEATURES = []
+
+# ─────────────────────────────────────────────
+# BUILD SHAP EXPLAINERS — expensive, do once at load time
+# ─────────────────────────────────────────────
+
+ntc_explainer  = shap.TreeExplainer(ntc_model)  if ntc_model  else None
+msme_explainer = shap.TreeExplainer(msme_model) if msme_model else None
 
 # ─────────────────────────────────────────────
 # HUMAN-READABLE REASON MAP
@@ -68,6 +77,7 @@ SHAP_REASON_MAP = {
     'employment_vintage_days':       'Employment tenure',
     'business_vintage_months':       'Business operating history',
     'revenue_growth_trend':          'Revenue growth trajectory',
+    'revenue_seasonality_index':     'Revenue seasonality pattern',
     'operating_cashflow_ratio':      'Operating cashflow health',
     'cashflow_volatility':           'Monthly cashflow volatility',
     'customer_concentration_ratio':  'Customer concentration risk',
@@ -82,7 +92,6 @@ SHAP_REASON_MAP = {
     'round_number_spike_ratio':      'Round number transaction spike',
     'turnover_inflation_spike':      'Turnover inflation indicator',
     'identity_device_mismatch':      'Identity verification signal',
-    'is_msme':                       'Applicant segment (MSME/NTC)',
 }
 
 GRADE_THRESHOLDS = [
@@ -94,35 +103,14 @@ GRADE_THRESHOLDS = [
 ]
 
 # ─────────────────────────────────────────────
-# MODEL LOADING
-# ─────────────────────────────────────────────
-
-_base = pathlib.Path(__file__).parent
-
-def _load(filename):
-    p = _base / filename
-    try:
-        obj = joblib.load(p)
-        print(f"[OK] Loaded {filename}")
-        return obj
-    except Exception as e:
-        print(f"[ERROR] Failed to load {filename}: {e}")
-        return None
-
-ntc_model  = _load('pdr_ntc_model.pkl')
-msme_model = _load('pdr_msme_model.pkl')
-
-# Build SHAP explainers once at load time — expensive, don't rebuild per request
-ntc_explainer  = shap.TreeExplainer(ntc_model)  if ntc_model  else None
-msme_explainer = shap.TreeExplainer(msme_model) if msme_model else None
-
-# ─────────────────────────────────────────────
 # HELPERS
 # ─────────────────────────────────────────────
 
 def _to_row(features: dict, feature_list: list) -> pd.DataFrame:
-    """Single-row DataFrame for model input, NaN-filling missing cols."""
-    return pd.DataFrame([{f: features.get(f, np.nan) for f in feature_list}])
+    """Single-row DataFrame for model input, filling missing cols with 0."""
+    row = pd.DataFrame([{f: features.get(f, 0.0) for f in feature_list}])
+    row = row.fillna(0)  # no NaN reaches the model
+    return row
 
 
 def _grade(pd_score: float):
@@ -162,22 +150,22 @@ def score_user(
 ) -> dict:
     """Score a user through the PDR pipeline.
 
-    Routes on profile['is_msme']:
-      - NTC  (is_msme=0): 100% XGBoost NTC model
-      - MSME (is_msme=1): 60% CatBoost MSME + 40% XGBoost NTC ensemble
+    Routes on profile['business_vintage_months'] and profile['business_type']:
+      - NTC: business_vintage_months == 0 or business_type == 'Individual / NTC'
+      - MSME: all others
+    Both routed 100% to XGBoost (no CatBoost ensemble).
     """
     # ── 1. Feature computation ────────────────────────────────────────────
     features = compute_features(transactions, profile, gst_data)
-
-    # Inject is_msme from profile so models see it as a feature
-    is_msme = int(profile.get('is_msme', 0))
-    features['is_msme'] = is_msme
 
     # ── 2. Pre-layer (hard rules) ─────────────────────────────────────────
     pre_result = apply_pre_layer(features)
 
     if pre_result is not None:
         grade, outcome, reason = pre_result
+        # Build a normalized shap_breakdown of zeros for pre-layer decisions
+        feat_names = NTC_FEATURES if NTC_FEATURES else MSME_FEATURES
+        shap_breakdown = {f: 0.0 for f in feat_names}
         return {
             'grade': grade,
             'outcome': outcome,
@@ -185,40 +173,66 @@ def score_user(
             'decision_source': 'pre_layer',
             'primary_reason': reason,
             'shap_reasons': [],
+            'shap_breakdown': shap_breakdown,
             'features': features,
         }
 
-    # ── 3. Model scoring ──────────────────────────────────────────────────
-    if ntc_model is None:
-        raise RuntimeError('NTC model not loaded — run train.py first')
+    # ── 3. Routing — NTC vs MSME ──────────────────────────────────────────
+    is_ntc = (
+        profile.get('business_vintage_months', 0) == 0
+        or profile.get('business_type') == 'Individual / NTC'
+    )
 
-    row_ntc = _to_row(features, NTC_FEATURES)
-    pd_ntc  = float(ntc_model.predict_proba(row_ntc)[0][1])
-
-    if is_msme:
+    if is_ntc:
+        if ntc_model is None:
+            raise RuntimeError('NTC model not loaded — run train.py first')
+        model = ntc_model
+        feature_list = NTC_FEATURES
+        explainer = ntc_explainer
+    else:
         if msme_model is None:
             raise RuntimeError('MSME model not loaded — run train.py first')
-        row_msme = _to_row(features, MSME_FEATURES)
-        pd_msme  = float(msme_model.predict_proba(row_msme)[0][1])
-        pd_score = 0.6 * pd_msme + 0.4 * pd_ntc
+        model = msme_model
+        feature_list = MSME_FEATURES
+        explainer = msme_explainer
 
-        # SHAP from MSME model (primary driver for MSME applicants)
-        shap_vals  = msme_explainer.shap_values(row_msme)[0]
-        shap_feats = MSME_FEATURES
+    # ── 4. Build feature row — fillna(0) ensures no NaN ───────────────────
+    features_df = _to_row(features, feature_list)
+
+    # Guarantee: no NaN reaches the model
+    assert features_df.isna().sum().sum() == 0, "NaN values detected before model input!"
+
+    # ── 5. Model scoring (100% XGBoost, no ensemble) ──────────────────────
+    pd_score = float(model.predict_proba(features_df)[0][1])
+
+    # ── 6. SHAP explanation ───────────────────────────────────────────────
+    shap_values = explainer.shap_values(features_df)
+
+    # Handle multi-class shape: (2, 1, n) — use positive class
+    if isinstance(shap_values, list):
+        shap_vals = shap_values[1][0] if len(shap_values) == 2 else shap_values[0]
+    elif len(shap_values.shape) == 3:
+        shap_vals = shap_values[1][0]
+    elif len(shap_values.shape) == 2:
+        shap_vals = shap_values[0]
     else:
-        pd_score   = pd_ntc
-        shap_vals  = ntc_explainer.shap_values(row_ntc)[0]
-        shap_feats = NTC_FEATURES
+        shap_vals = shap_values
 
-    # ── 4. Fraud hard-override ────────────────────────────────────────────
-    fraud_flags = ['p2p_circular_loop_flag', 'identity_device_mismatch']
-    if any(features.get(f, 0) == 1 for f in fraud_flags):
+    # ── 7. Fraud hard-override — fires regardless of model score ──────────
+    if features.get('p2p_circular_loop_flag', 0) == 1:
         pd_score = max(pd_score, 0.85)
+    if features.get('identity_device_mismatch', 0) == 1:
+        pd_score = max(pd_score, 0.75)
 
-    # ── 5. Grade + reason codes ───────────────────────────────────────────
-    grade, outcome    = _grade(pd_score)
-    shap_reasons      = _shap_reasons(shap_vals, shap_feats)
-    primary_reason    = shap_reasons[0]['reason'] if shap_reasons else 'Model assessed profile'
+    # ── 8. Grade + reason codes ───────────────────────────────────────────
+    grade, outcome = _grade(pd_score)
+    shap_reasons = _shap_reasons(shap_vals, list(feature_list))
+    primary_reason = shap_reasons[0]['reason'] if shap_reasons else 'Model assessed profile'
+
+    # ── 9. Normalized SHAP breakdown for frontend ─────────────────────────
+    shap_dict = dict(zip(feature_list, shap_vals))
+    max_abs = max((abs(v) for v in shap_dict.values()), default=1) or 1
+    shap_normalized = {k: round(float(v) / max_abs, 4) for k, v in shap_dict.items()}
 
     return {
         'grade': grade,
@@ -227,8 +241,6 @@ def score_user(
         'decision_source': 'model',
         'primary_reason': primary_reason,
         'shap_reasons': shap_reasons,
+        'shap_breakdown': shap_normalized,
         'features': features,
-        # Extra debug info — strip before prod if needed
-        'pd_ntc':  round(pd_ntc, 4),
-        'pd_msme': round(pd_msme, 4) if is_msme else None,
     }

@@ -14,10 +14,10 @@ def generate_good_borrower(user_id):
 
     base_profile = {
         "business_vintage_months": random.randint(24, 120),
-        "academic_background_tier": random.choice([1, 2]),
-        "purpose_of_loan_encoded": random.choice([1, 2]),
-        "telecom_number_vintage_days": random.randint(800, 3000),
-        "gst_filing_consistency_score": random.randint(8, 12),
+        "academic_background_tier": random.choice([1, 2, 3]),
+        "purpose_of_loan_encoded": random.choice([1, 2, 3]),
+        "telecom_number_vintage_days": random.randint(400, 3000),
+        "gst_filing_consistency_score": random.randint(4, 12),
         "city": random.choice(["Mumbai", "Bengaluru", "Chennai", "Hyderabad", "Pune"]),
     }
 
@@ -148,9 +148,20 @@ def generate_good_borrower(user_id):
             balance -= random.randint(5000, 20000)
             transactions.append({"date": date.strftime("%Y-%m-%d"), "amount": -random.randint(5000, 20000), "type": "DEBIT", "narration": "AMAZON EQUIPMENT PURCHASE", "balance": balance})
 
+    if random.random() < 0.15:
+        bounce_date = date + timedelta(days=random.randint(6, 12))
+        balance -= 500
+        transactions.append({
+            "date": bounce_date.strftime("%Y-%m-%d"),
+            "amount": -500,
+            "type": "DEBIT",
+            "narration": "CHEQUE BOUNCE CHG",
+            "balance": balance
+        })
+
     gst_turnover = sum(t['amount'] for t in transactions if t['type'] == 'CREDIT')
     return {
-        "id": user_id, "true_label": 0,
+        "id": user_id, "true_label": 0, "archetype": archetype,
         "profile": {
             "user_profile": base_profile,
             "transactions": transactions,
@@ -167,10 +178,10 @@ def generate_bad_borrower(user_id):
 
     base_profile = {
         "business_vintage_months": random.randint(2, 18),
-        "academic_background_tier": random.choice([3, 4]),
-        "purpose_of_loan_encoded": random.choice([3, 4]),
-        "telecom_number_vintage_days": random.randint(30, 200),
-        "gst_filing_consistency_score": random.randint(0, 3),
+        "academic_background_tier": random.choice([2, 3, 4]),
+        "purpose_of_loan_encoded": random.choice([2, 3, 4]),
+        "telecom_number_vintage_days": random.randint(30, 800),
+        "gst_filing_consistency_score": random.randint(0, 6),
         "city": random.choice(["Delhi", "Kanpur", "Patna", "Agra"]),
     }
 
@@ -268,7 +279,7 @@ def generate_bad_borrower(user_id):
 
     gst_turnover = sum(t['amount'] for t in transactions if t['type'] == 'CREDIT')
     return {
-        "id": user_id, "true_label": 1,
+        "id": user_id, "true_label": 1, "archetype": archetype,
         "profile": {
             "user_profile": base_profile,
             "transactions": transactions,
@@ -278,6 +289,7 @@ def generate_bad_borrower(user_id):
 
 
 # ================== FEATURE ENGINE (label-blind) ==================
+
 
 def compute_features(transactions, profile, gst_data):
     df = pd.DataFrame(transactions)
@@ -292,7 +304,7 @@ def compute_features(transactions, profile, gst_data):
     # === I. PROXY PILLARS ===
     utility_tx = df[df['narration'].str.contains('ELECTRICITY|WATER|BROADBAND|BILL', case=False, na=False)]
     features['utility_payment_consistency'] = len(utility_tx)
-    features['avg_utility_dpd'] = random.uniform(0, 5) if len(utility_tx) >= 4 else random.uniform(10, 40)
+    features['avg_utility_dpd'] = max(0.0, 30.0 - len(utility_tx) * 5.0)  # deterministic — matches feature_engine.py
 
     avg_income = credits.mean() if len(credits) > 0 else 1
     rent_payments = df[df['narration'].str.contains('RENT', case=False, na=False)]['amount'].abs()
@@ -341,7 +353,8 @@ def compute_features(transactions, profile, gst_data):
     total_out = monthly_out.sum()
     features['operating_cashflow_ratio'] = (total_in / total_out) if total_out > 0 else 1.0
     features['cashflow_volatility'] = float(monthly_net.std()) if len(monthly_net) > 1 else 0.0
-    features['avg_invoice_payment_delay'] = random.uniform(3, 15) if len(credits) >= 4 else random.uniform(20, 50)
+    n_credits = len(credits)
+    features['avg_invoice_payment_delay'] = max(3.0, 15.0 - n_credits * 1.0) if n_credits >= 4 else (50.0 - n_credits * 10.0)  # deterministic
 
     # === V. NETWORK RISK & COMPLIANCE ===
     credit_df = df[df['type'] == 'CREDIT'].copy()
@@ -355,7 +368,7 @@ def compute_features(transactions, profile, gst_data):
         features['customer_concentration_ratio'] = 1.0
         features['repeat_customer_revenue_pct'] = 0.0
 
-    features['vendor_payment_discipline'] = random.uniform(1, 10) if features['bounced_transaction_count'] == 0 else random.uniform(15, 45)
+    features['vendor_payment_discipline'] = 5.0 if features['bounced_transaction_count'] == 0 else (15.0 + features['bounced_transaction_count'] * 5.0)  # deterministic
     features['gst_filing_consistency_score'] = profile.get('gst_filing_consistency_score', 6)
 
     if gst_data.get('available') and gst_data.get('declared_turnover', 0) > 0:
@@ -365,18 +378,52 @@ def compute_features(transactions, profile, gst_data):
         features['gst_to_bank_variance'] = 0.5
 
     # === VI. TRUST FLAGS ===
-    features['p2p_circular_loop_flag'] = int(
-        any('SHYAM' in n.upper() or 'UNKNOWN' in n.upper() for n in df['narration'])
-    )
+    def detect_circular_flow(df):
+        credits_df = df[df['type'] == 'CREDIT'].copy()
+        debits_df  = df[df['type'] == 'DEBIT'].copy()
+        if len(credits_df) == 0 or len(debits_df) == 0:
+            return 0
+        loop_count = 0
+        for _, cr in credits_df.iterrows():
+            cr_root = cr['narration'].strip().split()[-1].upper()
+            if len(cr_root) < 3:
+                continue
+            matching_debits = debits_df[
+                (debits_df['narration'].str.upper().str.contains(cr_root, na=False)) &
+                (abs((debits_df['date'] - cr['date']).dt.days) <= 3) &
+                (debits_df['amount'].abs() >= cr['amount'] * 0.80)
+            ]
+            if len(matching_debits) > 0:
+                loop_count += 1
+        return int(loop_count >= 3)
+        
+    features['p2p_circular_loop_flag'] = detect_circular_flow(df)
+    
     first_digits = [int(str(abs(int(a)))[0]) for a in df['amount'] if a != 0]
     benford_exp = np.log10(1 + 1 / np.arange(1, 10))
     benford_obs = np.array([first_digits.count(d) / len(first_digits) for d in range(1, 10)]) if len(first_digits) > 0 else np.zeros(9)
     features['benford_anomaly_score'] = float(np.sum(np.abs(benford_obs - benford_exp))) if len(first_digits) > 10 else 0.05
     features['round_number_spike_ratio'] = len(df[df['amount'].abs() % 1000 == 0]) / len(df) if len(df) > 0 else 0.0
 
-    features['turnover_inflation_spike'] = int(features['round_number_spike_ratio'] > 
-    0.6 and features['gst_to_bank_variance'] > 0.3)
-    features['identity_device_mismatch'] = int(features['p2p_circular_loop_flag'] == 1 and features['bounced_transaction_count'] > 0)
+    features['turnover_inflation_spike'] = int(features['round_number_spike_ratio'] > 0.6 and features['gst_to_bank_variance'] > 0.3)
+    
+    bounce_count = features.get('bounced_transaction_count', 0)
+    mismatch_prob = 0.20 if bounce_count >= 3 else 0.03
+    features['identity_device_mismatch'] = int(random.random() < mismatch_prob)
+
+    NOISE_EXEMPT = {
+        'p2p_circular_loop_flag', 'identity_device_mismatch',
+        'turnover_inflation_spike', 'bounced_transaction_count',
+        'min_balance_violation_count', 'utility_payment_consistency',
+        'gst_filing_consistency_score', 'academic_background_tier',
+        'purpose_of_loan_encoded', 'business_vintage_months',
+        'telecom_number_vintage_days', 'employment_vintage_days'
+    }
+    for key in list(features.keys()):
+        if key not in NOISE_EXEMPT and isinstance(features[key], float):
+            if features[key] != 0.0:
+                sigma = abs(features[key]) * 0.15
+                features[key] = float(max(0.0, features[key] + random.gauss(0, sigma)))
 
     return features
 
@@ -393,12 +440,14 @@ for i in range(1, n_good + 1):
     good = generate_good_borrower(i)
     feats = compute_features(good['profile']['transactions'], good['profile']['user_profile'], good['profile']['gst_data'])
     feats['default_label'] = 0
+    feats['archetype'] = good['archetype']
     users.append(feats)
 
 for i in range(1, n_bad + 1):
     bad = generate_bad_borrower(i + n_good)
     feats = compute_features(bad['profile']['transactions'], bad['profile']['user_profile'], bad['profile']['gst_data'])
     feats['default_label'] = 1
+    feats['archetype'] = bad['archetype']
     users.append(feats)
 
 df = pd.DataFrame(users)
