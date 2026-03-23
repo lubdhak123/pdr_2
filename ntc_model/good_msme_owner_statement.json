@@ -1,507 +1,593 @@
 {
-    "user_id": "USR_GOOD_MSME_OWNER_522",
-    "account_number": "4542674111",
+    "user_id": "USR_GOOD_MSME_OWNER_351",
+    "account_number": "2210969875",
     "bank": "HDFC BANK",
     "ifsc": "HDFC0000123",
     "currency": "INR",
-    "statement_start": "2025-09-24",
-    "statement_end": "2026-03-09",
-    "total_credits": 795343.45,
-    "total_debits": 197911.81,
-    "transaction_count": 54,
+    "statement_start": "2025-09-12",
+    "statement_end": "2026-03-18",
+    "total_credits": 588861.0,
+    "total_debits": 130271.14,
+    "transaction_count": 61,
     "transactions": [
         {
-            "date": "2025-09-24",
-            "type": "CR",
-            "amount": 22936.91,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 123248.72,
-            "txn_id": "313d3ab0-b268-4c03-94e3-1a95141fe83e"
-        },
-        {
-            "date": "2025-09-26",
-            "type": "CR",
-            "amount": 30201.84,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 100311.82,
-            "txn_id": "73bcae67-2065-41c3-ae30-62e7f17d3c67"
+            "date": "2025-09-12",
+            "type": "DR",
+            "amount": 849.01,
+            "description": "UPI/BILLPAY/BESCOM ELECTRICITY",
+            "category": "UTILITY",
+            "balance": 487996.48,
+            "txn_id": "cd855b06-cd43-4517-a32d-b1cd4b884f17"
         },
         {
             "date": "2025-09-28",
+            "type": "CR",
+            "amount": 14827.49,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 406806.05,
+            "txn_id": "e36b9530-186d-4635-89fa-fca0c82755cd"
+        },
+        {
+            "date": "2025-09-29",
             "type": "DR",
-            "amount": 30000.0,
+            "amount": 10800.0,
             "description": "UPI/RENT/LANDLORD",
             "category": "RENT",
-            "balance": 113684.17,
-            "txn_id": "c88391dc-86c0-4745-bfb0-d61f871ed14a"
+            "balance": 477196.48,
+            "txn_id": "ca6363f4-0f1e-4c28-9050-99b0799ec7e6"
         },
         {
-            "date": "2025-09-28",
+            "date": "2025-10-01",
             "type": "DR",
-            "amount": 979.2,
-            "description": "UPI/NETFLIX",
+            "amount": 7200.0,
+            "description": "ACH/EMI/MUTHOOT FINANCE",
+            "category": "EMI",
+            "balance": 469996.48,
+            "txn_id": "8799f685-bb1c-4d5c-9d05-e35411b9db11"
+        },
+        {
+            "date": "2025-10-08",
+            "type": "DR",
+            "amount": 835.16,
+            "description": "UPI/FLIPKART",
             "category": "LIFESTYLE",
-            "balance": 112704.97,
-            "txn_id": "3c9d4db9-f0d8-405b-9acd-fdd9190e80f4"
+            "balance": 468444.47,
+            "txn_id": "228a8815-626a-4f9a-81c2-ae636ba91da6"
         },
         {
-            "date": "2025-10-02",
-            "type": "CR",
-            "amount": 28924.92,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 45505.11,
-            "txn_id": "33c25624-8a11-4f45-9dde-83cb3f54f3c8"
-        },
-        {
-            "date": "2025-10-03",
+            "date": "2025-10-10",
             "type": "DR",
-            "amount": 2179.11,
-            "description": "UPI/BILLPAY/TNEB WATER",
+            "amount": 2435.84,
+            "description": "UPI/BILLPAY/BESCOM ELECTRICITY",
             "category": "UTILITY",
-            "balance": 143684.17,
-            "txn_id": "f7f63b1d-1cc7-44a9-8e9c-d5a7b92e83de"
+            "balance": 570686.08,
+            "txn_id": "a37802d0-818f-4d12-b647-c73c23726881"
         },
         {
-            "date": "2025-10-17",
+            "date": "2025-10-13",
             "type": "CR",
-            "amount": 24604.87,
+            "amount": 21716.75,
             "description": "IMPS/B2B/VENDOR",
             "category": "INCOME",
-            "balance": 70109.97,
-            "txn_id": "85a6cde3-f131-416e-8103-cabc79ade2da"
+            "balance": 449117.75,
+            "txn_id": "25577ab2-d32b-42d3-95eb-0a82a5f8a3e3"
         },
         {
-            "date": "2025-10-17",
+            "date": "2025-10-16",
+            "type": "CR",
+            "amount": 23731.11,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 488845.49,
+            "txn_id": "1728caaf-647d-4a53-9751-35f226ac766d"
+        },
+        {
+            "date": "2025-10-18",
+            "type": "CR",
+            "amount": 15996.63,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 465114.38,
+            "txn_id": "6657c886-82d1-4877-8b66-9f52ea55d901"
+        },
+        {
+            "date": "2025-10-20",
+            "type": "CR",
+            "amount": 20594.95,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 427401.0,
+            "txn_id": "21afd2eb-5676-4754-8df7-c4dc52ce2ec1"
+        },
+        {
+            "date": "2025-10-21",
             "type": "DR",
-            "amount": 455.37,
+            "amount": 716.85,
             "description": "UPI/ZOMATO",
             "category": "LIFESTYLE",
-            "balance": 112249.61,
-            "txn_id": "876f6ad7-af5b-4af9-8e2e-bc2289231cac"
-        },
-        {
-            "date": "2025-10-19",
-            "type": "CR",
-            "amount": 22614.56,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 145863.28,
-            "txn_id": "240ed9d1-13ed-44a7-9a74-509d0378918c"
-        },
-        {
-            "date": "2025-10-28",
-            "type": "CR",
-            "amount": 19209.04,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 216855.58,
-            "txn_id": "c9ed5b55-4342-4d4d-a1f6-6434174d407a"
-        },
-        {
-            "date": "2025-10-28",
-            "type": "DR",
-            "amount": 30000.0,
-            "description": "UPI/RENT/LANDLORD",
-            "category": "RENT",
-            "balance": 207001.43,
-            "txn_id": "bfba019b-0b75-48d7-97f2-9d22c526d1a0"
+            "balance": 469279.63,
+            "txn_id": "e250913d-4bbf-4e58-99a4-8f3dbb838814"
         },
         {
             "date": "2025-10-29",
             "type": "DR",
-            "amount": 1245.36,
-            "description": "UPI/SWIGGY",
-            "category": "LIFESTYLE",
-            "balance": 204800.62,
-            "txn_id": "9b9b42c5-151c-4de1-ae4e-c3cd762cef7b"
+            "amount": 10800.0,
+            "description": "UPI/RENT/LANDLORD",
+            "category": "RENT",
+            "balance": 559886.08,
+            "txn_id": "bda6911e-ddca-49bd-9639-639f86575f91"
         },
         {
-            "date": "2025-10-30",
-            "type": "CR",
-            "amount": 20977.33,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 237832.91,
-            "txn_id": "1ec3e62f-7f5c-47d8-8886-919676cec6a5"
+            "date": "2025-10-31",
+            "type": "DR",
+            "amount": 7200.0,
+            "description": "ACH/EMI/MUTHOOT FINANCE",
+            "category": "EMI",
+            "balance": 552686.08,
+            "txn_id": "5814f76f-ab30-4541-9cfa-a35e06c77320"
         },
         {
             "date": "2025-11-01",
             "type": "CR",
-            "amount": 30661.07,
+            "amount": 26872.13,
             "description": "IMPS/B2B/VENDOR",
             "category": "INCOME",
-            "balance": 142910.68,
-            "txn_id": "1a5905ab-ad3b-4188-8ba9-50c6f0a1873c"
-        },
-        {
-            "date": "2025-11-02",
-            "type": "DR",
-            "amount": 831.48,
-            "description": "UPI/BILLPAY/JIO PREPAID",
-            "category": "UTILITY",
-            "balance": 237001.43,
-            "txn_id": "6b10da4b-d68c-46a7-a5be-b7aaac9a1dbf"
-        },
-        {
-            "date": "2025-11-06",
-            "type": "CR",
-            "amount": 33577.4,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 176488.07,
-            "txn_id": "4f3def3a-87cc-4023-a57b-4a213bfa2d29"
-        },
-        {
-            "date": "2025-11-06",
-            "type": "CR",
-            "amount": 21158.46,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 197646.54,
-            "txn_id": "64d8f383-a266-4062-b521-8157c551694b"
+            "balance": 522650.94,
+            "txn_id": "c14f0838-8af5-4279-a4ca-b09324fc318e"
         },
         {
             "date": "2025-11-06",
             "type": "DR",
-            "amount": 955.45,
+            "amount": 1220.19,
+            "description": "UPI/STARBUCKS",
+            "category": "LIFESTYLE",
+            "balance": 550220.22,
+            "txn_id": "1ffde935-cc7e-4aa0-a7f7-76c3642643c4"
+        },
+        {
+            "date": "2025-11-08",
+            "type": "CR",
+            "amount": 27334.35,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 495778.82,
+            "txn_id": "e66deb98-3f7b-4613-92ea-bdc2437f6dab"
+        },
+        {
+            "date": "2025-11-08",
+            "type": "CR",
+            "amount": 22509.63,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 558533.46,
+            "txn_id": "ddb2192f-9874-454f-952f-b9ec00f54285"
+        },
+        {
+            "date": "2025-11-10",
+            "type": "CR",
+            "amount": 13372.89,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 536023.84,
+            "txn_id": "3e7a53b4-7c3d-4adc-8640-3c29ed27fcb2"
+        },
+        {
+            "date": "2025-11-10",
+            "type": "DR",
+            "amount": 1245.67,
             "description": "UPI/AMAZON PAY",
             "category": "LIFESTYLE",
-            "balance": 206045.98,
-            "txn_id": "0be28ea5-0898-46ec-8eae-00cd8ecc3a44"
+            "balance": 551440.41,
+            "txn_id": "e212d7cc-2894-4de0-b55e-b7839823c007"
         },
         {
-            "date": "2025-11-26",
+            "date": "2025-11-10",
+            "type": "DR",
+            "amount": 1383.89,
+            "description": "UPI/BILLPAY/JIO PREPAID",
+            "category": "UTILITY",
+            "balance": 652382.16,
+            "txn_id": "a49b24f5-b880-420c-8700-794e16ab61ac"
+        },
+        {
+            "date": "2025-11-13",
             "type": "CR",
-            "amount": 32913.44,
+            "amount": 14588.46,
             "description": "IMPS/B2B/VENDOR",
             "category": "INCOME",
-            "balance": 288764.68,
-            "txn_id": "28d65007-4d86-4980-8a60-090342a1541f"
+            "balance": 573121.92,
+            "txn_id": "2257a282-ad9c-4212-b9fc-35e82449028b"
         },
         {
-            "date": "2025-11-27",
+            "date": "2025-11-24",
+            "type": "CR",
+            "amount": 14637.16,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 564857.38,
+            "txn_id": "1fb127fc-253a-46ef-b3a7-adb9b7e52975"
+        },
+        {
+            "date": "2025-11-28",
             "type": "DR",
-            "amount": 30000.0,
+            "amount": 10800.0,
             "description": "UPI/RENT/LANDLORD",
             "category": "RENT",
-            "balance": 307641.43,
-            "txn_id": "b3b116fd-a93c-44fc-a9bc-3143875975e5"
+            "balance": 641582.16,
+            "txn_id": "e182b73e-731d-43fe-a4db-715e51f7d222"
+        },
+        {
+            "date": "2025-11-30",
+            "type": "CR",
+            "amount": 25441.43,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 590298.81,
+            "txn_id": "18250b7f-7c9e-45a6-99d6-9d3e3f3d82ea"
         },
         {
             "date": "2025-11-30",
             "type": "DR",
-            "amount": 232.32,
-            "description": "UPI/FLIPKART",
-            "category": "LIFESTYLE",
-            "balance": 307409.12,
-            "txn_id": "e6d3cf78-66c2-45f3-87f7-819b6c2dd4c5"
+            "amount": 7200.0,
+            "description": "ACH/EMI/MUTHOOT FINANCE",
+            "category": "EMI",
+            "balance": 634382.16,
+            "txn_id": "d794898d-9c76-4f62-ae08-ff3682289f23"
         },
         {
-            "date": "2025-12-01",
+            "date": "2025-12-08",
+            "type": "DR",
+            "amount": 790.07,
+            "description": "UPI/ZOMATO",
+            "category": "LIFESTYLE",
+            "balance": 632544.59,
+            "txn_id": "f60bdc7a-8c98-4f88-84e6-334ac9463070"
+        },
+        {
+            "date": "2025-12-10",
             "type": "CR",
-            "amount": 26328.76,
+            "amount": 26016.08,
             "description": "IMPS/B2B/VENDOR",
             "category": "INCOME",
-            "balance": 340057.12,
-            "txn_id": "267e561c-1f09-4604-9a6c-834d2f4db5ec"
+            "balance": 653766.05,
+            "txn_id": "33027b79-f264-4de4-928d-7d0279096ab1"
         },
         {
-            "date": "2025-12-02",
+            "date": "2025-12-14",
+            "type": "CR",
+            "amount": 20961.54,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 627749.97,
+            "txn_id": "5c229e90-14e8-452b-96df-423315fe5125"
+        },
+        {
+            "date": "2025-12-14",
             "type": "DR",
-            "amount": 2415.68,
-            "description": "UPI/BILLPAY/INDANE GAS",
+            "amount": 873.36,
+            "description": "UPI/BILLPAY/TNEB WATER",
             "category": "UTILITY",
-            "balance": 337641.43,
-            "txn_id": "41507300-6d3e-43b2-8ba6-e60775ebae0a"
+            "balance": 725157.97,
+            "txn_id": "070f11d7-a700-42d0-8a82-2b0721cca5b5"
         },
         {
-            "date": "2025-12-04",
+            "date": "2025-12-15",
             "type": "CR",
-            "amount": 20965.87,
+            "amount": 16489.61,
             "description": "IMPS/B2B/VENDOR",
             "category": "INCOME",
-            "balance": 255851.25,
-            "txn_id": "235e7f41-9197-4492-ad34-7a67b84c64c1"
-        },
-        {
-            "date": "2025-12-07",
-            "type": "DR",
-            "amount": 1024.17,
-            "description": "UPI/STARBUCKS",
-            "category": "LIFESTYLE",
-            "balance": 306384.95,
-            "txn_id": "34c64697-2377-4174-968a-8d76d020bb0f"
-        },
-        {
-            "date": "2025-12-12",
-            "type": "CR",
-            "amount": 30084.76,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 234885.38,
-            "txn_id": "b478978d-1bda-45c4-909c-48a9afb87ffc"
+            "balance": 606788.42,
+            "txn_id": "6e934a2a-459d-4b20-b147-c4328f83dd44"
         },
         {
             "date": "2025-12-19",
-            "type": "CR",
-            "amount": 24963.67,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 313728.36,
-            "txn_id": "b3cebd3a-1f32-406b-8094-a3b530b2a62f"
-        },
-        {
-            "date": "2025-12-23",
-            "type": "CR",
-            "amount": 25286.71,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 352776.76,
-            "txn_id": "3844e6dc-6e01-46a6-b78d-ff9584d65419"
-        },
-        {
-            "date": "2025-12-25",
-            "type": "CR",
-            "amount": 21105.09,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 327490.04,
-            "txn_id": "6328d3b7-3ae3-4e5c-a67e-2a7a217923b6"
-        },
-        {
-            "date": "2025-12-25",
             "type": "DR",
-            "amount": 1235.86,
-            "description": "UPI/AMAZON PAY",
+            "amount": 1047.51,
+            "description": "UPI/STARBUCKS",
             "category": "LIFESTYLE",
-            "balance": 407853.72,
-            "txn_id": "588f28bf-85ed-4dc4-898a-91f22f574157"
+            "balance": 633334.65,
+            "txn_id": "702931cf-176b-4056-b682-20e290a6280a"
         },
         {
-            "date": "2025-12-27",
+            "date": "2025-12-25",
+            "type": "CR",
+            "amount": 21916.5,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 710838.73,
+            "txn_id": "a10daa7a-4ee5-4b10-8b3f-96a53e628a2b"
+        },
+        {
+            "date": "2025-12-28",
             "type": "DR",
-            "amount": 30000.0,
+            "amount": 10800.0,
             "description": "UPI/RENT/LANDLORD",
             "category": "RENT",
-            "balance": 409089.58,
-            "txn_id": "00e178c1-1347-43d8-9fff-929d6b4b4d3f"
+            "balance": 714357.97,
+            "txn_id": "444c2df9-6427-4c63-9f2a-ea036dff7001"
+        },
+        {
+            "date": "2025-12-28",
+            "type": "DR",
+            "amount": 350.14,
+            "description": "UPI/FLIPKART",
+            "category": "LIFESTYLE",
+            "balance": 706237.7,
+            "txn_id": "a3912ed4-b5d9-46b3-b0e3-0f896163db38"
         },
         {
             "date": "2025-12-29",
-            "type": "DR",
-            "amount": 890.0,
-            "description": "UPI/NETFLIX",
-            "category": "LIFESTYLE",
-            "balance": 406963.71,
-            "txn_id": "392b7104-0f12-4764-98e7-1dc068d68ad4"
-        },
-        {
-            "date": "2026-01-01",
-            "type": "DR",
-            "amount": 633.89,
-            "description": "UPI/BILLPAY/INDANE GAS",
-            "category": "UTILITY",
-            "balance": 439089.58,
-            "txn_id": "be5ed604-2cba-42f2-9edf-3e5dc916f68a"
-        },
-        {
-            "date": "2026-01-11",
             "type": "CR",
-            "amount": 32995.35,
+            "amount": 15192.6,
             "description": "IMPS/B2B/VENDOR",
             "category": "INCOME",
-            "balance": 413712.74,
-            "txn_id": "5f540aee-dfe4-4368-9841-95ac13315988"
+            "balance": 726031.33,
+            "txn_id": "48dff6a4-1036-4e01-89af-fd6d343c0b4e"
+        },
+        {
+            "date": "2025-12-30",
+            "type": "DR",
+            "amount": 7200.0,
+            "description": "ACH/EMI/MUTHOOT FINANCE",
+            "category": "EMI",
+            "balance": 707157.97,
+            "txn_id": "d987e2c6-b2ff-4767-adeb-c9d5276bedc4"
         },
         {
             "date": "2026-01-13",
             "type": "CR",
-            "amount": 26010.72,
+            "amount": 25248.53,
             "description": "IMPS/B2B/VENDOR",
             "category": "INCOME",
-            "balance": 439723.47,
-            "txn_id": "bc730faf-c243-4ca2-82be-57f7950b0043"
+            "balance": 674343.05,
+            "txn_id": "8c3ec0a9-3498-4540-acb7-189c12d8e6c9"
         },
         {
-            "date": "2026-01-18",
+            "date": "2026-01-13",
+            "type": "DR",
+            "amount": 2262.51,
+            "description": "UPI/BILLPAY/TNEB WATER",
+            "category": "UTILITY",
+            "balance": 796273.48,
+            "txn_id": "bfda0cc7-8f89-4de4-baf9-8cd2e9c6fe64"
+        },
+        {
+            "date": "2026-01-16",
             "type": "CR",
-            "amount": 27940.64,
+            "amount": 14579.17,
             "description": "IMPS/B2B/VENDOR",
             "category": "INCOME",
-            "balance": 380717.4,
-            "txn_id": "8cff8453-4783-4392-a2a8-5c07e785901b"
+            "balance": 688922.23,
+            "txn_id": "9f5ed32d-ec32-49b6-8452-64c79f56e8cb"
+        },
+        {
+            "date": "2026-01-17",
+            "type": "DR",
+            "amount": 570.14,
+            "description": "UPI/FLIPKART",
+            "category": "LIFESTYLE",
+            "balance": 706587.84,
+            "txn_id": "ec01c545-ef5b-45d6-9d71-a51774e44fbf"
+        },
+        {
+            "date": "2026-01-19",
+            "type": "CR",
+            "amount": 16549.94,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 649094.52,
+            "txn_id": "2e32852b-5adb-40da-ad9f-516803e7257c"
+        },
+        {
+            "date": "2026-01-23",
+            "type": "CR",
+            "amount": 13830.93,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 720068.63,
+            "txn_id": "8330b3de-a064-486d-a4ab-2dcf132a6576"
         },
         {
             "date": "2026-01-24",
-            "type": "DR",
-            "amount": 286.53,
-            "description": "UPI/AMAZON PAY",
-            "category": "LIFESTYLE",
-            "balance": 516420.8,
-            "txn_id": "4cf081b6-ec63-4ac1-8b6d-417f85e01ca1"
-        },
-        {
-            "date": "2026-01-25",
             "type": "CR",
-            "amount": 25388.23,
+            "amount": 21867.16,
             "description": "IMPS/B2B/VENDOR",
             "category": "INCOME",
-            "balance": 517027.4,
-            "txn_id": "e71e740a-e8f3-4b5a-830c-87de76f78633"
+            "balance": 757555.41,
+            "txn_id": "029657e0-69b2-4613-b258-36750e77c63a"
         },
         {
-            "date": "2026-01-26",
+            "date": "2026-01-27",
             "type": "DR",
-            "amount": 30000.0,
+            "amount": 10800.0,
             "description": "UPI/RENT/LANDLORD",
             "category": "RENT",
-            "balance": 517968.86,
-            "txn_id": "aa846733-af16-4b6b-8659-f896c40882de"
-        },
-        {
-            "date": "2026-01-28",
-            "type": "DR",
-            "amount": 1261.54,
-            "description": "UPI/STARBUCKS",
-            "category": "LIFESTYLE",
-            "balance": 516707.32,
-            "txn_id": "ff462d76-ca13-45c2-a671-33b8149e8ac9"
+            "balance": 785473.48,
+            "txn_id": "f1c46f55-2725-4ac8-87ca-4664d011e3ad"
         },
         {
             "date": "2026-01-29",
-            "type": "CR",
-            "amount": 28046.61,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 467026.41,
-            "txn_id": "42a8749b-9116-44cd-9ea8-4c7a37820a6e"
-        },
-        {
-            "date": "2026-01-31",
             "type": "DR",
-            "amount": 1070.9,
-            "description": "UPI/BILLPAY/JIO PREPAID",
-            "category": "UTILITY",
-            "balance": 547968.86,
-            "txn_id": "d737528f-8900-43d9-ba7b-995c69ee1418"
+            "amount": 7200.0,
+            "description": "ACH/EMI/MUTHOOT FINANCE",
+            "category": "EMI",
+            "balance": 778273.48,
+            "txn_id": "d90a4969-1aed-43d2-be54-ed19b4d737c3"
         },
         {
             "date": "2026-02-02",
             "type": "CR",
-            "amount": 24612.76,
+            "amount": 17769.87,
             "description": "IMPS/B2B/VENDOR",
             "category": "INCOME",
-            "balance": 491639.17,
-            "txn_id": "7d17c04c-f7cb-4dbf-a797-a44050ce950e"
+            "balance": 798535.99,
+            "txn_id": "7cf627d8-403a-43bd-b1a6-e2f9108c6298"
         },
         {
-            "date": "2026-02-07",
-            "type": "CR",
-            "amount": 32016.08,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 438979.8,
-            "txn_id": "aa41acf2-e316-455d-b3f3-01ac289418fd"
-        },
-        {
-            "date": "2026-02-08",
-            "type": "CR",
-            "amount": 32012.36,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 549039.76,
-            "txn_id": "be724d0b-8e04-4b3d-ac46-bc75270caff4"
-        },
-        {
-            "date": "2026-02-21",
+            "date": "2026-02-03",
             "type": "DR",
-            "amount": 427.03,
-            "description": "UPI/NETFLIX",
-            "category": "LIFESTYLE",
-            "balance": 614980.33,
-            "txn_id": "6922271e-9679-435b-8a06-752e55271af0"
+            "amount": 2250.0,
+            "description": "ATM CASH WITHDRAWAL/SBI",
+            "category": "CASH_WITHDRAWAL",
+            "balance": 776023.48,
+            "txn_id": "1154892b-3132-4205-b48c-afe0ef4be12d"
         },
         {
-            "date": "2026-02-22",
+            "date": "2026-02-09",
             "type": "DR",
-            "amount": 968.49,
+            "amount": 524.2,
             "description": "UPI/FLIPKART",
             "category": "LIFESTYLE",
-            "balance": 614011.84,
-            "txn_id": "c0b9d200-ad4b-4aab-98cb-00a682dfab45"
+            "balance": 775063.33,
+            "txn_id": "8edd8724-31f5-4368-b70c-63f6678428b4"
         },
         {
-            "date": "2026-02-25",
+            "date": "2026-02-13",
             "type": "CR",
-            "amount": 23270.8,
+            "amount": 23210.72,
             "description": "IMPS/B2B/VENDOR",
             "category": "INCOME",
-            "balance": 646226.8,
-            "txn_id": "0b93c25d-8aa2-4f1c-a15e-1bcc613ad57b"
+            "balance": 780766.13,
+            "txn_id": "c344ab8c-2f6d-4d3b-a250-7379f6889845"
         },
         {
-            "date": "2026-02-25",
+            "date": "2026-02-14",
+            "type": "CR",
+            "amount": 15619.62,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 735688.25,
+            "txn_id": "c2ac2075-49de-49a9-a307-406858430430"
+        },
+        {
+            "date": "2026-02-14",
             "type": "DR",
-            "amount": 30000.0,
+            "amount": 2202.79,
+            "description": "UPI/BILLPAY/TNEB WATER",
+            "category": "UTILITY",
+            "balance": 870846.29,
+            "txn_id": "9c33a082-1ac9-4d1a-b267-94e4a5dc96ec"
+        },
+        {
+            "date": "2026-02-16",
+            "type": "DR",
+            "amount": 435.95,
+            "description": "UPI/ZOMATO",
+            "category": "LIFESTYLE",
+            "balance": 775587.54,
+            "txn_id": "8fce7633-7692-4a90-9696-71178e37d78e"
+        },
+        {
+            "date": "2026-02-23",
+            "type": "CR",
+            "amount": 18604.21,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 812911.48,
+            "txn_id": "303ddbbc-3b44-4278-9bdb-8c7e19850803"
+        },
+        {
+            "date": "2026-02-24",
+            "type": "CR",
+            "amount": 25501.88,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 859269.65,
+            "txn_id": "06b80d99-a63e-43af-a0cb-50752dd3f256"
+        },
+        {
+            "date": "2026-02-26",
+            "type": "DR",
+            "amount": 10800.0,
             "description": "UPI/RENT/LANDLORD",
             "category": "RENT",
-            "balance": 615407.36,
-            "txn_id": "cc38b87c-efa9-4efe-92eb-7a4fef2891e6"
+            "balance": 860046.29,
+            "txn_id": "92229a45-a47e-4751-803a-617114b4f4b0"
         },
         {
-            "date": "2026-03-01",
-            "type": "CR",
-            "amount": 31369.96,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 568983.36,
-            "txn_id": "6ec3bd9c-8b17-4f6d-8074-d691d423e643"
-        },
-        {
-            "date": "2026-03-01",
-            "type": "CR",
-            "amount": 21158.08,
-            "description": "IMPS/B2B/VENDOR",
-            "category": "INCOME",
-            "balance": 590141.44,
-            "txn_id": "f8dc7d01-7ea1-4218-ac41-a80f71cf05e0"
-        },
-        {
-            "date": "2026-03-02",
+            "date": "2026-02-28",
             "type": "DR",
-            "amount": 819.43,
-            "description": "UPI/BILLPAY/INDANE GAS",
-            "category": "UTILITY",
-            "balance": 645407.36,
-            "txn_id": "2b30ad2d-28e7-4380-bba5-576a3981d2c1"
+            "amount": 7200.0,
+            "description": "ACH/EMI/MUTHOOT FINANCE",
+            "category": "EMI",
+            "balance": 852846.29,
+            "txn_id": "2337f42c-44c3-4784-8b1d-567de665afab"
         },
         {
-            "date": "2026-03-09",
+            "date": "2026-03-01",
             "type": "CR",
-            "amount": 21192.6,
+            "amount": 19243.94,
             "description": "IMPS/B2B/VENDOR",
             "category": "INCOME",
-            "balance": 537613.4,
-            "txn_id": "0ae50679-2f31-4566-bb05-e454cf6bd351"
+            "balance": 794307.27,
+            "txn_id": "6fa669ff-1cf6-4bbb-8cae-eec2ee7d26ce"
         },
         {
-            "date": "2026-03-09",
+            "date": "2026-03-04",
             "type": "CR",
-            "amount": 32814.56,
+            "amount": 13779.43,
             "description": "IMPS/B2B/VENDOR",
             "category": "INCOME",
-            "balance": 622955.99,
-            "txn_id": "47febdeb-e7c4-41a0-8154-1d806bc0dde2"
+            "balance": 873049.08,
+            "txn_id": "04d72487-1f7c-4e59-bc4a-eb5aa52ae71e"
+        },
+        {
+            "date": "2026-03-15",
+            "type": "DR",
+            "amount": 1035.23,
+            "description": "UPI/FLIPKART",
+            "category": "LIFESTYLE",
+            "balance": 850568.43,
+            "txn_id": "50670688-ec5a-4184-b14a-987a6a1ffc02"
+        },
+        {
+            "date": "2026-03-18",
+            "type": "CR",
+            "amount": 20856.29,
+            "description": "IMPS/B2B/VENDOR",
+            "category": "INCOME",
+            "balance": 833767.78,
+            "txn_id": "38f1e2c6-6d29-4d68-bfcd-ebe1795c5ba4"
+        },
+        {
+            "date": "2026-03-18",
+            "type": "DR",
+            "amount": 1242.63,
+            "description": "UPI/FLIPKART",
+            "category": "LIFESTYLE",
+            "balance": 851603.66,
+            "txn_id": "aa41d834-55de-4efd-ae38-4e59283c6a07"
         }
     ],
     "_test_expected_features": {
-        "utility_payment_consistency": 1.0,
+        "utility_payment_consistency": 0.92,
+        "avg_utility_dpd": 2.0,
         "bounced_transaction_count": 0,
-        "emergency_buffer_months": 4.0,
-        "cash_withdrawal_dependency": 0.1
+        "rent_wallet_share": 0.2,
+        "emergency_buffer_months": 7.0,
+        "eod_balance_volatility": 0.1,
+        "cash_withdrawal_dependency": 0.08,
+        "min_balance_violation_count": 0,
+        "telecom_recharge_drop_ratio": 0.06
     },
-    "_profile_description": "Solid MSME proprietor with high corporate inflows and stable operations."
+    "_profile_description": "Solid MSME proprietor with high corporate inflows and stable operations.",
+    "applicant_metadata": {
+        "applicant_age_years": 40,
+        "academic_background_tier": 4,
+        "id_document_age_years": 6.0,
+        "employment_vintage_days": 4380,
+        "owns_property": 1,
+        "owns_car": 1,
+        "region_risk_tier": 2,
+        "region_city_risk_score": 2,
+        "address_stability_years": 8.0,
+        "family_burden_ratio": 0.15,
+        "family_status_stability_score": 1,
+        "contactability_score": 4,
+        "income_type_risk_score": 1,
+        "address_work_mismatch": 0,
+        "car_age_years": 5,
+        "has_email_flag": 1
+    }
 }

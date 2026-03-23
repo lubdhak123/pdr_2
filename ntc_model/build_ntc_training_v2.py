@@ -170,51 +170,102 @@ def build_training_data():
     
     demo_df = demo_df.reset_index(drop=True)
     
-    logger.info("Part 2: Generating behavioral features independently...")
+    logger.info("Part 2: Computing demographic risk score...")
 
     rng = np.random.default_rng(RANDOM_SEED)
     n = N_SAMPLES
 
-    is_bad = rng.random(n) < TARGET_DEFAULT_RATE
-    boundary_noise = rng.normal(0, 0.12, n)  # significant overlap
+    # ── DEMOGRAPHIC RISK SCORE ──────────────────────────────────
+    # Instead of a random coin flip, compute risk from real demographics.
+    # A stable pensioner with property → low risk → good behavioral means.
+    # A young unstable person → high risk → bad behavioral means.
+
+    age_risk = np.clip((35 - demo_df["applicant_age_years"]) / 30, 0, 1)
+    emp_risk = np.clip(1 - demo_df["employment_vintage_days"] / 3650, 0, 1)
+    prop_risk = (1 - demo_df["owns_property"]).astype(float)
+    edu_risk = np.clip(1 - (demo_df["academic_background_tier"] - 1) / 4, 0, 1)
+    income_risk = np.clip(demo_df["income_type_risk_score"] / 5, 0, 1)
+    family_risk = demo_df["family_burden_ratio"].clip(0, 1)
+    addr_risk = np.clip(1 - demo_df["address_stability_years"] / 15, 0, 1)
+    contact_risk = np.clip(1 - demo_df["contactability_score"] / 4, 0, 1)
+    region_risk = np.clip((demo_df["region_risk_tier"] - 1) / 2, 0, 1)
+
+    demo_risk = (
+        0.20 * emp_risk +
+        0.15 * age_risk +
+        0.15 * prop_risk +
+        0.12 * income_risk +
+        0.10 * edu_risk +
+        0.10 * addr_risk +
+        0.08 * family_risk +
+        0.05 * contact_risk +
+        0.05 * region_risk
+    ).values
+
+    # Add noise so demographics aren't perfectly deterministic
+    demo_risk = np.clip(demo_risk + rng.normal(0, 0.08, n), 0.02, 0.98)
+
+    logger.info(f"Demographic risk score: mean={demo_risk.mean():.3f}, "
+                f"std={demo_risk.std():.3f}, "
+                f"range=[{demo_risk.min():.3f}, {demo_risk.max():.3f}]")
+
+    # ── BEHAVIORAL FEATURES DRIVEN BY DEMO RISK ────────────────
+    # Each feature's mean is a function of demo_risk.
+    # risk=0 → good mean, risk=1 → bad mean.
+    # The std creates realistic overlap so the model has to learn patterns.
+
     behav_df = pd.DataFrame()
 
-    # Good=0.72 vs Bad=0.55 (gap=0.17)
-    val = np.where(is_bad, rng.normal(0.55, 0.18, n), rng.normal(0.72, 0.15, n))
-    behav_df["utility_payment_consistency"] = np.clip(val + boundary_noise * 0.20, 0, 1).round(4)
+    # utility_payment_consistency: good=0.85, bad=0.42
+    mean = 0.85 - demo_risk * 0.43
+    val = rng.normal(mean, 0.10)
+    behav_df["utility_payment_consistency"] = np.clip(val, 0, 1).round(4)
 
-    val = np.where(is_bad, rng.normal(10.0, 6.0, n), rng.normal(5.0, 4.0, n))
+    # avg_utility_dpd: good=4, bad=14
+    mean = 4.0 + demo_risk * 10.0
+    val = rng.normal(mean, 4.0)
     behav_df["avg_utility_dpd"] = np.clip(val, 0, 90).round(2)
 
-    # Good=0.30 vs Bad=0.45 (gap=0.15)
-    val = np.where(is_bad, rng.normal(0.45, 0.14, n), rng.normal(0.30, 0.12, n))
-    behav_df["rent_wallet_share"] = np.clip(val + boundary_noise * 0.08, 0, 1).round(4)
+    # rent_wallet_share: good=0.22, bad=0.52
+    mean = 0.22 + demo_risk * 0.30
+    val = rng.normal(mean, 0.10)
+    behav_df["rent_wallet_share"] = np.clip(val, 0, 1).round(4)
 
     behav_df["subscription_commitment_ratio"] = (behav_df["rent_wallet_share"] * 0.3).clip(0, 1).round(4)
 
-    # Good=3.5 vs Bad=1.5 (gap=2.0)
-    val = np.where(is_bad, rng.normal(1.5, 1.2, n), rng.normal(3.5, 2.0, n))
+    # emergency_buffer_months: good=4.5, bad=0.8
+    mean = 4.5 - demo_risk * 3.7
+    val = rng.normal(mean, 1.3)
     behav_df["emergency_buffer_months"] = np.clip(val, 0, 24).round(2)
 
-    # Good=0.25 vs Bad=0.45 (gap=0.20)
-    val = np.where(is_bad, rng.normal(0.45, 0.16, n), rng.normal(0.25, 0.12, n))
-    behav_df["eod_balance_volatility"] = np.clip(val + boundary_noise * 0.15, 0, 1).round(4)
+    # eod_balance_volatility: good=0.20, bad=0.55
+    mean = 0.20 + demo_risk * 0.35
+    val = rng.normal(mean, 0.10)
+    behav_df["eod_balance_volatility"] = np.clip(val, 0, 1).round(4)
 
-    val = np.where(is_bad, rng.normal(0.50, 0.15, n), rng.normal(0.68, 0.12, n))
+    # essential_vs_lifestyle_ratio: good=0.72, bad=0.48
+    mean = 0.72 - demo_risk * 0.24
+    val = rng.normal(mean, 0.12)
     behav_df["essential_vs_lifestyle_ratio"] = np.clip(val, 0, 1).round(4)
 
-    # Good=0.18 vs Bad=0.35 (gap=0.17)
-    val = np.where(is_bad, rng.normal(0.35, 0.15, n), rng.normal(0.18, 0.10, n))
-    behav_df["cash_withdrawal_dependency"] = np.clip(val + boundary_noise * 0.08, 0, 1).round(4)
+    # cash_withdrawal_dependency: good=0.10, bad=0.45
+    mean = 0.10 + demo_risk * 0.35
+    val = rng.normal(mean, 0.10)
+    behav_df["cash_withdrawal_dependency"] = np.clip(val, 0, 1).round(4)
 
-    # Good=0.8 vs Bad=2.5 (gap=1.7)
-    val = np.where(is_bad, rng.normal(2.5, 1.8, n), rng.normal(0.8, 1.0, n))
+    # bounced_transaction_count: good=0.3, bad=3.5
+    mean = 0.3 + demo_risk * 3.2
+    val = rng.normal(mean, 1.0)
     behav_df["bounced_transaction_count"] = np.clip(val, 0, 10).round(0).astype(int)
 
-    val = np.where(is_bad, rng.normal(0.32, 0.15, n), rng.normal(0.15, 0.10, n))
+    # telecom_recharge_drop_ratio: good=0.12, bad=0.35
+    mean = 0.12 + demo_risk * 0.23
+    val = rng.normal(mean, 0.10)
     behav_df["telecom_recharge_drop_ratio"] = np.clip(val, 0, 1).round(4)
 
-    val = np.where(is_bad, rng.normal(2.5, 1.6, n), rng.normal(0.8, 0.8, n))
+    # min_balance_violation_count: good=0.5, bad=3.0
+    mean = 0.5 + demo_risk * 2.5
+    val = rng.normal(mean, 1.0)
     behav_df["min_balance_violation_count"] = np.clip(val, 0, 8).round(0).astype(int)
 
     behav_df = behav_df.reset_index(drop=True)
@@ -232,16 +283,27 @@ def build_training_data():
         ((df_merged["applicant_age_years"] - 18) * 365).clip(lower=1)
     ).clip(0, 1).round(4)
 
-    logger.info("Part 4: Assigning TARGET from behavior only...")
+    logger.info("Part 4: Assigning TARGET from demographics + behavior...")
 
-    default_score = (
+    # Behavioral component (what they actually did)
+    behavioral_score = (
         (1 - df_merged["utility_payment_consistency"]) * 0.28
         + df_merged["eod_balance_volatility"]           * 0.22
         + (df_merged["bounced_transaction_count"] / 10) * 0.20
         + df_merged["rent_wallet_share"].clip(0, 1)     * 0.15
         + df_merged["cash_withdrawal_dependency"]        * 0.10
         + (df_merged["min_balance_violation_count"] / 8)* 0.05
-    ) + rng.normal(0, 0.06, N_SAMPLES)
+    )
+
+    # Blend: 70% behavior + 30% demographics + small noise
+    # A pensioner with demo_risk=0.05 now needs EXTREME behavioral bad luck
+    # to cross the threshold. A risky person at demo_risk=0.90 can't escape
+    # with just behavioral good luck.
+    default_score = (
+        0.70 * behavioral_score +
+        0.30 * demo_risk +
+        rng.normal(0, 0.04, N_SAMPLES)  # reduced noise since demo already anchors
+    )
 
     threshold = np.percentile(default_score, 75)
     df_merged["TARGET"] = (default_score >= threshold).astype(int)
@@ -279,11 +341,15 @@ def build_training_data():
     logger.info("\nDemographic correlation with TARGET:")
     logger.info("\n" + demo_corr.round(4).to_string())
 
-    high_corr = demo_corr[demo_corr > 0.15]
+    high_corr = demo_corr[demo_corr > 0.35]
     if len(high_corr) > 0:
-        logger.warning(f"Demographics correlating with TARGET > 0.15:\n{high_corr.to_string()}\nExpected: all below 0.15 for independence")
+        logger.warning(f"Demographics correlating with TARGET > 0.35 (too strong, risk of leakage):\n{high_corr.to_string()}")
+    
+    low_corr = demo_corr[demo_corr < 0.03]
+    if len(low_corr) > 0:
+        logger.warning(f"Demographics with near-zero TARGET correlation (should contribute):\n{low_corr.to_string()}")
     else:
-        logger.info("Demographics independent of TARGET ✅ (all correlations < 0.15)")
+        logger.info("Demographics moderately correlated with TARGET ✅ (all > 0.03, demographics are contributing)")
 
     behav_corr = (df_merged[behav_cols + ["TARGET"]].corr()["TARGET"].drop("TARGET").abs().sort_values(ascending=False))
     logger.info("\nBehavioral correlation with TARGET:")

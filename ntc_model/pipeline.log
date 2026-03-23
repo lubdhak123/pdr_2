@@ -680,3 +680,762 @@
 11:56:04 | INFO | Computing global SHAP feature importances...
 11:56:04 | INFO | 
 - Step 14: Print final summary
+17:06:35 | INFO | 
+==================================================
+17:06:35 | INFO | * STARTING NTC FULL PIPELINE BUILD
+17:06:35 | INFO | ==================================================
+17:06:35 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+17:10:45 | INFO | 
+==================================================
+17:10:45 | INFO | * STARTING NTC FULL PIPELINE BUILD
+17:10:45 | INFO | ==================================================
+17:10:45 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+17:10:45 | INFO | 
+- Step 4: split_data()
+17:10:45 | INFO | Splitting dataset into train/val/test using configured ratios...
+17:10:45 | INFO | Train size: 17500 (70.0%)
+17:10:45 | INFO | Val size:   3750 (15.0%)
+17:10:45 | INFO | Test size:  3750 (15.0%)
+17:10:45 | INFO | Stratified Default Rates -> Train: 0.2500, Val: 0.2501, Test: 0.2499
+17:10:45 | INFO | 
+- Step 5: Cache X_test + y_test to models/X_test.parquet
+17:10:45 | INFO | 
+- Step 6: build_preprocessor()
+17:10:45 | INFO | Building ColumnTransformer preprocessor pipeline...
+17:10:45 | INFO | 
+- Step 7: fit_and_transform()
+17:10:45 | INFO | Fitting preprocessor on training data ONLY...
+17:10:45 | INFO | Transforming validation and test validation datasets...
+17:10:45 | INFO | 
+- Step 8: save_preprocessor()
+17:10:45 | INFO | Saving preprocessor to models/ntc_preprocessor.pkl...
+17:10:45 | INFO | 
+- Step 9: train_xgboost()
+17:10:45 | INFO | Initializing XGBoost Training...
+17:10:45 | INFO | Computed scale_pos_weight: 3.0000 (Class 0: 13125 / Class 1: 4375)
+17:10:45 | INFO | Fitting XGBClassifier...
+17:10:46 | INFO | Training complete! Best iteration: 64
+17:10:46 | INFO | Validation AUC (raw uncalibrated XGBoost): 0.9686
+17:10:46 | INFO | 
+- Step 10: calibrate_model() using X_val ONLY
+17:10:46 | INFO | Starting model calibration using sigmoid (Platt Scaling) fitted strictly on Val set...
+17:10:46 | INFO | AUC Shift -> Raw: 0.9686 | Calibrated: 0.9686
+17:10:46 | INFO | Prob Range Shift -> Raw: [0.0208, 0.9726] | Cal: [0.0094, 0.9117]
+17:10:46 | INFO | Checking decile-level calibration quality...
+17:10:46 | INFO | Calibration quality check passed (Max error = 0.0936 <= 0.10 limit).
+17:10:46 | INFO | 
+- Step 11: save_model()
+17:10:46 | INFO | Saving final calibrated model to models/ntc_credit_model.pkl...
+17:10:46 | INFO | 
+- Step 12: evaluate_model() on X_test
+17:10:46 | INFO | Evaluating calibrated model heavily on Test Set...
+17:10:46 | INFO | ROC AUC: 0.9688
+17:10:46 | INFO | Gini Coefficient: 0.9376
+17:10:46 | INFO | Average Precision (PR-AUC): 0.9150
+17:10:46 | INFO | Brier Score (Calibration error): 0.0585
+17:10:46 | INFO | KS Statistic: 0.8193
+17:10:46 | INFO | KS Statistic condition: Excellent (0.8193 >= 0.40). Strong class separation.
+17:10:46 | INFO | Computing Business Decision Bands...
+17:10:47 | INFO | 
+- Step 13: compute_global_shap()
+17:10:47 | INFO | Computing global SHAP feature importances...
+17:10:47 | INFO | 
+- Step 14: Print final summary
+17:21:26 | INFO | 
+==================================================
+17:21:26 | INFO | * STARTING NTC FULL PIPELINE BUILD
+17:21:26 | INFO | ==================================================
+17:21:26 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+17:21:26 | INFO | 
+- Step 4: split_data()
+17:21:26 | INFO | Splitting dataset into train/val/test using configured ratios...
+17:21:26 | INFO | Train size: 17500 (70.0%)
+17:21:26 | INFO | Val size:   3750 (15.0%)
+17:21:26 | INFO | Test size:  3750 (15.0%)
+17:21:26 | INFO | Stratified Default Rates -> Train: 0.2500, Val: 0.2501, Test: 0.2499
+17:21:26 | INFO | 
+- Step 5: Cache X_test + y_test to models/X_test.parquet
+17:21:27 | INFO | 
+- Step 6: build_preprocessor()
+17:21:27 | INFO | Building ColumnTransformer preprocessor pipeline...
+17:21:27 | INFO | 
+- Step 7: fit_and_transform()
+17:21:27 | INFO | Fitting preprocessor on training data ONLY...
+17:21:27 | INFO | Transforming validation and test validation datasets...
+17:21:27 | INFO | 
+- Step 8: save_preprocessor()
+17:21:27 | INFO | Saving preprocessor to models/ntc_preprocessor.pkl...
+17:21:27 | INFO | 
+- Step 9: train_xgboost()
+17:21:27 | INFO | Initializing XGBoost Training...
+17:21:27 | INFO | Computed scale_pos_weight: 3.0000 (Class 0: 13125 / Class 1: 4375)
+17:21:27 | INFO | Fitting XGBClassifier...
+17:21:27 | INFO | Training complete! Best iteration: 119
+17:21:27 | INFO | Validation AUC (raw uncalibrated XGBoost): 0.8914
+17:21:27 | INFO | 
+- Step 10: calibrate_model() using X_val ONLY
+17:21:27 | INFO | Starting model calibration using sigmoid (Platt Scaling) fitted strictly on Val set...
+17:21:27 | INFO | AUC Shift -> Raw: 0.8914 | Calibrated: 0.8914
+17:21:27 | INFO | Prob Range Shift -> Raw: [0.0050, 0.9935] | Cal: [0.0216, 0.8152]
+17:21:27 | INFO | Checking decile-level calibration quality...
+17:21:27 | INFO | Calibration quality check passed (Max error = 0.0926 <= 0.10 limit).
+17:21:27 | INFO | 
+- Step 11: save_model()
+17:21:27 | INFO | Saving final calibrated model to models/ntc_credit_model.pkl...
+17:21:27 | INFO | 
+- Step 12: evaluate_model() on X_test
+17:21:27 | INFO | Evaluating calibrated model heavily on Test Set...
+17:21:27 | INFO | ROC AUC: 0.9037
+17:21:27 | INFO | Gini Coefficient: 0.8075
+17:21:27 | INFO | Average Precision (PR-AUC): 0.7455
+17:21:27 | INFO | Brier Score (Calibration error): 0.1076
+17:21:27 | INFO | KS Statistic: 0.6740
+17:21:27 | INFO | KS Statistic condition: Excellent (0.6740 >= 0.40). Strong class separation.
+17:21:27 | INFO | Computing Business Decision Bands...
+17:21:28 | INFO | 
+- Step 13: compute_global_shap()
+17:21:28 | INFO | Computing global SHAP feature importances...
+17:21:28 | INFO | 
+- Step 14: Print final summary
+17:27:11 | INFO | 
+==================================================
+17:27:11 | INFO | * STARTING NTC FULL PIPELINE BUILD
+17:27:11 | INFO | ==================================================
+17:27:11 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+17:27:11 | INFO | 
+- Step 4: split_data()
+17:27:11 | INFO | Splitting dataset into train/val/test using configured ratios...
+17:27:11 | INFO | Train size: 17500 (70.0%)
+17:27:11 | INFO | Val size:   3750 (15.0%)
+17:27:11 | INFO | Test size:  3750 (15.0%)
+17:27:11 | INFO | Stratified Default Rates -> Train: 0.2500, Val: 0.2501, Test: 0.2499
+17:27:11 | INFO | 
+- Step 5: Cache X_test + y_test to models/X_test.parquet
+17:27:11 | INFO | 
+- Step 6: build_preprocessor()
+17:27:11 | INFO | Building ColumnTransformer preprocessor pipeline...
+17:27:11 | INFO | 
+- Step 7: fit_and_transform()
+17:27:11 | INFO | Fitting preprocessor on training data ONLY...
+17:27:11 | INFO | Transforming validation and test validation datasets...
+17:27:11 | INFO | 
+- Step 8: save_preprocessor()
+17:27:11 | INFO | Saving preprocessor to models/ntc_preprocessor.pkl...
+17:27:11 | INFO | 
+- Step 9: train_xgboost()
+17:27:11 | INFO | Initializing XGBoost Training...
+17:27:11 | INFO | Computed scale_pos_weight: 3.0000 (Class 0: 13125 / Class 1: 4375)
+17:27:11 | INFO | Fitting XGBClassifier...
+17:27:11 | INFO | Training complete! Best iteration: 70
+17:27:11 | INFO | Validation AUC (raw uncalibrated XGBoost): 0.9678
+17:27:11 | INFO | 
+- Step 10: calibrate_model() using X_val ONLY
+17:27:11 | INFO | Starting model calibration using sigmoid (Platt Scaling) fitted strictly on Val set...
+17:27:12 | INFO | AUC Shift -> Raw: 0.9678 | Calibrated: 0.9678
+17:27:12 | INFO | Prob Range Shift -> Raw: [0.0171, 0.9826] | Cal: [0.0075, 0.9363]
+17:27:12 | INFO | Checking decile-level calibration quality...
+17:27:12 | INFO | Calibration quality check passed (Max error = 0.0726 <= 0.10 limit).
+17:27:12 | INFO | 
+- Step 11: save_model()
+17:27:12 | INFO | Saving final calibrated model to models/ntc_credit_model.pkl...
+17:27:12 | INFO | 
+- Step 12: evaluate_model() on X_test
+17:27:12 | INFO | Evaluating calibrated model heavily on Test Set...
+17:27:12 | INFO | ROC AUC: 0.9613
+17:27:12 | INFO | Gini Coefficient: 0.9225
+17:27:12 | INFO | Average Precision (PR-AUC): 0.9084
+17:27:12 | INFO | Brier Score (Calibration error): 0.0642
+17:27:12 | INFO | KS Statistic: 0.7881
+17:27:12 | INFO | KS Statistic condition: Excellent (0.7881 >= 0.40). Strong class separation.
+17:27:12 | INFO | Computing Business Decision Bands...
+17:27:12 | INFO | 
+- Step 13: compute_global_shap()
+17:27:12 | INFO | Computing global SHAP feature importances...
+17:27:13 | INFO | 
+- Step 14: Print final summary
+17:27:30 | INFO | 
+==================================================
+17:27:30 | INFO | * STARTING NTC FULL PIPELINE BUILD
+17:27:30 | INFO | ==================================================
+17:27:30 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+17:27:30 | INFO | 
+- Step 4: split_data()
+17:27:30 | INFO | Splitting dataset into train/val/test using configured ratios...
+17:27:30 | INFO | Train size: 17500 (70.0%)
+17:27:30 | INFO | Val size:   3750 (15.0%)
+17:27:30 | INFO | Test size:  3750 (15.0%)
+17:27:30 | INFO | Stratified Default Rates -> Train: 0.2500, Val: 0.2501, Test: 0.2499
+17:27:30 | INFO | 
+- Step 5: Cache X_test + y_test to models/X_test.parquet
+17:27:30 | INFO | 
+- Step 6: build_preprocessor()
+17:27:30 | INFO | Building ColumnTransformer preprocessor pipeline...
+17:27:30 | INFO | 
+- Step 7: fit_and_transform()
+17:27:30 | INFO | Fitting preprocessor on training data ONLY...
+17:27:30 | INFO | Transforming validation and test validation datasets...
+17:27:30 | INFO | 
+- Step 8: save_preprocessor()
+17:27:30 | INFO | Saving preprocessor to models/ntc_preprocessor.pkl...
+17:27:30 | INFO | 
+- Step 9: train_xgboost()
+17:27:30 | INFO | Initializing XGBoost Training...
+17:27:30 | INFO | Computed scale_pos_weight: 3.0000 (Class 0: 13125 / Class 1: 4375)
+17:27:30 | INFO | Fitting XGBClassifier...
+17:27:30 | INFO | Training complete! Best iteration: 70
+17:27:30 | INFO | Validation AUC (raw uncalibrated XGBoost): 0.9678
+17:27:30 | INFO | 
+- Step 10: calibrate_model() using X_val ONLY
+17:27:30 | INFO | Starting model calibration using sigmoid (Platt Scaling) fitted strictly on Val set...
+17:27:30 | INFO | AUC Shift -> Raw: 0.9678 | Calibrated: 0.9678
+17:27:30 | INFO | Prob Range Shift -> Raw: [0.0171, 0.9826] | Cal: [0.0075, 0.9363]
+17:27:30 | INFO | Checking decile-level calibration quality...
+17:27:30 | INFO | Calibration quality check passed (Max error = 0.0726 <= 0.10 limit).
+17:27:30 | INFO | 
+- Step 11: save_model()
+17:27:30 | INFO | Saving final calibrated model to models/ntc_credit_model.pkl...
+17:27:30 | INFO | 
+- Step 12: evaluate_model() on X_test
+17:27:30 | INFO | Evaluating calibrated model heavily on Test Set...
+17:27:30 | INFO | ROC AUC: 0.9613
+17:27:30 | INFO | Gini Coefficient: 0.9225
+17:27:30 | INFO | Average Precision (PR-AUC): 0.9084
+17:27:30 | INFO | Brier Score (Calibration error): 0.0642
+17:27:30 | INFO | KS Statistic: 0.7881
+17:27:30 | INFO | KS Statistic condition: Excellent (0.7881 >= 0.40). Strong class separation.
+17:27:30 | INFO | Computing Business Decision Bands...
+17:27:31 | INFO | 
+- Step 13: compute_global_shap()
+17:27:31 | INFO | Computing global SHAP feature importances...
+17:27:31 | INFO | 
+- Step 14: Print final summary
+17:46:08 | INFO | 
+==================================================
+17:46:08 | INFO | * STARTING NTC FULL PIPELINE BUILD
+17:46:08 | INFO | ==================================================
+17:46:08 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+17:46:08 | INFO | 
+- Step 4: split_data()
+17:46:08 | INFO | Splitting dataset into train/val/test using configured ratios...
+17:46:08 | INFO | Train size: 17500 (70.0%)
+17:46:08 | INFO | Val size:   3750 (15.0%)
+17:46:08 | INFO | Test size:  3750 (15.0%)
+17:46:08 | INFO | Stratified Default Rates -> Train: 0.2500, Val: 0.2501, Test: 0.2499
+17:46:08 | INFO | 
+- Step 5: Cache X_test + y_test to models/X_test.parquet
+17:46:08 | INFO | 
+- Step 6: build_preprocessor()
+17:46:08 | INFO | Building ColumnTransformer preprocessor pipeline...
+17:46:08 | INFO | 
+- Step 7: fit_and_transform()
+17:46:08 | INFO | Fitting preprocessor on training data ONLY...
+17:46:08 | INFO | Transforming validation and test validation datasets...
+17:46:08 | INFO | 
+- Step 8: save_preprocessor()
+17:46:08 | INFO | Saving preprocessor to models/ntc_preprocessor.pkl...
+17:46:08 | INFO | 
+- Step 9: train_xgboost()
+17:46:08 | INFO | Initializing XGBoost Training...
+17:46:08 | INFO | Computed scale_pos_weight: 3.0000 (Class 0: 13125 / Class 1: 4375)
+17:46:08 | INFO | Fitting XGBClassifier...
+17:46:09 | INFO | Training complete! Best iteration: 123
+17:46:09 | INFO | Validation AUC (raw uncalibrated XGBoost): 0.9679
+17:46:09 | INFO | 
+- Step 10: calibrate_model() using X_val ONLY
+17:46:09 | INFO | Starting model calibration using sigmoid (Platt Scaling) fitted strictly on Val set...
+17:46:09 | INFO | AUC Shift -> Raw: 0.9679 | Calibrated: 0.9679
+17:46:09 | INFO | Prob Range Shift -> Raw: [0.0023, 0.9968] | Cal: [0.0080, 0.9335]
+17:46:09 | INFO | Checking decile-level calibration quality...
+17:46:09 | INFO | Calibration quality check passed (Max error = 0.0633 <= 0.10 limit).
+17:46:09 | INFO | 
+- Step 11: save_model()
+17:46:09 | INFO | Saving final calibrated model to models/ntc_credit_model.pkl...
+17:46:09 | INFO | 
+- Step 12: evaluate_model() on X_test
+17:46:09 | INFO | Evaluating calibrated model heavily on Test Set...
+17:46:09 | INFO | ROC AUC: 0.9620
+17:46:09 | INFO | Gini Coefficient: 0.9240
+17:46:09 | INFO | Average Precision (PR-AUC): 0.9063
+17:46:09 | INFO | Brier Score (Calibration error): 0.0648
+17:46:09 | INFO | KS Statistic: 0.7841
+17:46:09 | INFO | KS Statistic condition: Excellent (0.7841 >= 0.40). Strong class separation.
+17:46:09 | INFO | Computing Business Decision Bands...
+17:46:10 | INFO | 
+- Step 13: compute_global_shap()
+17:46:10 | INFO | Computing global SHAP feature importances...
+17:46:10 | INFO | 
+- Step 14: Print final summary
+21:54:28 | INFO | 
+==================================================
+21:54:28 | INFO | * STARTING NTC FULL PIPELINE BUILD
+21:54:28 | INFO | ==================================================
+21:54:28 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+22:09:44 | INFO | 
+==================================================
+22:09:44 | INFO | * STARTING NTC FULL PIPELINE BUILD
+22:09:44 | INFO | ==================================================
+22:09:44 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+22:09:44 | INFO | 
+- Step 4: split_data()
+22:09:44 | INFO | Splitting dataset into train/val/test using configured ratios...
+22:09:44 | INFO | Train size: 17500 (70.0%)
+22:09:44 | INFO | Val size:   3750 (15.0%)
+22:09:44 | INFO | Test size:  3750 (15.0%)
+22:09:44 | INFO | Stratified Default Rates -> Train: 0.2500, Val: 0.2501, Test: 0.2499
+22:09:44 | INFO | 
+- Step 5: Cache X_test + y_test to models/X_test.parquet
+22:09:44 | INFO | 
+- Step 6: build_preprocessor()
+22:09:44 | INFO | Building ColumnTransformer preprocessor pipeline...
+22:09:44 | INFO | 
+- Step 7: fit_and_transform()
+22:09:44 | INFO | Fitting preprocessor on training data ONLY...
+22:09:44 | INFO | Transforming validation and test validation datasets...
+22:09:44 | INFO | 
+- Step 8: save_preprocessor()
+22:09:44 | INFO | Saving preprocessor to models/ntc_preprocessor.pkl...
+22:09:44 | INFO | 
+- Step 9: train_xgboost()
+22:09:44 | INFO | Initializing XGBoost Training...
+22:09:44 | INFO | Computed scale_pos_weight: 3.0000 (Class 0: 13125 / Class 1: 4375)
+22:09:44 | INFO | Fitting XGBClassifier...
+22:09:44 | INFO | Training complete! Best iteration: 27
+22:09:44 | INFO | Validation AUC (raw uncalibrated XGBoost): 0.9988
+22:09:44 | INFO | 
+- Step 10: calibrate_model() using X_val ONLY
+22:09:44 | INFO | Starting model calibration using sigmoid (Platt Scaling) fitted strictly on Val set...
+22:09:44 | INFO | AUC Shift -> Raw: 0.9988 | Calibrated: 0.9988
+22:09:44 | INFO | Prob Range Shift -> Raw: [0.1223, 0.8767] | Cal: [0.0007, 0.9909]
+22:09:44 | INFO | Checking decile-level calibration quality...
+22:09:44 | INFO | Calibration quality check passed (Max error = 0.0109 <= 0.10 limit).
+22:09:44 | INFO | 
+- Step 11: save_model()
+22:09:44 | INFO | Saving final calibrated model to models/ntc_credit_model.pkl...
+22:09:44 | INFO | 
+- Step 12: evaluate_model() on X_test
+22:09:44 | INFO | Evaluating calibrated model heavily on Test Set...
+22:09:44 | INFO | ROC AUC: 0.9982
+22:09:44 | INFO | Gini Coefficient: 0.9963
+22:09:44 | INFO | Average Precision (PR-AUC): 0.9947
+22:09:44 | INFO | Brier Score (Calibration error): 0.0035
+22:09:44 | INFO | KS Statistic: 0.9940
+22:09:44 | INFO | KS Statistic condition: Excellent (0.9940 >= 0.40). Strong class separation.
+22:09:44 | INFO | Computing Business Decision Bands...
+22:09:46 | INFO | 
+- Step 13: compute_global_shap()
+22:09:46 | INFO | Computing global SHAP feature importances...
+22:09:46 | INFO | 
+- Step 14: Print final summary
+22:14:19 | INFO | 
+==================================================
+22:14:19 | INFO | * STARTING NTC FULL PIPELINE BUILD
+22:14:19 | INFO | ==================================================
+22:14:19 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+22:14:19 | INFO | 
+- Step 4: split_data()
+22:14:19 | INFO | Splitting dataset into train/val/test using configured ratios...
+22:14:19 | INFO | Train size: 17500 (70.0%)
+22:14:19 | INFO | Val size:   3750 (15.0%)
+22:14:19 | INFO | Test size:  3750 (15.0%)
+22:14:19 | INFO | Stratified Default Rates -> Train: 0.2500, Val: 0.2501, Test: 0.2499
+22:14:19 | INFO | 
+- Step 5: Cache X_test + y_test to models/X_test.parquet
+22:14:19 | INFO | 
+- Step 6: build_preprocessor()
+22:14:19 | INFO | Building ColumnTransformer preprocessor pipeline...
+22:14:19 | INFO | 
+- Step 7: fit_and_transform()
+22:14:19 | INFO | Fitting preprocessor on training data ONLY...
+22:14:19 | INFO | Transforming validation and test validation datasets...
+22:14:19 | INFO | 
+- Step 8: save_preprocessor()
+22:14:19 | INFO | Saving preprocessor to models/ntc_preprocessor.pkl...
+22:14:19 | INFO | 
+- Step 9: train_xgboost()
+22:14:19 | INFO | Initializing XGBoost Training...
+22:14:19 | INFO | Computed scale_pos_weight: 3.0000 (Class 0: 13125 / Class 1: 4375)
+22:14:19 | INFO | Fitting XGBClassifier...
+22:14:19 | INFO | Training complete! Best iteration: 27
+22:14:19 | INFO | Validation AUC (raw uncalibrated XGBoost): 0.9988
+22:14:19 | INFO | 
+- Step 10: calibrate_model() using X_val ONLY
+22:14:19 | INFO | Starting model calibration using sigmoid (Platt Scaling) fitted strictly on Val set...
+22:14:19 | INFO | AUC Shift -> Raw: 0.9988 | Calibrated: 0.9988
+22:14:19 | INFO | Prob Range Shift -> Raw: [0.1223, 0.8767] | Cal: [0.0007, 0.9909]
+22:14:19 | INFO | Checking decile-level calibration quality...
+22:14:19 | INFO | Calibration quality check passed (Max error = 0.0109 <= 0.10 limit).
+22:14:19 | INFO | 
+- Step 11: save_model()
+22:14:19 | INFO | Saving final calibrated model to models/ntc_credit_model.pkl...
+22:14:19 | INFO | 
+- Step 12: evaluate_model() on X_test
+22:14:19 | INFO | Evaluating calibrated model heavily on Test Set...
+22:14:19 | INFO | ROC AUC: 0.9982
+22:14:19 | INFO | Gini Coefficient: 0.9963
+22:14:19 | INFO | Average Precision (PR-AUC): 0.9947
+22:14:19 | INFO | Brier Score (Calibration error): 0.0035
+22:14:19 | INFO | KS Statistic: 0.9940
+22:14:19 | INFO | KS Statistic condition: Excellent (0.9940 >= 0.40). Strong class separation.
+22:14:20 | INFO | Computing Business Decision Bands...
+22:14:20 | INFO | 
+- Step 13: compute_global_shap()
+22:14:20 | INFO | Computing global SHAP feature importances...
+22:14:20 | INFO | 
+- Step 14: Print final summary
+22:14:33 | INFO | 
+==================================================
+22:14:33 | INFO | * STARTING NTC FULL PIPELINE BUILD
+22:14:33 | INFO | ==================================================
+22:14:33 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+22:14:33 | INFO | 
+- Step 4: split_data()
+22:14:33 | INFO | Splitting dataset into train/val/test using configured ratios...
+22:14:33 | INFO | Train size: 17500 (70.0%)
+22:14:33 | INFO | Val size:   3750 (15.0%)
+22:14:33 | INFO | Test size:  3750 (15.0%)
+22:14:33 | INFO | Stratified Default Rates -> Train: 0.2500, Val: 0.2501, Test: 0.2499
+22:14:33 | INFO | 
+- Step 5: Cache X_test + y_test to models/X_test.parquet
+22:14:33 | INFO | 
+- Step 6: build_preprocessor()
+22:14:33 | INFO | Building ColumnTransformer preprocessor pipeline...
+22:14:33 | INFO | 
+- Step 7: fit_and_transform()
+22:14:33 | INFO | Fitting preprocessor on training data ONLY...
+22:14:33 | INFO | Transforming validation and test validation datasets...
+22:14:33 | INFO | 
+- Step 8: save_preprocessor()
+22:14:33 | INFO | Saving preprocessor to models/ntc_preprocessor.pkl...
+22:14:33 | INFO | 
+- Step 9: train_xgboost()
+22:14:33 | INFO | Initializing XGBoost Training...
+22:14:33 | INFO | Computed scale_pos_weight: 3.0000 (Class 0: 13125 / Class 1: 4375)
+22:14:33 | INFO | Fitting XGBClassifier...
+22:14:34 | INFO | Training complete! Best iteration: 27
+22:14:34 | INFO | Validation AUC (raw uncalibrated XGBoost): 0.9988
+22:14:34 | INFO | 
+- Step 10: calibrate_model() using X_val ONLY
+22:14:34 | INFO | Starting model calibration using sigmoid (Platt Scaling) fitted strictly on Val set...
+22:14:34 | INFO | AUC Shift -> Raw: 0.9988 | Calibrated: 0.9988
+22:14:34 | INFO | Prob Range Shift -> Raw: [0.1223, 0.8767] | Cal: [0.0007, 0.9909]
+22:14:34 | INFO | Checking decile-level calibration quality...
+22:14:34 | INFO | Calibration quality check passed (Max error = 0.0109 <= 0.10 limit).
+22:14:34 | INFO | 
+- Step 11: save_model()
+22:14:34 | INFO | Saving final calibrated model to models/ntc_credit_model.pkl...
+22:14:34 | INFO | 
+- Step 12: evaluate_model() on X_test
+22:14:34 | INFO | Evaluating calibrated model heavily on Test Set...
+22:14:34 | INFO | ROC AUC: 0.9982
+22:14:34 | INFO | Gini Coefficient: 0.9963
+22:14:34 | INFO | Average Precision (PR-AUC): 0.9947
+22:14:34 | INFO | Brier Score (Calibration error): 0.0035
+22:14:34 | INFO | KS Statistic: 0.9940
+22:14:34 | INFO | KS Statistic condition: Excellent (0.9940 >= 0.40). Strong class separation.
+22:14:34 | INFO | Computing Business Decision Bands...
+22:14:35 | INFO | 
+- Step 13: compute_global_shap()
+22:14:35 | INFO | Computing global SHAP feature importances...
+22:14:35 | INFO | 
+- Step 14: Print final summary
+22:30:37 | INFO | 
+==================================================
+22:30:37 | INFO | * STARTING NTC FULL PIPELINE BUILD
+22:30:37 | INFO | ==================================================
+22:30:37 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+22:30:37 | INFO | 
+- Step 4: split_data()
+22:30:37 | INFO | Splitting dataset into train/val/test using configured ratios...
+22:30:37 | INFO | Train size: 17500 (70.0%)
+22:30:37 | INFO | Val size:   3750 (15.0%)
+22:30:37 | INFO | Test size:  3750 (15.0%)
+22:30:37 | INFO | Stratified Default Rates -> Train: 0.2500, Val: 0.2501, Test: 0.2499
+22:30:37 | INFO | 
+- Step 5: Cache X_test + y_test to models/X_test.parquet
+22:30:37 | INFO | 
+- Step 6: build_preprocessor()
+22:30:37 | INFO | Building ColumnTransformer preprocessor pipeline...
+22:30:37 | INFO | 
+- Step 7: fit_and_transform()
+22:30:37 | INFO | Fitting preprocessor on training data ONLY...
+22:30:37 | INFO | Transforming validation and test validation datasets...
+22:30:37 | INFO | 
+- Step 8: save_preprocessor()
+22:30:37 | INFO | Saving preprocessor to models/ntc_preprocessor.pkl...
+22:30:37 | INFO | 
+- Step 9: train_xgboost()
+22:30:37 | INFO | Initializing XGBoost Training...
+22:30:37 | INFO | Computed scale_pos_weight: 3.0000 (Class 0: 13125 / Class 1: 4375)
+22:30:37 | INFO | Fitting XGBClassifier...
+22:30:37 | INFO | Training complete! Best iteration: 99
+22:30:37 | INFO | Validation AUC (raw uncalibrated XGBoost): 0.9790
+22:30:37 | INFO | 
+- Step 10: calibrate_model() using X_val ONLY
+22:30:37 | INFO | Starting model calibration using sigmoid (Platt Scaling) fitted strictly on Val set...
+22:30:37 | INFO | AUC Shift -> Raw: 0.9790 | Calibrated: 0.9790
+22:30:37 | INFO | Prob Range Shift -> Raw: [0.0064, 0.9947] | Cal: [0.0114, 0.9320]
+22:30:37 | INFO | Checking decile-level calibration quality...
+22:30:37 | INFO | Calibration quality check passed (Max error = 0.0821 <= 0.10 limit).
+22:30:37 | INFO | 
+- Step 11: save_model()
+22:30:37 | INFO | Saving final calibrated model to models/ntc_credit_model.pkl...
+22:30:37 | INFO | 
+- Step 12: evaluate_model() on X_test
+22:30:37 | INFO | Evaluating calibrated model heavily on Test Set...
+22:30:37 | INFO | ROC AUC: 0.9821
+22:30:37 | INFO | Gini Coefficient: 0.9642
+22:30:37 | INFO | Average Precision (PR-AUC): 0.9618
+22:30:37 | INFO | Brier Score (Calibration error): 0.0364
+22:30:37 | INFO | KS Statistic: 0.8894
+22:30:37 | INFO | KS Statistic condition: Excellent (0.8894 >= 0.40). Strong class separation.
+22:30:37 | INFO | Computing Business Decision Bands...
+22:30:38 | INFO | 
+- Step 13: compute_global_shap()
+22:30:38 | INFO | Computing global SHAP feature importances...
+22:30:38 | INFO | 
+- Step 14: Print final summary
+22:31:49 | INFO | 
+==================================================
+22:31:49 | INFO | * STARTING NTC FULL PIPELINE BUILD
+22:31:49 | INFO | ==================================================
+22:31:49 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+22:31:49 | INFO | 
+- Step 4: split_data()
+22:31:49 | INFO | Splitting dataset into train/val/test using configured ratios...
+22:31:49 | INFO | Train size: 17500 (70.0%)
+22:31:49 | INFO | Val size:   3750 (15.0%)
+22:31:49 | INFO | Test size:  3750 (15.0%)
+22:31:49 | INFO | Stratified Default Rates -> Train: 0.2500, Val: 0.2501, Test: 0.2499
+22:31:49 | INFO | 
+- Step 5: Cache X_test + y_test to models/X_test.parquet
+22:31:49 | INFO | 
+- Step 6: build_preprocessor()
+22:31:49 | INFO | Building ColumnTransformer preprocessor pipeline...
+22:31:49 | INFO | 
+- Step 7: fit_and_transform()
+22:31:49 | INFO | Fitting preprocessor on training data ONLY...
+22:31:49 | INFO | Transforming validation and test validation datasets...
+22:31:49 | INFO | 
+- Step 8: save_preprocessor()
+22:31:49 | INFO | Saving preprocessor to models/ntc_preprocessor.pkl...
+22:31:49 | INFO | 
+- Step 9: train_xgboost()
+22:31:49 | INFO | Initializing XGBoost Training...
+22:31:49 | INFO | Computed scale_pos_weight: 3.0000 (Class 0: 13125 / Class 1: 4375)
+22:31:49 | INFO | Fitting XGBClassifier...
+22:31:50 | INFO | Training complete! Best iteration: 159
+22:31:50 | INFO | Validation AUC (raw uncalibrated XGBoost): 0.9489
+22:31:50 | INFO | 
+- Step 10: calibrate_model() using X_val ONLY
+22:31:50 | INFO | Starting model calibration using sigmoid (Platt Scaling) fitted strictly on Val set...
+22:31:50 | INFO | AUC Shift -> Raw: 0.9489 | Calibrated: 0.9489
+22:31:50 | INFO | Prob Range Shift -> Raw: [0.0018, 0.9975] | Cal: [0.0151, 0.9012]
+22:31:50 | INFO | Checking decile-level calibration quality...
+22:31:50 | INFO | Calibration quality check passed (Max error = 0.0814 <= 0.10 limit).
+22:31:50 | INFO | 
+- Step 11: save_model()
+22:31:50 | INFO | Saving final calibrated model to models/ntc_credit_model.pkl...
+22:31:50 | INFO | 
+- Step 12: evaluate_model() on X_test
+22:31:50 | INFO | Evaluating calibrated model heavily on Test Set...
+22:31:50 | INFO | ROC AUC: 0.9375
+22:31:50 | INFO | Gini Coefficient: 0.8750
+22:31:50 | INFO | Average Precision (PR-AUC): 0.8697
+22:31:50 | INFO | Brier Score (Calibration error): 0.0815
+22:31:50 | INFO | KS Statistic: 0.7272
+22:31:50 | INFO | KS Statistic condition: Excellent (0.7272 >= 0.40). Strong class separation.
+22:31:50 | INFO | Computing Business Decision Bands...
+22:31:50 | INFO | 
+- Step 13: compute_global_shap()
+22:31:50 | INFO | Computing global SHAP feature importances...
+22:31:51 | INFO | 
+- Step 14: Print final summary
+09:38:38 | INFO | 
+==================================================
+09:38:38 | INFO | * STARTING NTC FULL PIPELINE BUILD
+09:38:38 | INFO | ==================================================
+09:38:38 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+09:38:38 | INFO | 
+- Step 4: split_data()
+09:38:38 | INFO | Splitting dataset into train/val/test using configured ratios...
+09:38:38 | INFO | Train size: 17500 (70.0%)
+09:38:38 | INFO | Val size:   3750 (15.0%)
+09:38:38 | INFO | Test size:  3750 (15.0%)
+09:38:38 | INFO | Stratified Default Rates -> Train: 0.2500, Val: 0.2501, Test: 0.2499
+09:38:38 | INFO | 
+- Step 5: Cache X_test + y_test to models/X_test.parquet
+09:38:39 | INFO | 
+- Step 6: build_preprocessor()
+09:38:39 | INFO | Building ColumnTransformer preprocessor pipeline...
+09:38:39 | INFO | 
+- Step 7: fit_and_transform()
+09:38:39 | INFO | Fitting preprocessor on training data ONLY...
+09:38:39 | INFO | Transforming validation and test validation datasets...
+09:38:39 | INFO | 
+- Step 8: save_preprocessor()
+09:38:39 | INFO | Saving preprocessor to models/ntc_preprocessor.pkl...
+09:38:39 | INFO | 
+- Step 9: train_xgboost()
+09:38:39 | INFO | Initializing XGBoost Training...
+09:38:39 | INFO | Computed scale_pos_weight: 3.0000 (Class 0: 13125 / Class 1: 4375)
+09:38:39 | INFO | Fitting XGBClassifier...
+09:38:39 | INFO | Training complete! Best iteration: 159
+09:38:39 | INFO | Validation AUC (raw uncalibrated XGBoost): 0.9489
+09:38:39 | INFO | 
+- Step 10: calibrate_model() using X_val ONLY
+09:38:39 | INFO | Starting model calibration using sigmoid (Platt Scaling) fitted strictly on Val set...
+09:38:39 | INFO | AUC Shift -> Raw: 0.9489 | Calibrated: 0.9489
+09:38:39 | INFO | Prob Range Shift -> Raw: [0.0018, 0.9975] | Cal: [0.0151, 0.9012]
+09:38:39 | INFO | Checking decile-level calibration quality...
+09:38:39 | INFO | Calibration quality check passed (Max error = 0.0814 <= 0.10 limit).
+09:38:39 | INFO | 
+- Step 11: save_model()
+09:38:39 | INFO | Saving final calibrated model to models/ntc_credit_model.pkl...
+09:38:39 | INFO | 
+- Step 12: evaluate_model() on X_test
+09:38:39 | INFO | Evaluating calibrated model heavily on Test Set...
+09:38:39 | INFO | ROC AUC: 0.9375
+09:38:39 | INFO | Gini Coefficient: 0.8750
+09:38:39 | INFO | Average Precision (PR-AUC): 0.8697
+09:38:39 | INFO | Brier Score (Calibration error): 0.0815
+09:38:39 | INFO | KS Statistic: 0.7272
+09:38:39 | INFO | KS Statistic condition: Excellent (0.7272 >= 0.40). Strong class separation.
+09:38:39 | INFO | Computing Business Decision Bands...
+09:38:41 | INFO | 
+- Step 13: compute_global_shap()
+09:38:41 | INFO | Computing global SHAP feature importances...
+09:38:41 | INFO | 
+- EXPLAIN MODE: Fetching Sample SHAP Local Explanations
+09:38:41 | INFO | 
+- Step 14: Print final summary
+09:58:20 | INFO | 
+==================================================
+09:58:20 | INFO | * STARTING NTC FULL PIPELINE BUILD
+09:58:20 | INFO | ==================================================
+09:58:20 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+09:58:20 | INFO | 
+- Step 4: split_data()
+09:58:20 | INFO | Splitting dataset into train/val/test using configured ratios...
+09:58:20 | INFO | Train size: 17500 (70.0%)
+09:58:20 | INFO | Val size:   3750 (15.0%)
+09:58:20 | INFO | Test size:  3750 (15.0%)
+09:58:20 | INFO | Stratified Default Rates -> Train: 0.2500, Val: 0.2501, Test: 0.2499
+09:58:20 | INFO | 
+- Step 5: Cache X_test + y_test to models/X_test.parquet
+09:58:20 | INFO | 
+- Step 6: build_preprocessor()
+09:58:20 | INFO | Building ColumnTransformer preprocessor pipeline...
+09:58:20 | INFO | 
+- Step 7: fit_and_transform()
+09:58:20 | INFO | Fitting preprocessor on training data ONLY...
+09:58:20 | INFO | Transforming validation and test validation datasets...
+09:58:21 | INFO | 
+- Step 8: save_preprocessor()
+09:58:21 | INFO | Saving preprocessor to models/ntc_preprocessor.pkl...
+09:58:21 | INFO | 
+- Step 9: train_xgboost()
+09:58:21 | INFO | Initializing XGBoost Training...
+09:58:21 | INFO | Computed scale_pos_weight: 3.0000 (Class 0: 13125 / Class 1: 4375)
+09:58:21 | INFO | Fitting XGBClassifier...
+09:58:21 | INFO | Training complete! Best iteration: 140
+09:58:21 | INFO | Validation AUC (raw uncalibrated XGBoost): 0.8716
+09:58:21 | INFO | 
+- Step 10: calibrate_model() using X_val ONLY
+09:58:21 | INFO | Starting model calibration using sigmoid (Platt Scaling) fitted strictly on Val set...
+09:58:21 | INFO | AUC Shift -> Raw: 0.8716 | Calibrated: 0.8716
+09:58:21 | INFO | Prob Range Shift -> Raw: [0.0034, 0.9872] | Cal: [0.0224, 0.8232]
+09:58:21 | INFO | Checking decile-level calibration quality...
+09:58:21 | INFO | Calibration quality check passed (Max error = 0.0630 <= 0.10 limit).
+09:58:21 | INFO | 
+- Step 11: save_model()
+09:58:21 | INFO | Saving final calibrated model to models/ntc_credit_model.pkl...
+09:58:21 | INFO | 
+- Step 12: evaluate_model() on X_test
+09:58:21 | INFO | Evaluating calibrated model heavily on Test Set...
+09:58:21 | INFO | ROC AUC: 0.8666
+09:58:21 | INFO | Gini Coefficient: 0.7333
+09:58:21 | INFO | Average Precision (PR-AUC): 0.7034
+09:58:21 | INFO | Brier Score (Calibration error): 0.1236
+09:58:21 | INFO | KS Statistic: 0.5704
+09:58:21 | INFO | KS Statistic condition: Excellent (0.5704 >= 0.40). Strong class separation.
+09:58:21 | INFO | Computing Business Decision Bands...
+09:58:22 | INFO | 
+- Step 13: compute_global_shap()
+09:58:22 | INFO | Computing global SHAP feature importances...
+09:58:22 | INFO | 
+- EXPLAIN MODE: Fetching Sample SHAP Local Explanations
+09:58:22 | INFO | 
+- Step 14: Print final summary
+10:01:13 | INFO | 
+==================================================
+10:01:13 | INFO | * STARTING NTC FULL PIPELINE BUILD
+10:01:13 | INFO | ==================================================
+10:01:13 | INFO | 
+- Step 1: Loading ntc_credit_training_v2.csv directly
+10:01:13 | INFO | 
+- Step 4: split_data()
+10:01:13 | INFO | Splitting dataset into train/val/test using configured ratios...
+10:01:13 | INFO | Train size: 17500 (70.0%)
+10:01:13 | INFO | Val size:   3750 (15.0%)
+10:01:13 | INFO | Test size:  3750 (15.0%)
+10:01:13 | INFO | Stratified Default Rates -> Train: 0.2500, Val: 0.2501, Test: 0.2499
+10:01:13 | INFO | 
+- Step 5: Cache X_test + y_test to models/X_test.parquet
+10:01:13 | INFO | 
+- Step 6: build_preprocessor()
+10:01:13 | INFO | Building ColumnTransformer preprocessor pipeline...
+10:01:13 | INFO | 
+- Step 7: fit_and_transform()
+10:01:13 | INFO | Fitting preprocessor on training data ONLY...
+10:01:13 | INFO | Transforming validation and test validation datasets...
+10:01:13 | INFO | 
+- Step 8: save_preprocessor()
+10:01:13 | INFO | Saving preprocessor to models/ntc_preprocessor.pkl...
+10:01:13 | INFO | 
+- Step 9: train_xgboost()
+10:01:13 | INFO | Initializing XGBoost Training...
+10:01:13 | INFO | Computed scale_pos_weight: 3.0000 (Class 0: 13125 / Class 1: 4375)
+10:01:13 | INFO | Fitting XGBClassifier...
+10:01:13 | INFO | Training complete! Best iteration: 157
+10:01:13 | INFO | Validation AUC (raw uncalibrated XGBoost): 0.9291
+10:01:13 | INFO | 
+- Step 10: calibrate_model() using X_val ONLY
+10:01:13 | INFO | Starting model calibration using sigmoid (Platt Scaling) fitted strictly on Val set...
+10:01:13 | INFO | AUC Shift -> Raw: 0.9291 | Calibrated: 0.9291
+10:01:13 | INFO | Prob Range Shift -> Raw: [0.0009, 0.9951] | Cal: [0.0150, 0.8896]
+10:01:13 | INFO | Checking decile-level calibration quality...
+10:01:13 | INFO | Calibration quality check passed (Max error = 0.0722 <= 0.10 limit).
+10:01:13 | INFO | 
+- Step 11: save_model()
+10:01:13 | INFO | Saving final calibrated model to models/ntc_credit_model.pkl...
+10:01:13 | INFO | 
+- Step 12: evaluate_model() on X_test
+10:01:13 | INFO | Evaluating calibrated model heavily on Test Set...
+10:01:13 | INFO | ROC AUC: 0.9378
+10:01:13 | INFO | Gini Coefficient: 0.8756
+10:01:13 | INFO | Average Precision (PR-AUC): 0.8462
+10:01:13 | INFO | Brier Score (Calibration error): 0.0869
+10:01:13 | INFO | KS Statistic: 0.7262
+10:01:13 | INFO | KS Statistic condition: Excellent (0.7262 >= 0.40). Strong class separation.
+10:01:13 | INFO | Computing Business Decision Bands...
+10:01:14 | INFO | 
+- Step 13: compute_global_shap()
+10:01:14 | INFO | Computing global SHAP feature importances...
+10:01:14 | INFO | 
+- EXPLAIN MODE: Fetching Sample SHAP Local Explanations
+10:01:15 | INFO | 
+- Step 14: Print final summary

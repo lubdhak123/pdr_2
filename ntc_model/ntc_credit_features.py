@@ -297,31 +297,6 @@ def build_credit_features(df: pd.DataFrame) -> pd.DataFrame:
     # =====================================================
 
     # 31. stress_composite_score
-    # Logic: Combines three independent stress signals.
-    #        None of these is bureau-derived.
-    out["stress_composite_score"] = (
-        out["eod_balance_volatility"] * 0.4 +
-        out["rent_wallet_share"].clip(0, 1) * 0.3 +
-        (out["bounced_transaction_count"] / 10) * 0.3
-    ).clip(0, 1).round(4)
-
-    # 32. stability_composite_score
-    # Logic: Combines asset ownership + employment + address stability.
-    out["stability_composite_score"] = (
-        out["owns_property"] * 0.35 +
-        out["owns_car"] * 0.15 +
-        (out["employment_to_age_ratio"]) * 0.35 +
-        (out["address_stability_years"] / 30).clip(0, 1) * 0.15
-    ).clip(0, 1).round(4)
-
-    # 33. affordability_stress_ratio
-    # Logic: Emergency buffer vs rent burden combined.
-    #        Low buffer + high rent = highest default risk.
-    out["affordability_stress_ratio"] = (
-        out["rent_wallet_share"] /
-        (out["emergency_buffer_months"] + 1)
-    ).clip(0, 1).round(4)
-
     # Include TARGET
     out['TARGET'] = df['TARGET'].astype(int)
     
@@ -361,9 +336,6 @@ def _validate(df: pd.DataFrame) -> None:
         "region_city_risk_score",
         "address_work_mismatch",
         "employment_to_age_ratio",
-        "stress_composite_score",
-        "stability_composite_score",
-        "affordability_stress_ratio",
         "TARGET"
     ]
     
@@ -386,8 +358,7 @@ def _validate(df: pd.DataFrame) -> None:
     ratios = ['utility_payment_consistency', 'rent_wallet_share', 
               'subscription_commitment_ratio', 'eod_balance_volatility',
               'essential_vs_lifestyle_ratio', 'cash_withdrawal_dependency',
-              'telecom_recharge_drop_ratio', 'family_burden_ratio', 'employment_to_age_ratio',
-              'stress_composite_score', 'stability_composite_score', 'affordability_stress_ratio']
+              'telecom_recharge_drop_ratio', 'family_burden_ratio', 'employment_to_age_ratio']
     for col in ratios:
         if df[col].min() < -0.01 or df[col].max() > 1.01:
             logger.warning(f"Ratio Alert: {col} is out of expected [0,1] bounds. Min: {df[col].min():.3f}, Max: {df[col].max():.3f}")

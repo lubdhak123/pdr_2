@@ -23,49 +23,140 @@ PROFILES = {
         "expected_features": {
             "utility_payment_consistency": 1.0, 
             "bounced_transaction_count": 0,
-            "emergency_buffer_months": 2.25,
-            "cash_withdrawal_dependency": 0.05
+            "emergency_buffer_months": 5.5,
+            "eod_balance_volatility": 0.12,
+            "cash_withdrawal_dependency": 0.05,
+            "rent_wallet_share": 0.22,
+            "min_balance_violation_count": 0,
+            "telecom_recharge_drop_ratio": 0.06
         },
-        "desc": "Stable salaried employee with clean utility and zero bounces."
+        "desc": "Stable salaried employee with clean utility and zero bounces.",
+        "applicant_metadata": {
+            "applicant_age_years"      : 42,
+            "academic_background_tier" : 4,
+            "id_document_age_years"    : 8.0,
+            "employment_vintage_days"  : 3650,
+            "owns_property"            : 1,
+            "owns_car"                 : 1,
+            "region_risk_tier"         : 1,
+            "region_city_risk_score"   : 1,
+            "address_stability_years"  : 8.0,
+            "family_burden_ratio"      : 0.15,
+            "family_status_stability_score": 1,
+            "contactability_score"     : 4,
+            "income_type_risk_score"   : 1,
+            "address_work_mismatch"    : 0,
+            "car_age_years"            : 3,
+            "has_email_flag"           : 1,
+        }
     },
     "stressed_gig_ntc": {
-        "monthly_income": 22000.0,
+        "monthly_income": 20000.0,
         "income_type": "gig",
         "loan_amount": 50000.0,
-        "months_of_history": 6,
+        "months_of_history": 10,
         "expected_features": {
-            "utility_payment_consistency": 0.6, 
+            "utility_payment_consistency": 0.62,
+            "avg_utility_dpd": 8.0,
             "bounced_transaction_count": 2,
-            "emergency_buffer_months": 0.8,
-            "cash_withdrawal_dependency": 0.3
+            "rent_wallet_share": 0.38,
+            "emergency_buffer_months": 1.8,
+            "eod_balance_volatility": 0.38,
+            "cash_withdrawal_dependency": 0.30,
+            "min_balance_violation_count": 2,
+            "telecom_recharge_drop_ratio": 0.32
         },
-        "desc": "Gig worker with erratic income, occasional missed utility, low buffer."
+        "desc": "Gig worker with erratic income, occasional missed utility, low buffer.",
+        "applicant_metadata": {
+            "applicant_age_years"      : 28,
+            "academic_background_tier" : 2,
+            "id_document_age_years"    : 1.5,
+            "employment_vintage_days"  : 365,
+            "owns_property"            : 0,
+            "owns_car"                 : 0,
+            "region_risk_tier"         : 3,
+            "region_city_risk_score"   : 3,
+            "address_stability_years"  : 2.0,
+            "family_burden_ratio"      : 0.40,
+            "family_status_stability_score": 4,
+            "contactability_score"     : 2,
+            "income_type_risk_score"   : 3,
+            "address_work_mismatch"    : 2,
+            "car_age_years"            : 99,
+            "has_email_flag"           : 0,
+        }
     },
     "high_risk_ntc": {
-        "monthly_income": 15000.0,
+        "monthly_income": 12000.0,
         "income_type": "irregular",
         "loan_amount": 75000.0,
         "months_of_history": 6,
         "expected_features": {
-            "utility_payment_consistency": 0.3, 
+            "utility_payment_consistency": 0.22, 
+            "avg_utility_dpd": 28.0,
+            "rent_wallet_share": 0.72,
             "bounced_transaction_count": 6,
-            "emergency_buffer_months": 0.1,
-            "cash_withdrawal_dependency": 0.8
+            "emergency_buffer_months": 0.4,
+            "eod_balance_volatility": 0.78,
+            "cash_withdrawal_dependency": 0.62,
+            "min_balance_violation_count": 6,
+            "telecom_recharge_drop_ratio": 0.68
         },
-        "desc": "Highly irregular cashflow, frequent NSF bounces, massive cash dependency."
+        "desc": "Highly irregular cashflow, frequent NSF bounces, massive cash dependency.",
+        "applicant_metadata": {
+            "applicant_age_years"      : 22,
+            "academic_background_tier" : 1,
+            "id_document_age_years"    : 0.3,
+            "employment_vintage_days"  : 60,
+            "owns_property"            : 0,
+            "owns_car"                 : 0,
+            "region_risk_tier"         : 3,
+            "region_city_risk_score"   : 3,
+            "address_stability_years"  : 0.3,
+            "family_burden_ratio"      : 0.70,
+            "family_status_stability_score": 4,
+            "contactability_score"     : 0,
+            "income_type_risk_score"   : 5,
+            "address_work_mismatch"    : 2,
+            "car_age_years"            : 99,
+            "has_email_flag"           : 0,
+        }
     },
     "good_msme_owner": {
-        "monthly_income": 120000.0,
+        "monthly_income": 90000.0,
         "income_type": "business",
         "loan_amount": 300000.0,
         "months_of_history": 6,
         "expected_features": {
-            "utility_payment_consistency": 1.0, 
+            "utility_payment_consistency": 0.92,
+            "avg_utility_dpd": 2.0,
             "bounced_transaction_count": 0,
-            "emergency_buffer_months": 4.0,
-            "cash_withdrawal_dependency": 0.1
+            "rent_wallet_share": 0.20,
+            "emergency_buffer_months": 7.0,
+            "eod_balance_volatility": 0.10,
+            "cash_withdrawal_dependency": 0.08,
+            "min_balance_violation_count": 0,
+            "telecom_recharge_drop_ratio": 0.06
         },
-        "desc": "Solid MSME proprietor with high corporate inflows and stable operations."
+        "desc": "Solid MSME proprietor with high corporate inflows and stable operations.",
+        "applicant_metadata": {
+            "applicant_age_years"      : 40,
+            "academic_background_tier" : 4,
+            "id_document_age_years"    : 6.0,
+            "employment_vintage_days"  : 4380,
+            "owns_property"            : 1,
+            "owns_car"                 : 1,
+            "region_risk_tier"         : 2,
+            "region_city_risk_score"   : 2,
+            "address_stability_years"  : 8.0,
+            "family_burden_ratio"      : 0.15,
+            "family_status_stability_score": 1,
+            "contactability_score"     : 4,
+            "income_type_risk_score"   : 1,
+            "address_work_mismatch"    : 0,
+            "car_age_years"            : 5,
+            "has_email_flag"           : 1,
+        }
     }
 }
 
@@ -84,8 +175,14 @@ def generate_statement(profile_name: str, user_id: str, months: int) -> dict:
     start_date = datetime.now() - timedelta(days=30*months)
     transactions = []
     
-    # Starting logical balance
-    running_balance = rng.uniform(5000, 20000) if "good" in profile_name else rng.uniform(100, 1500)
+    # Starting logical balance — proportional to income for realistic volatility
+    monthly_inc = profile["monthly_income"]
+    if "good" in profile_name:
+        running_balance = monthly_inc * rng.uniform(3.0, 5.0)  # 3-5 months' income saved
+    elif "stressed" in profile_name:
+        running_balance = monthly_inc * rng.uniform(0.7, 1.0)  # moderate savings
+    else:
+        running_balance = monthly_inc * rng.uniform(0.02, 0.1)  # high risk = near zero
     
     for month_idx in range(months):
         base_date = start_date + timedelta(days=30*month_idx)
@@ -104,19 +201,20 @@ def generate_statement(profile_name: str, user_id: str, months: int) -> dict:
                 "txn_id": str(uuid.uuid4())
             })
         elif profile["income_type"] == "gig":
-            for _ in range(3): # Spread gig payments
-                amt = profile["monthly_income"]/3 + rng.uniform(-2000, 2000)
-                d = base_date + timedelta(days=int(rng.integers(1, 28)))
-                running_balance += amt
-                transactions.append({
-                    "date": d.strftime("%Y-%m-%d"),
-                    "type": "CR",
-                    "amount": round(amt, 2),
-                    "description": "UPI/ZOMATO/PAYOUT",
-                    "category": "INCOME",
-                    "balance": round(running_balance, 2),
-                    "txn_id": str(uuid.uuid4())
-                })
+            if rng.random() >= 0.30:
+                for _ in range(3): # Spread gig payments
+                    amt = profile["monthly_income"]/3 + rng.uniform(-2000, 2000)
+                    d = base_date + timedelta(days=int(rng.integers(1, 28)))
+                    running_balance += amt
+                    transactions.append({
+                        "date": d.strftime("%Y-%m-%d"),
+                        "type": "CR",
+                        "amount": round(amt, 2),
+                        "description": "UPI/ZOMATO/PAYOUT",
+                        "category": "INCOME",
+                        "balance": round(running_balance, 2),
+                        "txn_id": str(uuid.uuid4())
+                    })
         else: # irregular / business
             count = 5 if profile["income_type"] == "business" else 2
             for _ in range(count):
@@ -134,22 +232,55 @@ def generate_statement(profile_name: str, user_id: str, months: int) -> dict:
                 })
                 
         # 2. Add structural predictable utility outflows
-        if rng.random() >= probs["miss_utility"]:
-            amt = rng.uniform(600, 2500)
-            running_balance -= amt
-            util_date = base_date + timedelta(days=10)
-            transactions.append({
-                "date": util_date.strftime("%Y-%m-%d"),
-                "type": "DR",
-                "amount": round(amt, 2),
-                "description": f"UPI/BILLPAY/{rng.choice(UTILITY_BANDS)}",
-                "category": "UTILITY",
-                "balance": round(running_balance, 2),
-                "txn_id": str(uuid.uuid4())
-            })
+        consistency = profile.get("expected_features", {}).get("utility_payment_consistency", 0.85)
+            
+            
+        consistency = float(
+            profile.get("expected_features", {}).get(
+                "utility_payment_consistency", 0.85
+            )
+        )
+        # Hard clamp — never allow above expected value
+        consistency = min(consistency, 
+            profile.get("expected_features", {}).get(
+                "utility_payment_consistency", 0.85
+            )
+        )
+        
+        is_on_time = rng.random() < consistency
+        
+        amt = rng.uniform(600, 2500)
+        running_balance -= amt
+        
+        # Due date = 10th of this calendar month (not +10 days which can cross months)
+        from datetime import date as _date
+        bill_due = datetime(base_date.year, base_date.month, 10)
+        if is_on_time:
+            # Pay between day 10 and day 14 (on time, 0-4 DPD)
+            util_date = bill_due + timedelta(days=int(rng.integers(0, 5)))
+        else:
+            avg_dpd = profile.get("expected_features", {}).get("avg_utility_dpd", 5.0)
+            util_date = bill_due + timedelta(days=max(6, int(rng.normal(avg_dpd, avg_dpd*0.3))))
+            
+        transactions.append({
+            "date": util_date.strftime("%Y-%m-%d"),
+            "type": "DR",
+            "amount": round(amt, 2),
+            "description": f"UPI/BILLPAY/{rng.choice(UTILITY_BANDS)}",
+            "category": "UTILITY",
+            "balance": round(running_balance, 2),
+            "txn_id": str(uuid.uuid4())
+        })
             
         # 3. Rent & EMI (simulated based on wallet share logic)
-        rent_amt = profile["monthly_income"] * 0.25 # standard mapping proxy
+        rent_share = float(
+            profile.get("expected_features", {}).get(
+                "rent_wallet_share", 0.30
+            )
+        )
+        # Rent = 60% of total rent+emi burden
+        monthly_income = profile["monthly_income"]
+        rent_amt = monthly_income * rent_share * 0.6
         running_balance -= rent_amt
         transactions.append({
             "date": (base_date + timedelta(days=5)).strftime("%Y-%m-%d"),
@@ -157,6 +288,25 @@ def generate_statement(profile_name: str, user_id: str, months: int) -> dict:
             "amount": round(rent_amt, 2),
             "description": "UPI/RENT/LANDLORD",
             "category": "RENT",
+            "balance": round(running_balance, 2),
+            "txn_id": str(uuid.uuid4())
+        })
+        
+        rent_share = float(
+            profile.get("expected_features", {}).get(
+                "rent_wallet_share", 0.30
+            )
+        )
+        # EMI = 40% of total rent+emi burden  
+        monthly_income = profile["monthly_income"]
+        emi_amt = monthly_income * rent_share * 0.4
+        running_balance -= emi_amt
+        transactions.append({
+            "date": (base_date + timedelta(days=7)).strftime("%Y-%m-%d"),
+            "type": "DR",
+            "amount": round(emi_amt, 2),
+            "description": "ACH/EMI/MUTHOOT FINANCE",
+            "category": "EMI",
             "balance": round(running_balance, 2),
             "txn_id": str(uuid.uuid4())
         })
@@ -189,19 +339,26 @@ def generate_statement(profile_name: str, user_id: str, months: int) -> dict:
                 "txn_id": str(uuid.uuid4())
             })
             
-        # 6. Bounces / NSF fees
-        if "bounce" in profile_name and rng.random() < probs["bounce"]:
-            for _ in range(profile.get("expected_features", {}).get("bounced_transaction_count", 1) // months + 1):
-                transactions.append({
-                    "date": (base_date + timedelta(days=int(rng.integers(15, 25)))).strftime("%Y-%m-%d"),
-                    "type": "DR",
-                    "amount": 590.00,
-                    "description": "CHQ RETURN/INSUFFICIENT FUNDS/NSF",
-                    "category": "BOUNCE",
-                    "balance": round(running_balance, 2),
-                    "txn_id": str(uuid.uuid4())
-                })
+        # 6. Bounces / NSF fees - Moved outside loop
+
     
+    # 6. Bounces / NSF fees
+    n_bounces = profile.get("expected_features", {}).get("bounced_transaction_count", 0)
+    end_date = start_date + timedelta(days=30*months)
+    for i in range(n_bounces):
+        day_offset = int((i / max(n_bounces, 1)) * (end_date - start_date).days)
+        bounce_date = start_date + timedelta(days=day_offset + int(rng.integers(0, 15)))
+        running_balance -= 590.00
+        transactions.append({
+            "date": bounce_date.strftime("%Y-%m-%d"),
+            "type": "DR",
+            "amount": 590.00,
+            "description": "CHQ RETURN/INSUFFICIENT FUNDS/NSF",
+            "category": "BOUNCE",
+            "balance": round(running_balance, 2),
+            "txn_id": str(uuid.uuid4())
+        })
+
     # Sort by date
     transactions.sort(key=lambda x: x["date"])
     
@@ -221,7 +378,8 @@ def generate_statement(profile_name: str, user_id: str, months: int) -> dict:
         "transaction_count": len(transactions),
         "transactions": transactions,
         "_test_expected_features": profile.get("expected_features", {}),
-        "_profile_description": profile.get("desc", "")
+        "_profile_description": profile.get("desc", ""),
+        "applicant_metadata": profile.get("applicant_metadata", {})
     }
 
 def generate_all_demo_profiles(output_dir: str):

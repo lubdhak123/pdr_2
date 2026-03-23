@@ -6,9 +6,7 @@ import pandas as pd
 from datetime import datetime
 
 # Import project modules
-from config import PREPROCESSOR_PATH, CREDIT_MODEL_PATH, REPORT_DIR, MODEL_DIR, THRESHOLD_APPROVE, THRESHOLD_REVIEW
-from data_loader import load_raw_data
-from ntc_credit_features import filter_dataset, build_credit_features, _validate, save
+from config import PREPROCESSOR_PATH, CREDIT_MODEL_PATH, REPORT_DIR, MODEL_DIR, THRESHOLD_APPROVE, THRESHOLD_REVIEW, DATA_PATH
 from preprocessor import split_data, build_preprocessor, fit_and_transform, save_preprocessor, load_preprocessor
 from trainer import train_xgboost, calibrate_model, save_model, load_model
 from evaluator import evaluate_model, compute_global_shap, explain_single_applicant
@@ -74,18 +72,8 @@ def main():
     logger.info("* STARTING NTC FULL PIPELINE BUILD")
     logger.info("="*50)
 
-    logger.info("\n- Step 1: load_raw_data()")
-    raw_df = load_raw_data()
-    
-    logger.info("\n- Step 2: filter_dataset()")
-    filtered_df = filter_dataset(raw_df)
-    
-    logger.info("\n- Step 3: build_credit_features()")
-    features_df = build_credit_features(filtered_df)
-    _validate(features_df)
-    os.makedirs('datasets', exist_ok=True)
-    save(features_df, 'datasets/ntc_credit_training.csv')
-    
+    logger.info("\n- Step 1: Loading ntc_credit_training_v2.csv directly")
+    features_df = pd.read_csv(DATA_PATH)
     logger.info("\n- Step 4: split_data()")
     X_train, X_val, X_test, y_train, y_val, y_test = split_data(features_df)
     

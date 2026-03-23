@@ -1,5 +1,5 @@
 # PATHS
-DATA_PATH = "datasets/application_train.csv"
+DATA_PATH = "datasets/ntc_credit_training_v2.csv"
 MODEL_DIR = "models/"
 CREDIT_MODEL_PATH = "models/ntc_credit_model.pkl"
 PREPROCESSOR_PATH = "models/ntc_preprocessor.pkl"
