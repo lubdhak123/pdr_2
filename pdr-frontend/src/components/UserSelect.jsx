@@ -9,11 +9,11 @@ export default function UserSelect({
   onBack,
 }) {
   const users = [
-    { user_id: 'user_001', name: 'Rajesh Sharma', city: 'Bengaluru', persona_type: 'DEMO', persona: 'Clean IT Contractor', business_type: 'Business', expected_grade: 'A' },
-    { user_id: 'user_002', name: 'Mohammed Farouk', city: 'Delhi', persona_type: 'DEMO', persona: 'Wash Trader', business_type: 'Business', expected_grade: 'E' },
-    { user_id: 'user_003', name: 'Sukhwinder Singh', city: 'Ludhiana', persona_type: 'DEMO', persona: 'Seasonal Farmer', business_type: 'Business', expected_grade: 'C' },
-    { user_id: 'user_004', name: 'Priya Patel', city: 'Surat', persona_type: 'DEMO', persona: 'Struggling Kirana', business_type: 'Business', expected_grade: 'D' },
-    { user_id: 'user_005', name: 'Arjun Nair', city: 'Kochi', persona_type: 'DEMO', persona: 'NRI Remittance Receiver', business_type: 'Business', expected_grade: 'B' }
+    { user_id: 'NTC_001', name: 'Priya Venkataraman', city: 'Chennai',  persona_type: 'NTC',  persona: 'Clean Salaried Professional',          business_type: 'Individual / Salaried', expected_grade: 'A' },
+    { user_id: 'NTC_002', name: 'Ramesh Gowda',       city: 'Mysuru',   persona_type: 'NTC',  persona: 'Cash-Dependent Informal Worker',        business_type: 'Individual / Informal', expected_grade: 'C' },
+    { user_id: 'NTC_003', name: 'Deepak Malhotra',    city: 'Delhi',    persona_type: 'NTC',  persona: 'Synthetic Fraud — Balance Inflation',   business_type: 'Individual / NTC',      expected_grade: 'E' },
+    { user_id: 'MSME_001', name: 'Sukhwinder Singh',  city: 'Ludhiana', persona_type: 'MSME', persona: 'Seasonal Agri Business',                business_type: 'Agriculture',           expected_grade: 'B' },
+    { user_id: 'MSME_002', name: 'Mohammed Farouk',   city: 'Delhi',    persona_type: 'MSME', persona: 'Wash Trader — Circular Transaction Fraud', business_type: 'Trading',            expected_grade: 'E' },
   ];
   const [activeId, setActiveId] = useState(null);
 

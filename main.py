@@ -149,6 +149,7 @@ def demo_endpoint(user_id: str):
     result['persona']        = user['persona']
     result['expected_grade'] = user['expected_grade']
     result['user_id']        = user_id
+    result['profile']        = user['user_profile']
 
     print(f"[DEMO] {user_id} ({user['persona']}) -> {result['grade']} expected {user['expected_grade']}")
     return result
@@ -181,14 +182,13 @@ def aa_users_endpoint():
     summaries = []
     for u in users:
         profile     = u.get('user_profile', {})
-        b_type      = profile.get('business_type', '')
-        persona_type = "NTC" if b_type == "Individual / NTC" else "MSME"
+        persona_type = u.get('model', 'NTC')
         summaries.append({
             "user_id":       u.get("user_id"),
             "name":          profile.get("name", "Unknown"),
             "persona":       u.get("persona", "Unknown"),
             "city":          profile.get("city", "Unknown"),
-            "business_type": b_type,
+            "business_type": profile.get("business_type", ""),
             "persona_type":  persona_type
         })
     print(f"[AA] /aa/users — returned {len(summaries)} user summaries")
