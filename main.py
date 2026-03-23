@@ -3,9 +3,11 @@ Endpoints: POST /score, GET /health, GET /demo/{user_id}
            + full Setu AA integration endpoints
 """
 
+from typing import Dict, Any, Optional
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from middleman_scorer import score_middleman_user
 import uvicorn
 import json
 import datetime
@@ -44,6 +46,14 @@ class SetuScoreRequest(BaseModel):
     business_vintage_months: int = 24
     gst_filing_consistency_score: int = 6
     telecom_number_vintage_days: int = 365
+
+class MiddlemanScoreRequest(BaseModel):
+    supplierdata: Optional[Dict[str, Any]] = None
+    gstdata: Optional[Dict[str, Any]] = None
+    telecomdata: Optional[Dict[str, Any]] = None
+    utilitydata: Optional[Dict[str, Any]] = None
+    bcagentdata: Optional[Dict[str, Any]] = None
+    applicantmetadata: Dict[str, Any]
 
 # ─────────────────────────────────────────────
 # APP + MIDDLEWARE
@@ -153,6 +163,55 @@ def demo_endpoint(user_id: str):
 
     print(f"[DEMO] {user_id} ({user['persona']}) -> {result['grade']} expected {user['expected_grade']}")
     return result
+
+# ─────────────────────────────────────────────
+# MIDDLEMAN ENDPOINTS
+# ─────────────────────────────────────────────
+
+@app.post('/score/middleman')
+def score_middleman_endpoint(req: MiddlemanScoreRequest):
+    try:
+        result = score_middleman_user(
+            applicantmetadata=req.applicantmetadata,
+            supplierdata=req.supplierdata,
+            gstdata=req.gstdata,
+            telecomdata=req.telecomdata,
+            utilitydata=req.utilitydata,
+            bcagentdata=req.bcagentdata
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get('/middleman/data/{msme_id}/{source}')
+def get_middleman_data(msme_id: str, source: str):
+    valid_sources = ["supplier", "gst", "telecom", "utility", "bcagent"]
+    if source not in valid_sources:
+        raise HTTPException(status_code=400, detail="Invalid source")
+    
+    # Hardcoded sample payload per source for demo purposes
+    demo_data = {
+        "supplier": {"invoices_cleared": 10, "avg_payment_days": 15},
+        "gst": {"filing_consistency": 8, "turnover": 500000},
+        "telecom": {"vintage_days": 400, "recharge_drop_ratio": 0.1},
+        "utility": {"electricity_on_time": 0.95, "avg_dpd": 2},
+        "bcagent": {"cash_deposited": 100000, "active_days": 25}
+    }
+    
+    return {source: demo_data[source]}
+
+@app.get('/middleman/consent/{msme_id}')
+def get_middleman_consent(msme_id: str):
+    return {
+        "msme_id": msme_id,
+        "consents": [
+            {"source": "supplier", "consent_granted": True},
+            {"source": "gst", "consent_granted": True},
+            {"source": "telecom", "consent_granted": True},
+            {"source": "utility", "consent_granted": True},
+            {"source": "bcagent", "consent_granted": True}
+        ]
+    }
 
 # ═══════════════════════════════════════════════════
 # SIMULATED AA LAYER (demo_users.json personas)

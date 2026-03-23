@@ -1141,6 +1141,94 @@
         "available": true,
         "declared_turnover": 5000000
       }
+    },
+    {
+      "user_id": "MSME_003",
+      "persona": "Cash-Only Kirana — No Digital Footprint",
+      "model": "MSME_MIDDLEMAN",
+      "expected_grade": "B",
+      "expected_outcome": "APPROVED",
+      "story": "No bank statement. No GST. No bureau entry. Invisible to every traditional lender. But 11 years of consistent supplier payments, 9 years of clean utility history, and a BC agent field confirmation tell a clear story. This is exactly the borrower the system was built for.",
+      "user_profile": {
+        "name": "Selvaraj M",
+        "phone": "9442187623",
+        "city": "Villupuram",
+        "business_type": "Retail / Kirana",
+        "business_vintage_months": 132,
+        "academic_background_tier": 3,
+        "purpose_of_loan_encoded": 3,
+        "telecom_number_vintage_days": 1825,
+        "gst_filing_consistency_score": 0
+      },
+      "middleman_sources": {
+        "supplierdata": {
+          "supplier_name": "Sri Murugan Agencies",
+          "relationship_vintage_days": 2190,
+          "avg_monthly_purchase_inr": 40000,
+          "payment_on_time_ratio": 0.94,
+          "avg_payment_delay_days": 7.8,
+          "rolling_dues_flag": 0,
+          "purchase_trend": "stable",
+          "months_of_data": 24
+        },
+        "utilitydata": {
+          "consumer_number": "TN-VPM-004821",
+          "bills_paid_last_24": 22,
+          "bills_missed_last_24": 2,
+          "avg_payment_delay_days": 3.1,
+          "disconnection_flag": 0,
+          "account_vintage_days": 3285,
+          "avg_monthly_bill_inr": 1800
+        },
+        "telecomdata": {
+          "operator": "Jio",
+          "sim_vintage_days": 1825,
+          "recharge_consistency_ratio": 0.96,
+          "avg_monthly_recharge_inr": 349,
+          "sudden_usage_drop_flag": 0,
+          "number_portability_count": 0
+        },
+        "bcagentdata": {
+          "agent_id": "FINO-VPM-0042",
+          "field_visit_confirmed": 1,
+          "business_existence_confirmed": 1,
+          "estimated_daily_footfall": "medium",
+          "cash_deposit_records": 8,
+          "cooperative_member": 1,
+          "field_officer_risk_rating": "low"
+        },
+        "gstdata": null
+      },
+      "transactions": [],
+      "gst_data": {
+        "available": false,
+        "declared_turnover": 0
+      },
+      "msme_features": {
+        "business_vintage_months": 132,
+        "supplier_payment_on_time_ratio": 0.94,
+        "supplier_relationship_vintage_days": 2190,
+        "utility_payment_consistency": 22,
+        "avg_utility_dpd": 3.1,
+        "telecom_vintage_days": 1825,
+        "telecom_recharge_consistency": 0.96,
+        "bc_agent_confirmed": 1,
+        "cashflow_volatility": 0.0,
+        "gst_to_bank_variance": 0.0,
+        "turnover_inflation_spike": 0,
+        "customer_concentration_ratio": 0.0,
+        "revenue_growth_trend": 0.03,
+        "revenue_seasonality_index": 0.15
+      },
+      "radar": {
+        "Operational Stability": 74,
+        "Payment Discipline": 88,
+        "Identity Stability": 71,
+        "Cross-Source Consistency": 85,
+        "Liquidity Health": 45,
+        "Forensic / Fraud": 82
+      },
+      "key_flags": []
     }
   ]
 }
