@@ -1,0 +1,51 @@
+{
+  "supplierdata": {
+    "supplier_name": "Sri Murugan Agencies",
+    "relationship_vintage_days": 2190,
+    "avg_monthly_purchase_inr": 40000,
+    "payment_on_time_ratio": 0.94,
+    "avg_payment_delay_days": 7.8,
+    "rolling_dues_flag": 0,
+    "purchase_trend": "stable",
+    "months_of_data": 24
+  },
+  "gstdata": null,
+  "telecomdata": {
+    "operator": "Jio",
+    "sim_vintage_days": 1825,
+    "recharge_consistency_ratio": 0.96,
+    "avg_monthly_recharge_inr": 349,
+    "sudden_usage_drop_flag": 0,
+    "number_portability_count": 0
+  },
+  "utilitydata": {
+    "consumer_number": "TN-VPM-004821",
+    "bills_paid_last_24": 22,
+    "bills_missed_last_24": 2,
+    "avg_payment_delay_days": 3.1,
+    "disconnection_flag": 0,
+    "account_vintage_days": 3285,
+    "avg_monthly_bill_inr": 1800
+  },
+  "bcagentdata": {
+    "agent_id": "FINO-VPM-0042",
+    "field_visit_confirmed": 1,
+    "business_existence_confirmed": 1,
+    "estimated_daily_footfall": "medium",
+    "cash_deposit_records": 8,
+    "cooperative_member": 1,
+    "field_officer_risk_rating": "low"
+  },
+  "applicantmetadata": {
+    "applicant_age_years": 41,
+    "business_vintage_days": 4015,
+    "loan_amount_requested": 80000,
+    "estimated_monthly_turnover": 140000,
+    "owns_property": 1,
+    "region_risk_tier": 2,
+    "has_gstin": 0,
+    "has_business_bank_account": 0,
+    "sector": "retail_trade",
+    "employee_count_estimated": 2
+  }
+}

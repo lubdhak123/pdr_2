@@ -18,3 +18,7 @@ datasets/
 *.pkl
 *.joblib
 datasets.zip
+
+node_modules/
+dist/
+build/
