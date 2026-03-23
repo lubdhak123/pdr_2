@@ -3,6 +3,7 @@ import numpy as np
 from datetime import datetime, date
 import calendar
 from collections import Counter
+import math
 def _get_months_in_statement(statement) -> float:
     try:
         start = datetime.strptime(statement["statement_start"], "%Y-%m-%d")
@@ -471,10 +472,79 @@ def extract_features(statement: dict) -> dict:
     
     features["essential_vs_lifestyle_ratio"] = float(raw)
 
+    # ── 5 NEW UPI-CALIBRATED FEATURES ──────────────────────────────────────
+
+    # 45. night_transaction_ratio — % of transactions between 12AM-6AM
+    if transactions:
+        night_count = 0
+        total_with_time = 0
+        for t in transactions:
+            try:
+                d = datetime.strptime(t["date"], "%Y-%m-%d")
+                # If timestamp info available in description or timestamp field
+                hour = int(t.get("hour", d.hour if hasattr(d, 'hour') else 12))
+                total_with_time += 1
+                if 0 <= hour < 6:
+                    night_count += 1
+            except:
+                continue
+        night_transaction_ratio = night_count / max(1, total_with_time)
+    else:
+        night_transaction_ratio = metadata.get("night_transaction_ratio", 0.05)
+
+    # 46. weekend_spending_ratio — % of debit transactions on weekends
+    if transactions:
+        weekend_spend = 0.0
+        total_spend = 0.0
+        for t in transactions:
+            if t["type"] == "DR":
+                try:
+                    d = datetime.strptime(t["date"], "%Y-%m-%d")
+                    total_spend += t["amount"]
+                    if d.weekday() >= 5:  # Saturday=5, Sunday=6
+                        weekend_spend += t["amount"]
+                except:
+                    continue
+        weekend_spending_ratio = weekend_spend / max(1, total_spend)
+    else:
+        weekend_spending_ratio = metadata.get("weekend_spending_ratio", 0.28)
+
+    # 47. payment_diversity_score — Shannon entropy of transaction categories
+    if transactions:
+        cat_counts = Counter(t.get("category", "OTHER") for t in transactions)
+        total_txns = sum(cat_counts.values())
+        if total_txns > 0 and len(cat_counts) > 1:
+            max_ent = math.log2(len(cat_counts))
+            entropy = -sum((c/total_txns) * math.log2(c/total_txns) for c in cat_counts.values() if c > 0)
+            payment_diversity_score = entropy / max_ent if max_ent > 0 else 0.5
+        else:
+            payment_diversity_score = 0.0
+    else:
+        payment_diversity_score = metadata.get("payment_diversity_score", 0.5)
+
+    # 48. device_consistency_score — from metadata (1.0 = same device always)
+    device_consistency_score = float(metadata.get("device_consistency_score", 0.8))
+
+    # 49. geographic_risk_score — state-level risk from UPI fraud data
+    state_risk_map = {
+        'Karnataka': 3, 'Rajasthan': 2, 'Gujarat': 2, 'Delhi': 2,
+        'Maharashtra': 2, 'West Bengal': 2, 'Andhra Pradesh': 2,
+        'Telangana': 2, 'Uttar Pradesh': 2, 'Tamil Nadu': 1, 'Kerala': 1
+    }
+    user_state = metadata.get("state", metadata.get("region", ""))
+    geographic_risk_score = state_risk_map.get(user_state, int(metadata.get("geographic_risk_score", 2)))
+
+    # Add the 5 new UPI-calibrated features to the dict
+    features["night_transaction_ratio"] = float(night_transaction_ratio)
+    features["weekend_spending_ratio"] = float(weekend_spending_ratio)
+    features["payment_diversity_score"] = float(payment_diversity_score)
+    features["device_consistency_score"] = float(device_consistency_score)
+    features["geographic_risk_score"] = int(geographic_risk_score)
+
     for k, v in features.items():
         if v is None: raise ValueError(f"{k} is None")
         if pd.isna(v) or np.isinf(v): raise ValueError(f"{k} is NaN or inf")
-    if len(features) != 44: raise ValueError(f"Expected 44 features, got {len(features)}")
+    if len(features) != 49: raise ValueError(f"Expected 49 features, got {len(features)}")
     return features
 
 if __name__ == "__main__":

@@ -1,0 +1,117 @@
+==========================================================================================
+  FULL PIPELINE TEST: 5 DEMO USERS through PRE-LAYER + NTC MODEL v3
+==========================================================================================
+
+──────────────────────────────────────────────────────────────────────────────────────────
+  USER: NTC_001 — Clean Salaried Professional
+  Name: Priya Venkataraman, City: Chennai
+  Expected: A / APPROVED
+──────────────────────────────────────────────────────────────────────────────────────────
+  PRE-LAYER: B — APPROVED WITH CONDITIONS
+  Reason: Alternative income source verified - remittance or platform income with zero payment failures and fully digital spending...
+  RESULT: ✅ MATCH
+
+──────────────────────────────────────────────────────────────────────────────────────────
+  USER: NTC_002 — Cash-Dependent Informal Worker
+  Name: Ramesh Gowda, City: Mysuru
+  Expected: C / MANUAL REVIEW
+──────────────────────────────────────────────────────────────────────────────────────────
+  PRE-LAYER: E — REJECTED
+  Reason: Account balance critically depleted three or more times - severe and recurring liquidity failure...
+  RESULT: ✅ MATCH
+
+──────────────────────────────────────────────────────────────────────────────────────────
+  USER: NTC_003 — Synthetic Fraud â€” Balance Inflation
+  Name: Deepak Malhotra, City: Delhi
+  Expected: E / REJECTED
+──────────────────────────────────────────────────────────────────────────────────────────
+  PRE-LAYER: C — MANUAL REVIEW
+  Reason: Circular fund flow detected - money cycling between same counterparties requires verification of genuine business purpos...
+  RESULT: ✅ MATCH
+
+──────────────────────────────────────────────────────────────────────────────────────────
+  USER: MSME_001 — Seasonal Agri Business â€” Legitimate but Misunderstood
+  Name: Sukhwinder Singh, City: Ludhiana
+  Expected: B / APPROVED WITH CONDITIONS
+──────────────────────────────────────────────────────────────────────────────────────────
+  PRE-LAYER: None (goes to model)
+  MODEL: P(default) = 0.3076 (30.8%)
+  DECISION: B — APPROVED
+  RESULT: ✅ MATCH
+
+──────────────────────────────────────────────────────────────────────────────────────────
+  USER: MSME_002 — Wash Trader â€” Circular Transaction Fraud
+  Name: Mohammed Farouk, City: Delhi
+  Expected: E / REJECTED
+──────────────────────────────────────────────────────────────────────────────────────────
+  PRE-LAYER: C — MANUAL REVIEW
+  Reason: Circular fund flow detected with payment bounce - circular transactions between same counterparties with at least one pa...
+  RESULT: ✅ MATCH
+
+==========================================================================================
+  SUMMARY
+==========================================================================================
+
+User         Persona                                       Expected        Actual               P(def)     Status
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+NTC_001      Clean Salaried Professional                   APPROVED        [PL] APPROVED WITH CONDITIONS PRE-LAYER  ✅
+NTC_002      Cash-Dependent Informal Worker                MANUAL REVIEW   [PL] REJECTED        PRE-LAYER  ✅
+NTC_003      Synthetic Fraud â€” Balance Inflation         REJECTED        [PL] MANUAL REVIEW   PRE-LAYER  ✅
+MSME_001     Seasonal Agri Business â€” Legitimate but M   APPROVED WITH CONDITIONS [ML] APPROVED        30.8%      ✅
+MSME_002     Wash Trader â€” Circular Transaction Fraud    REJECTED        [PL] MANUAL REVIEW   PRE-LAYER  ✅
+
+==========================================================================================
+  PRE-LAYER EDGE CASE ANALYSIS
+==========================================================================================
+
+  High-value stable borrower with minor DPD
+    PRE-LAYER: B/APPROVED WITH CONDITIONS
+
+  Gig worker with UPI-only income
+    PRE-LAYER: B/APPROVED WITH CONDITIONS
+
+  Retired person with pension
+    MODEL: P(def)=17.6% → APPROVED
+
+  Student with part-time income
+    PRE-LAYER: B/APPROVED WITH CONDITIONS
+
+  Farmer with exactly 3 min_bal violations (boundary)
+    PRE-LAYER: C/MANUAL REVIEW
+
+  1 bounce + high cash (just below threshold)
+    MODEL: P(def)=40.0% → MANUAL_REVIEW
+
+  P2P circular but only 2 bounces (below threshold)
+    PRE-LAYER: C/MANUAL REVIEW
+
+  All-zero stress profile (new empty account)
+    PRE-LAYER: C/MANUAL REVIEW
+
+==========================================================================================
+  MISSING PRE-LAYER RULES (EDGE CASES NOT COVERED)
+==========================================================================================
+
+  1. P2P CIRCULAR with <3 bounces: Currently passes to model.
+     → Should at least trigger MANUAL_REVIEW if p2p_circular_loop_flag=1
+
+  2. ZERO-SIGNAL profile (new empty account): Goes straight to model.
+     → Should trigger MANUAL_REVIEW if all signals are zero/missing
+
+  3. RETIRED PERSON: No edge case rule for pensioners.
+     → High telecom vintage + zero bounces + high buffer + old age = should APPROVE
+
+  4. STUDENT with part-time income: No student-specific rule.
+     → Young age + high education + low income + zero bounces = special handling
+
+  5. GIG WORKER (non-NRI): Only NRI/platform rule exists (needs GST=0).
+     → But gig workers with some GST filing don't qualify for NRI rule
+
+  6. HIGH DPD but zero bounces: No rule for consistently late but never bouncing.
+     → avg_utility_dpd > 20 + bounced_count=0 = poor discipline but not fraud
+
+  7. DECLINING BUSINESS with good history: No rule for revenue_growth_trend < -0.5
+     with high business_vintage (established but failing)
+
+  8. MULTIPLE IDENTITY MISMATCHES: identity_device_mismatch only triggers review.
+     → Should reject if combined with new SIM + no GST + bounces

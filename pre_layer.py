@@ -55,6 +55,11 @@ T_NEW_BUSINESS_VINTAGE   = 6     # <=6 months = early stage MSME (RBI priority s
 T_NEW_BIZ_GST_MIN        = 2     # Minimum GST compliance for new business
 T_NEW_BIZ_BUFFER         = 1.0   # Minimum 1 month operating reserve
 
+# NEW: Balance inflation
+T_BALANCE_INFLATION_VOL  = 0.85  # >85% EOD volatility = extreme swings
+T_NEW_SIM_DAYS           = 120   # <120 days = very new SIM
+T_MIN_SIGNAL_THRESHOLD   = 0.10  # Minimum signal coverage to avoid zero-profile
+
 
 def apply_pre_layer(features: dict) -> tuple | None:
     # ── TYPE 1: HARD REJECTION ──
@@ -90,11 +95,35 @@ def apply_pre_layer(features: dict) -> tuple | None:
                 'Excessive payment failures - five or more bounce charges '
                 'indicate chronic inability to meet obligations')
 
-    # Severe liquidity failure
-    if features.get('min_balance_violation_count', 0) >= T_MIN_BAL_VIOLATION:
+    # Balance inflation + new identity (balance stacking fraud)
+    if (features.get('eod_balance_volatility', 0) > T_BALANCE_INFLATION_VOL and
+        features.get('telecom_number_vintage_days', 0) < T_NEW_SIM_DAYS and
+        features.get('utility_payment_consistency', 0) < 0.30):
         return ('E', 'REJECTED',
-                'Account balance critically depleted three or more times - '
-                'severe and recurring liquidity failure')
+                'Balance inflation pattern detected - extreme balance volatility '
+                'with new identity and minimal payment history indicates '
+                'artificial balance stacking before loan application')
+
+    # Identity mismatch + new SIM + bounces (combined fraud signal)
+    if (features.get('identity_device_mismatch', 0) == 1 and
+        features.get('telecom_number_vintage_days', 0) < T_NEW_SIM_DAYS and
+        features.get('gst_filing_consistency_score', 0) == 0 and
+        features.get('bounced_transaction_count', 0) >= 1):
+        return ('E', 'REJECTED',
+                'Multiple fraud indicators - identity mismatch combined with '
+                'new SIM, no GST compliance, and payment failures')
+
+    # Severe liquidity failure — BUT exempt seasonal farmers with good signals
+    if features.get('min_balance_violation_count', 0) >= T_MIN_BAL_VIOLATION:
+        is_seasonal = (features.get('revenue_seasonality_index', 0) > T_SEASONALITY_INDEX and
+                       features.get('telecom_number_vintage_days', 0) > T_TELECOM_VINTAGE_STRONG and
+                       features.get('bounced_transaction_count', 0) == 0)
+        if is_seasonal:
+            pass  # Don't reject — let it fall through to edge case or model
+        else:
+            return ('E', 'REJECTED',
+                    'Account balance critically depleted three or more times - '
+                    'severe and recurring liquidity failure')
 
     # Extreme cash dependency with bounces
     if (features.get('cash_withdrawal_dependency', 0) > T_CASH_DEPENDENCY_HIGH and
@@ -156,6 +185,36 @@ def apply_pre_layer(features: dict) -> tuple | None:
 
     # ── TYPE 3: MANUAL REVIEW ──
 
+    # P2P circular loop with ANY bounces (even below hard rejection threshold)
+    if (features.get('p2p_circular_loop_flag', 0) == 1 and
+        features.get('bounced_transaction_count', 0) >= 1):
+        return ('C', 'MANUAL REVIEW',
+                'Circular fund flow detected with payment bounce - circular '
+                'transactions between same counterparties with at least one '
+                'payment failure requires manual investigation')
+
+    # P2P circular loop alone (no bounces but still suspicious)
+    if features.get('p2p_circular_loop_flag', 0) == 1:
+        return ('C', 'MANUAL REVIEW',
+                'Circular fund flow detected - money cycling between same '
+                'counterparties requires verification of genuine business purpose')
+
+    # Zero-signal profile (new account with no history)
+    signal_count = sum([
+        features.get('utility_payment_consistency', 0) > 0,
+        features.get('bounced_transaction_count', 0) > 0,
+        features.get('telecom_number_vintage_days', 0) > 180,
+        features.get('gst_filing_consistency_score', 0) > 0,
+        features.get('emergency_buffer_months', 0) > 0.5,
+        features.get('income_stability_score', 0) > 0.1,
+        features.get('business_vintage_months', 0) > 6,
+    ])
+    if signal_count <= 1:
+        return ('C', 'MANUAL REVIEW',
+                'Insufficient credit signals - account has minimal financial '
+                'history. Manual assessment required to verify identity and '
+                'repayment capacity before loan disbursement')
+
     # Customer concentration with additional risk signals
     if (features.get('customer_concentration_ratio', 0) > T_CUSTOMER_CONCENTRATION and
         (features.get('telecom_number_vintage_days', 0) < T_TELECOM_VINTAGE_MEDIUM or
@@ -213,6 +272,49 @@ def apply_pre_layer(features: dict) -> tuple | None:
                 'behavioral signals are clean with zero payment failures and active '
                 'GST compliance. Recommend manual assessment with focus on business '
                 'plan and sector outlook')
+
+    # Declining established business (was healthy, now failing)
+    if (features.get('revenue_growth_trend', 0) < -0.40 and
+        features.get('business_vintage_months', 0) > 24 and
+        features.get('emergency_buffer_months', 0) < 2.0):
+        return ('C', 'MANUAL REVIEW',
+                'Established business showing significant revenue decline - '
+                'business has operated for 2+ years but recent revenue trend is '
+                'strongly negative with limited buffer. Verify cause of decline '
+                'and recovery prospects before disbursement')
+
+    # Consistently late payer with zero bounces (poor discipline, not fraud)
+    if (features.get('avg_utility_dpd', 0) > 20 and
+        features.get('bounced_transaction_count', 0) == 0 and
+        features.get('utility_payment_consistency', 0) < 0.50):
+        return ('C', 'MANUAL REVIEW',
+                'Chronic late payment pattern detected - consistently pays utility '
+                'bills 20+ days late but never bounces. Indicates poor financial '
+                'discipline rather than inability to pay. Recommend structured '
+                'repayment schedule with auto-debit mandate')
+
+    # Seasonal farmer with min_bal violations but clean otherwise
+    if (features.get('revenue_seasonality_index', 0) > T_SEASONALITY_INDEX and
+        features.get('min_balance_violation_count', 0) >= T_MIN_BAL_VIOLATION and
+        features.get('bounced_transaction_count', 0) == 0 and
+        features.get('telecom_number_vintage_days', 0) > T_TELECOM_VINTAGE_STRONG):
+        return ('C', 'MANUAL REVIEW',
+                'Seasonal business with low-balance periods - balance drops below '
+                'minimum during off-season months but maintains zero bounce record '
+                'and long identity vintage. Recommend seasonal EMI structure aligned '
+                'with harvest/revenue cycle')
+
+    # Gig worker with some GST but irregular income
+    if (features.get('income_seasonality_flag', 0) == 1 and
+        features.get('income_stability_score', 0) < 0.40 and
+        features.get('bounced_transaction_count', 0) == 0 and
+        features.get('gst_filing_consistency_score', 0) > 0 and
+        features.get('gst_filing_consistency_score', 0) < T_GST_SCORE_STRONG and
+        features.get('cash_withdrawal_dependency', 0) < T_CASH_DEPENDENCY_MEDIUM):
+        return ('C', 'MANUAL REVIEW',
+                'Gig or freelance income pattern - irregular income timing with '
+                'partial GST compliance and zero payment failures. Recommend '
+                'approval with income averaging and flexible EMI dates')
 
     return None
 
