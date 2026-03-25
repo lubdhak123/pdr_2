@@ -6,6 +6,18 @@ import os, pickle, warnings
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+
+class PlattCalibratedModel:
+    """Required to unpickle the calibrated model saved by train.py."""
+    def __init__(self, xgb_model, platt_lr):
+        self.xgb_model = xgb_model
+        self.platt_lr  = platt_lr
+
+    def predict_proba(self, X):
+        raw = self.xgb_model.predict_proba(X)[:, 1].reshape(-1, 1)
+        cal = self.platt_lr.predict_proba(raw)[:, 1]
+        return np.column_stack([1 - cal, cal])
 import matplotlib.gridspec as gridspec
 from sklearn.metrics import (
     roc_auc_score, roc_curve, precision_recall_curve,

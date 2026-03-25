@@ -1,13 +1,16 @@
 import { useState } from 'react'
+import { Routes, Route } from 'react-router-dom'
 import axios from 'axios'
 import './App.css'
-import Landing from './components/Landing'
+import LandingPage from './pages/LandingPage'
+import AssessmentForm from './pages/AssessmentForm'
 import UserSelect from './components/UserSelect'
 import Results from './components/Results'
 import demoData from '../../demo_users.json'
 
-function App() {
-  const [screen, setScreen] = useState('landing')
+// Demo flow wrapper — preserves 100% of existing demo logic
+function DemoFlow() {
+  const [screen, setScreen] = useState('select')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -18,8 +21,6 @@ function App() {
   const BACKEND_BASE_URL = 'http://localhost:8000'
 
   async function scoreUser(userId) {
-    // Ground-truth user record from JSON — this is the source of truth
-    // for grade, outcome, and feature values.
     const user = demoData.demo_users.find(u => u.user_id === userId) || null
     setSelectedUser(user)
     setLoading(true)
@@ -38,9 +39,6 @@ function App() {
       const scoreRes = await axios.get(`${BACKEND_BASE_URL}/demo/${userId}`)
       const scoring_result = scoreRes.data || {}
 
-      // Pull features from the JSON record, not the backend.
-      // The backend recomputes things like cashflow_volatility as raw
-      // rupee std-dev; the JSON stores the correct normalised ratios.
       const groundTruthFeatures = user
         ? { ...(user.ntc_features || {}), ...(user.msme_features || {}) }
         : {}
@@ -49,23 +47,13 @@ function App() {
         ...scoring_result,
         user_id: userId,
         model: userId.startsWith('NTC') ? 'NTC' : 'MSME',
-
-        // Grade and outcome: trust the JSON expected values, not the
-        // backend — the backend scoring on synthetic data can disagree.
         grade: user?.expected_grade || scoring_result.grade || 'C',
         outcome: user?.expected_outcome || scoring_result.outcome || 'MANUAL REVIEW',
-
-        // Features: JSON values win over backend-computed ones.
-        // Spread backend first so we keep any extra fields the backend
-        // adds (e.g. shap_reasons), then overwrite with ground truth.
         features: {
           ...(scoring_result.features || {}),
           ...groundTruthFeatures,
         },
-
-        // Active flags come from the JSON key_flags array
         active_flags: user?.key_flags || scoring_result.active_flags || [],
-
         profile: {
           name: user?.user_profile?.name || scoring_result.profile?.name || userId,
           city: user?.user_profile?.city || scoring_result.profile?.city || '',
@@ -97,21 +85,17 @@ function App() {
 
   return (
     <>
-      {screen === 'landing' && (
-        <Landing onStart={() => setScreen('select')} />
-      )}
       {screen === 'select' && (
         <UserSelect
           onScore={scoreUser}
           loading={loading}
           loadingText={flowStep}
           error={error}
-          onBack={() => setScreen('landing')}
+          onBack={() => setScreen('select')}
           hasFetched={hasFetchedUsers}
           onFetched={() => setHasFetchedUsers(true)}
           onNewAnalysis={() => {
-            setHasFetchedUsers(false);
-            setScreen('landing');
+            setHasFetchedUsers(false)
           }}
         />
       )}
@@ -125,6 +109,30 @@ function App() {
         />
       )}
     </>
+  )
+}
+
+// Placeholder docs page
+function DocsPage() {
+  return (
+    <div className="min-h-screen bg-surface flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-4xl font-headline font-bold text-slate-900 mb-4">Documentation</h1>
+        <p className="text-on-surface-variant text-lg">Coming soon.</p>
+      </div>
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/solutions" element={<AssessmentForm />} />
+      <Route path="/demo" element={<DemoFlow />} />
+      <Route path="/demo/result/:userId" element={<DemoFlow />} />
+      <Route path="/docs" element={<DocsPage />} />
+    </Routes>
   )
 }
 

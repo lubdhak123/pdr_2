@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
-df = pd.read_csv(os.path.join(DATA_DIR, "msme_synthetic.csv"))
+df = pd.read_csv(os.path.join(DATA_DIR, "msme_training_v2.csv"))
 print(f"Loaded: {df.shape[0]} rows × {df.shape[1]} cols")
 print(f"Default rate: {df['default'].mean():.1%}\n")
 
