@@ -13,6 +13,7 @@ function App() {
   const [error, setError] = useState(null)
   const [flowStep, setFlowStep] = useState('')
   const [selectedUser, setSelectedUser] = useState(null)
+  const [hasFetchedUsers, setHasFetchedUsers] = useState(false)
 
   const BACKEND_BASE_URL = 'http://localhost:8000'
 
@@ -25,7 +26,15 @@ function App() {
     setError(null)
 
     try {
-      setFlowStep('Fetching demo score...')
+      setFlowStep('Extracting behavioral signals...')
+      await new Promise(r => setTimeout(r, 1000))
+      
+      setFlowStep('Refining behavioral models & graphs...')
+      await new Promise(r => setTimeout(r, 1000))
+
+      setFlowStep('Generating multidimensional SHAP factors...')
+      await new Promise(r => setTimeout(r, 1000))
+
       const scoreRes = await axios.get(`${BACKEND_BASE_URL}/demo/${userId}`)
       const scoring_result = scoreRes.data || {}
 
@@ -98,6 +107,12 @@ function App() {
           loadingText={flowStep}
           error={error}
           onBack={() => setScreen('landing')}
+          hasFetched={hasFetchedUsers}
+          onFetched={() => setHasFetchedUsers(true)}
+          onNewAnalysis={() => {
+            setHasFetchedUsers(false);
+            setScreen('landing');
+          }}
         />
       )}
       {screen === 'results' && (

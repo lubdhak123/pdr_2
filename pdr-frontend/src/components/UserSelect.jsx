@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import './UserSelect.css';
 
-function UserSelect({ onScore, onBack }) {
-  const [fetchMode, setFetchMode] = useState('initial'); // 'initial' | 'loading' | 'grid'
+function UserSelect({ onScore, onBack, hasFetched, onFetched, onNewAnalysis, loading, loadingText: propLoadingText }) {
+  const [fetchMode, setFetchMode] = useState(hasFetched ? 'grid' : 'initial'); // 'initial' | 'loading' | 'grid'
   const [progress, setProgress] = useState(0);
   const [loadingText, setLoadingText] = useState('Connecting to Data Sources...');
 
@@ -34,6 +34,7 @@ function UserSelect({ onScore, onBack }) {
       } else {
         setTimeout(() => {
           setFetchMode('grid');
+          if (onFetched) onFetched();
         }, 500);
       }
     };
@@ -64,9 +65,6 @@ function UserSelect({ onScore, onBack }) {
             </a>
           </nav>
           <div className="px-8 mt-auto pt-8 border-t border-slate-200/10">
-            <button className="w-full bg-primary text-on-primary py-3 rounded-full font-bold shadow-md active:scale-95 transition-all mb-6">
-              New Analysis
-            </button>
             <div className="space-y-1">
               <a className="flex items-center gap-4 text-slate-500 px-6 py-2 hover:text-slate-900" href="#">
                 <span className="material-symbols-outlined text-lg">help</span>
@@ -100,8 +98,8 @@ function UserSelect({ onScore, onBack }) {
             <button onClick={onBack} className="text-secondary text-sm flex items-center gap-1 hover:text-primary transition-colors mb-6 group bg-transparent border-none cursor-pointer">
               <span className="material-symbols-outlined text-sm transition-transform group-hover:-translate-x-1">arrow_back</span> Back
             </button>
-            <h2 className="text-4xl font-headline font-extrabold text-slate-900 mb-2 tracking-tight">Account Aggregator Demo</h2>
-            <p className="text-on-surface-variant text-lg">Initialize the connection to start scoring demo profiles.</p>
+            <h2 className="text-4xl font-headline font-extrabold text-slate-900 mb-2 tracking-tight">Alternative Credit Intelligence</h2>
+            <p className="text-on-surface-variant text-lg">Select a sandbox profile to run through the multi-layer risk evaluation pipeline.</p>
           </div>
 
           {/* Initial State */}
@@ -110,7 +108,7 @@ function UserSelect({ onScore, onBack }) {
               <div className="w-16 h-16 bg-primary-container text-primary rounded-2xl flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-3xl">database</span>
               </div>
-              <h3 className="text-2xl font-headline font-bold text-slate-900 mb-2">Connect to Account Aggregator</h3>
+              <h3 className="text-2xl font-headline font-bold text-slate-900 mb-2">Initialize Sandbox Environment</h3>
               <p className="text-secondary mb-8 text-center max-w-md">Fetch real-time financial snapshots from our sandboxed data sources to begin analysis.</p>
               <button 
                 onClick={startLoading}
@@ -163,10 +161,9 @@ function UserSelect({ onScore, onBack }) {
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                    
                    {/* User 1 */}
-                   <div className="bg-surface-container-lowest border border-slate-200 rounded-xl p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col group">
+                   <div className="bg-surface-container-lowest border border-slate-200 rounded-xl p-8 shadow-xl shadow-slate-400 hover:shadow-2xl hover:shadow-slate-500 hover:-translate-y-1 transition-all flex flex-col group">
                      <div className="flex justify-between items-start mb-8">
                        <span className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase">NTC Profile</span>
-                       <span className="bg-tertiary-container text-on-tertiary-container text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Expect: A</span>
                      </div>
                      <h4 className="text-xl font-headline font-bold text-on-surface mb-1">Priya Venkataraman</h4>
                      <p className="text-xs text-on-surface-variant mb-2">Chennai, Tamil Nadu</p>
@@ -183,10 +180,9 @@ function UserSelect({ onScore, onBack }) {
                    </div>
 
                    {/* User 2 */}
-                   <div className="bg-surface-container-lowest border border-slate-200 rounded-xl p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col group">
+                   <div className="bg-surface-container-lowest border border-slate-200 rounded-xl p-8 shadow-xl shadow-slate-400 hover:shadow-2xl hover:shadow-slate-500 hover:-translate-y-1 transition-all flex flex-col group">
                      <div className="flex justify-between items-start mb-8">
                        <span className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase">NTC Profile</span>
-                       <span className="bg-amber-100 text-amber-700 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Expect: C</span>
                      </div>
                      <h4 className="text-xl font-headline font-bold text-on-surface mb-1">Ramesh Gowda</h4>
                      <p className="text-xs text-on-surface-variant mb-2">Mysuru, Karnataka</p>
@@ -203,10 +199,9 @@ function UserSelect({ onScore, onBack }) {
                    </div>
 
                    {/* User 3 */}
-                   <div className="bg-surface-container-lowest border border-slate-200 rounded-xl p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col group">
+                   <div className="bg-surface-container-lowest border border-slate-200 rounded-xl p-8 shadow-xl shadow-slate-400 hover:shadow-2xl hover:shadow-slate-500 hover:-translate-y-1 transition-all flex flex-col group">
                      <div className="flex justify-between items-start mb-8">
                        <span className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase">NTC Profile</span>
-                       <span className="bg-error-container text-on-error-container text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Expect: E</span>
                      </div>
                      <h4 className="text-xl font-headline font-bold text-on-surface mb-1">Deepak Malhotra</h4>
                      <p className="text-xs text-on-surface-variant mb-2">Delhi, NCR</p>
@@ -233,10 +228,9 @@ function UserSelect({ onScore, onBack }) {
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                    
                    {/* User 4 */}
-                   <div className="bg-surface-container-lowest border border-slate-200 rounded-xl p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col group">
+                   <div className="bg-surface-container-lowest border border-slate-200 rounded-xl p-8 shadow-xl shadow-slate-400 hover:shadow-2xl hover:shadow-slate-500 hover:-translate-y-1 transition-all flex flex-col group">
                      <div className="flex justify-between items-start mb-8">
                        <span className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase">MSME Entity</span>
-                       <span className="bg-primary-container text-primary text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Expect: B</span>
                      </div>
                      <h4 className="text-xl font-headline font-bold text-on-surface mb-1">Sukhwinder Singh</h4>
                      <p className="text-xs text-on-surface-variant mb-2">Ludhiana, Punjab</p>
@@ -253,10 +247,9 @@ function UserSelect({ onScore, onBack }) {
                    </div>
 
                    {/* User 5 */}
-                   <div className="bg-surface-container-lowest border border-slate-200 rounded-xl p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col group">
+                   <div className="bg-surface-container-lowest border border-slate-200 rounded-xl p-8 shadow-xl shadow-slate-400 hover:shadow-2xl hover:shadow-slate-500 hover:-translate-y-1 transition-all flex flex-col group">
                      <div className="flex justify-between items-start mb-8">
                        <span className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase">MSME Entity</span>
-                       <span className="bg-error-container text-on-error-container text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Expect: E</span>
                      </div>
                      <h4 className="text-xl font-headline font-bold text-on-surface mb-1">Mohammed Farouk</h4>
                      <p className="text-xs text-on-surface-variant mb-2">Delhi, NCR</p>
@@ -278,6 +271,19 @@ function UserSelect({ onScore, onBack }) {
 
         </section>
       </main>
+
+      {/* Analysis Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center animate-reveal">
+          <div className="bg-white p-10 rounded-3xl shadow-2xl flex flex-col items-center max-w-sm w-full text-center border border-slate-200">
+            <div className="w-16 h-16 bg-slate-100 text-primary rounded-full flex items-center justify-center mb-6">
+               <span className="material-symbols-outlined text-3xl animate-spin">autorenew</span>
+            </div>
+            <h3 className="text-xl font-headline font-bold text-slate-900 mb-2">Analyzing Profile</h3>
+            <p className="text-secondary font-medium text-sm animate-pulse">{propLoadingText || 'Processing parameters...'}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

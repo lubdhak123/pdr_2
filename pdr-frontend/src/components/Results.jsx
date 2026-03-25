@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import './Results.css';
+import XaiTransparencySection from './XaiTransparencySection';
 
 // ── Per-user profile metadata ─────────────────────────────────
 const PROFILE_DETAILS = {
@@ -561,6 +562,16 @@ export default function Results({ result, error, onBack, transactions }) {
             })}
           </div>
         </div>
+
+        <XaiTransparencySection 
+          userProfile={{
+            ...profile,
+            features,
+            isNTC,
+            shap_reasons: result.shap_reasons,
+            active_flags: result.active_flags
+          }} 
+        />
 
         <div style={{ height: 100 }} />
       </div>
