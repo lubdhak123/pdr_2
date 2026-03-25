@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import axios from 'axios'
 import './App.css'
 import LandingPage from './pages/LandingPage'
@@ -7,6 +7,16 @@ import AssessmentForm from './pages/AssessmentForm'
 import UserSelect from './components/UserSelect'
 import Results from './components/Results'
 import demoData from '../../demo_users.json'
+
+// Animated page wrapper — re-triggers on route change via key
+function PageTransition({ children }) {
+  const location = useLocation()
+  return (
+    <div className="page-transition" key={location.pathname}>
+      {children}
+    </div>
+  )
+}
 
 // Demo flow wrapper — preserves 100% of existing demo logic
 function DemoFlow() {
@@ -125,14 +135,18 @@ function DocsPage() {
 }
 
 function App() {
+  const location = useLocation()
+
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/solutions" element={<AssessmentForm />} />
-      <Route path="/demo" element={<DemoFlow />} />
-      <Route path="/demo/result/:userId" element={<DemoFlow />} />
-      <Route path="/docs" element={<DocsPage />} />
-    </Routes>
+    <div className="page-transition" key={location.pathname}>
+      <Routes location={location}>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/solutions" element={<AssessmentForm />} />
+        <Route path="/demo" element={<DemoFlow />} />
+        <Route path="/demo/result/:userId" element={<DemoFlow />} />
+        <Route path="/docs" element={<DocsPage />} />
+      </Routes>
+    </div>
   )
 }
 

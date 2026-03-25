@@ -81,14 +81,15 @@ function AssessmentForm() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center w-full">
           <Link to="/" className="text-xl font-bold tracking-tighter text-slate-900">Paise Do Re (PDR)</Link>
           <div className="hidden md:flex items-center gap-x-8">
+            <Link to="/#problem-statement" className="text-slate-500 font-medium hover:text-slate-900 transition-all duration-300">About Us</Link>
             <a className="text-slate-900 font-semibold border-b-2 border-slate-900 pb-1 hover:text-slate-900 transition-all duration-300" href="#">Solutions</a>
             <a className="text-slate-500 font-medium hover:text-slate-900 transition-all duration-300" href="#">Trust Pipeline</a>
             <a className="text-slate-500 font-medium hover:text-slate-900 transition-all duration-300" href="#">Compliance</a>
-            <a className="text-slate-500 font-medium hover:text-slate-900 transition-all duration-300" href="#">Documentation</a>
+            <a className="text-slate-500 font-medium hover:text-slate-900 transition-all duration-300" href="https://github.com/lubdhak123/pdr_2" target="_blank" rel="noopener noreferrer">Documentation</a>
           </div>
           <div className="flex items-center gap-4">
             <button className="text-slate-600 font-medium hover:text-slate-900 transition-all duration-300 active:scale-95">Login</button>
-            <Link to="/solutions" className="gradient-dark text-white px-6 py-2.5 rounded-full font-semibold active:scale-95 transition-transform duration-200 text-sm">Request Demo</Link>
+            <Link to="/demo" className="gradient-dark text-white px-6 py-2.5 rounded-full font-semibold active:scale-95 transition-transform duration-200 text-sm">View Demo</Link>
           </div>
         </div>
       </nav>
@@ -126,7 +127,7 @@ function AssessmentForm() {
 
           {/* ==================== MSME FORM ==================== */}
           {activeForm === 'msme' && (
-            <div className="space-y-8" id="msme-content">
+            <div className="space-y-8 page-transition" key="msme" id="msme-content">
               {/* Header Section */}
               <div className="text-center space-y-2">
                 <h1 className="text-3xl font-headline font-extrabold text-on-surface tracking-tight">MSME Credit Assessment</h1>
@@ -302,12 +303,54 @@ function AssessmentForm() {
                   </button>
                 </div>
               </form>
+
+              {/* Bottom Context Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 flex flex-col items-center text-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
+                    <span className="material-symbols-outlined">speed</span>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold">Real-time Analysis</h4>
+                    <p className="text-[11px] text-on-surface-variant">Scores are calculated using live market benchmarks.</p>
+                  </div>
+                </div>
+                <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 flex flex-col items-center text-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
+                    <span className="material-symbols-outlined">account_tree</span>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold">Risk Weighting</h4>
+                    <p className="text-[11px] text-on-surface-variant">Algorithm accounts for sector-specific volatility.</p>
+                  </div>
+                </div>
+                <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 flex flex-col items-center text-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
+                    <span className="material-symbols-outlined">clinical_notes</span>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold">Instant Report</h4>
+                    <p className="text-[11px] text-on-surface-variant">Receive a detailed PDF breakdown upon submission.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Actions */}
+              <div className="flex justify-center gap-6 mt-8">
+                <button className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" type="button">
+                  <span className="material-symbols-outlined text-sm">save</span> Save Progress
+                </button>
+                <div className="w-[1px] h-4 bg-outline-variant/30"></div>
+                <button className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" type="button">
+                  <span className="material-symbols-outlined text-sm">print</span> Print Draft
+                </button>
+              </div>
             </div>
           )}
 
           {/* ==================== NTC FORM ==================== */}
           {activeForm === 'ntc' && (
-            <div className="space-y-8" id="ntc-content">
+            <div className="space-y-8 page-transition" key="ntc" id="ntc-content">
               {/* Header Section */}
               <div className="text-center space-y-2">
                 <h1 className="text-3xl font-headline font-extrabold text-on-surface tracking-tight">New To Credit Assessment</h1>
@@ -484,50 +527,52 @@ function AssessmentForm() {
                   </button>
                 </div>
               </form>
+
+              {/* Bottom Context Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 flex flex-col items-center text-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
+                    <span className="material-symbols-outlined">speed</span>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold">Real-time Analysis</h4>
+                    <p className="text-[11px] text-on-surface-variant">Scores are calculated using live market benchmarks.</p>
+                  </div>
+                </div>
+                <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 flex flex-col items-center text-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
+                    <span className="material-symbols-outlined">account_tree</span>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold">Risk Weighting</h4>
+                    <p className="text-[11px] text-on-surface-variant">Algorithm accounts for sector-specific volatility.</p>
+                  </div>
+                </div>
+                <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 flex flex-col items-center text-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
+                    <span className="material-symbols-outlined">clinical_notes</span>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold">Instant Report</h4>
+                    <p className="text-[11px] text-on-surface-variant">Receive a detailed PDF breakdown upon submission.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Actions */}
+              <div className="flex justify-center gap-6 mt-8">
+                <button className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" type="button">
+                  <span className="material-symbols-outlined text-sm">save</span> Save Progress
+                </button>
+                <div className="w-[1px] h-4 bg-outline-variant/30"></div>
+                <button className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" type="button">
+                  <span className="material-symbols-outlined text-sm">print</span> Print Draft
+                </button>
+              </div>
             </div>
           )}
 
-          {/* Bottom Context Cards (Shared) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 flex flex-col items-center text-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
-                <span className="material-symbols-outlined">speed</span>
-              </div>
-              <div>
-                <h4 className="text-sm font-bold">Real-time Analysis</h4>
-                <p className="text-[11px] text-on-surface-variant">Scores are calculated using live market benchmarks.</p>
-              </div>
-            </div>
-            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 flex flex-col items-center text-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
-                <span className="material-symbols-outlined">account_tree</span>
-              </div>
-              <div>
-                <h4 className="text-sm font-bold">Risk Weighting</h4>
-                <p className="text-[11px] text-on-surface-variant">Algorithm accounts for sector-specific volatility.</p>
-              </div>
-            </div>
-            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 flex flex-col items-center text-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
-                <span className="material-symbols-outlined">clinical_notes</span>
-              </div>
-              <div>
-                <h4 className="text-sm font-bold">Instant Report</h4>
-                <p className="text-[11px] text-on-surface-variant">Receive a detailed PDF breakdown upon submission.</p>
-              </div>
-            </div>
-          </div>
 
-          {/* Bottom Actions */}
-          <div className="flex justify-center gap-6 mt-8">
-            <button className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" type="button">
-              <span className="material-symbols-outlined text-sm">save</span> Save Progress
-            </button>
-            <div className="w-[1px] h-4 bg-outline-variant/30"></div>
-            <button className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" type="button">
-              <span className="material-symbols-outlined text-sm">print</span> Print Draft
-            </button>
-          </div>
         </div>
       </main>
 

@@ -9,11 +9,11 @@ function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center w-full">
           <div className="text-xl font-bold tracking-tighter text-slate-900 dark:text-slate-50">Paise Do Re (PDR)</div>
           <div className="hidden md:flex items-center gap-x-8">
-            <a className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:hover:text-white transition-all duration-300" href="#problem-statement">About Us</a>
-            <a className="text-slate-900 dark:text-white font-semibold border-b-2 border-slate-900 dark:border-slate-50 pb-1 hover:text-slate-900 dark:hover:text-white transition-all duration-300" href="#trust-pipeline">Solutions</a>
+            <a className="text-slate-900 dark:text-white font-semibold border-b-2 border-slate-900 dark:border-slate-50 pb-1 hover:text-slate-900 dark:hover:text-white transition-all duration-300" href="#problem-statement">About Us</a>
+            <Link to="/solutions" className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:hover:text-white transition-all duration-300">Solutions</Link>
             <a className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:hover:text-white transition-all duration-300" href="#trust-pipeline">Trust Pipeline</a>
             <a className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:hover:text-white transition-all duration-300" href="#intelligence">Compliance</a>
-            <a className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:hover:text-white transition-all duration-300" href="#intelligence">Documentation</a>
+            <a className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:hover:text-white transition-all duration-300" href="https://github.com/lubdhak123/pdr_2" target="_blank" rel="noopener noreferrer">Documentation</a>
           </div>
           <div className="flex items-center gap-4">
             <button className="text-[#565e74] dark:text-slate-300 font-medium hover:text-slate-900 dark:hover:text-white transition-all duration-300 active:scale-95">Login</button>
@@ -41,9 +41,9 @@ function LandingPage() {
                 <Link to="/solutions" className="gradient-cta text-white px-8 py-4 rounded-lg text-lg font-bold flex items-center gap-2 shadow-lg shadow-tertiary/20 active:scale-95 transition-transform">
                   Score a Business Free →
                 </Link>
-                <Link to="/docs" className="bg-transparent text-on-surface px-8 py-4 rounded-lg text-lg font-bold ghost-border active:scale-95 transition-transform">
+                <a href="https://github.com/lubdhak123/pdr_2" target="_blank" rel="noopener noreferrer" className="bg-transparent text-on-surface px-8 py-4 rounded-lg text-lg font-bold ghost-border active:scale-95 transition-transform">
                   Documentation
-                </Link>
+                </a>
               </div>
             </div>
             <div className="lg:col-span-5 relative">
