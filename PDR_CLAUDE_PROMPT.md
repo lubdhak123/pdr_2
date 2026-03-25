@@ -1,6 +1,6 @@
 # PDR Alternative Credit Scoring System — Complete Context Prompt
 
-> **Last updated:** 2026-03-24 00:44 IST
+> **Last updated:** 2026-03-25 13:19 IST
 > **Repo:** `github.com/lubdhak123/pdr_2`
 > **Branch:** `main`
 > **Local path:** `C:\Users\kanis\OneDrive\Documents\alternative_credit_scoring\`
@@ -501,17 +501,19 @@ Zero-signal empty account     → [PL] C/MANUAL REVIEW           ✅ (was APPROV
 | Demographics dominating SHAP | **FIXED** | 89% behavioral, 11% demographic importance |
 | Random number generation for behavioral | **FIXED** | 0/28 features use pure random |
 
-### 10.2 Remaining Limitations
+### 10.2 Remaining Limitations (see Section 16 for full flaw audit)
 
-| Issue | Impact | Fixable? |
-|-------|--------|----------|
-| Demographics from Home Credit (Eastern European, not Indian) | MEDIUM | Need Indian demographic dataset |
-| Fraud model trained on synthetic labels | MEDIUM | Have 480 real fraud labels from UPI, not yet used |
-| UPI features (night_txn, weekend_ratio etc.) still use DPD as proxy | LOW | Need per-user UPI data |
-| `geographic_risk_score` uses rng.choice (random draw) | LOW | Only draws from real-DPD-based probabilities |
-| Default rate artificially set to 20% (oversampled from 6.7%) | LOW | Deliberate for model training |
-| MSME model broken (AUC=0.59) | HIGH | Needs full rebuild |
-| Middleman endpoint not yet in main.py | MEDIUM | Needs wiring |
+| Issue | Severity | Status |
+|-------|----------|--------|
+| **API uses OLD 30-feature circular model, NOT v3** | 🔴 CRITICAL | scorer.py loads `pdr_ntc_model.pkl` instead of `ntc_credit_model.pkl` |
+| **feature_engine.py outputs 32 features, v3 needs 49** | 🔴 CRITICAL | 25 features missing at inference |
+| **middleman_scorer.py hardcodes PD=0.25** | 🔴 CRITICAL | Real extractors exist but aren't wired |
+| **MSME model AUC=0.59 (random)** | 🔴 CRITICAL | Needs full rebuild |
+| **v3 model wrapper (CalibratedClassifierCV) breaks SHAP** | 🟠 HIGH | `get_booster()` doesn't work |
+| **Grade thresholds differ between scorer.py and tests** | 🟡 MEDIUM | scorer: 0.05/0.15/0.30/0.50, test: 0.35/0.55 |
+| Demographics from Home Credit (not Indian) | 🟡 MEDIUM | Need Indian demographic dataset |
+| Setu API keys hardcoded in main.py | 🟠 HIGH | Visible in GitHub repo |
+| 393MB+ CSV files committed to git | 🟡 MEDIUM | Should use .gitignore or LFS |
 
 ---
 
@@ -562,27 +564,48 @@ Zero-signal empty account     → [PL] C/MANUAL REVIEW           ✅ (was APPROV
 7. Analyzed CC fraud dataset (`synthetic_fraud_dataset.csv`) → REJECTED as unusable (100% synthetic, 32% fraud rate, uniform distributions, wrong domain)
 8. Decided against separate fraud ML model — rule-based pre-layer is more defensible
 
+### Phase 9: Full System Audit (Mar 25) ★★
+1. Discovered **API uses OLD circular 30-feature model** — `scorer.py` loads `pdr_ntc_model.pkl`, not the fixed `ntc_credit_model.pkl`
+2. Found **feature_engine.py outputs 32 features, v3 model needs 49** — 25 features missing at inference, 7 extra unused
+3. Found **middleman_scorer.py returns hardcoded PD=0.25** — real extractors exist in `ntc_model/middleman/` but aren't wired
+4. Found **v3 model wrapped in CalibratedClassifierCV** — breaks `get_booster()` and SHAP TreeExplainer
+5. Found **3 different compute_features() implementations** that are out of sync
+6. Found **grade thresholds differ** between scorer.py and test scripts
+7. Found **Setu API credentials hardcoded** in main.py (visible in GitHub)
+8. Documented all 22 flaws across 7 categories (see Section 16)
+
 ---
 
 ## 12. REMAINING FOR HACKATHON
 
 ```
-CURRENT STATUS
+CURRENT STATUS (as of Phase 9 audit)
 ──────────────────────────────────────────
-NTC model v3:     WORKING, AUC=0.85, circularity BROKEN
+NTC model v3:     TRAINED (AUC=0.85), BUT NOT WIRED TO API ← CRITICAL
 Pre-layer:        WORKING, 5/5 demo + 8/8 edge cases, 20 rules
-Middleman path:   WORKING, 4/4 profiles passing
+Middleman path:   Extractors BUILT, but scorer returns hardcoded PD=0.25
 Frontend:         WORKING, 3 screens
-FastAPI:          WORKING (AA path online, middleman endpoint TODO)
+FastAPI:          15 endpoints, uses WRONG model
 
-REMAINING TASKS (priority order)
+CRITICAL FIXES (must do before demo)
 ──────────────────────────────────────────
-1. Wire POST /score/middleman into main.py
-2. Fix MSME model (AUC=0.59 → needs rebuild)
-3. Update demo_pipeline_test.py for 49-feature model
-4. Update real_world_stress_test.py for 49-feature model
-5. Integration test: API call → frontend display
-6. Pitch preparation
+1. Wire v3 model to scorer.py (replace pdr_ntc_model.pkl → ntc_credit_model.pkl + preprocessor)
+2. Update feature_engine.py to output all 49 features the v3 model expects
+3. Handle CalibratedClassifierCV wrapper for SHAP compatibility
+4. Align grade thresholds across scorer.py, tests, and pre-layer
+5. Wire real middleman extractors into middleman_scorer.py (replace PD=0.25)
+
+IMPORTANT FIXES
+──────────────────────────────────────────
+6. Fix MSME model (AUC=0.59 → needs rebuild)
+7. Move Setu credentials to environment variables only
+8. Delete stale files (old models, debug outputs, 393MB CSVs)
+
+NICE TO HAVE
+──────────────────────────────────────────
+9. Integration test: API call → frontend display
+10. Update demo_users.json with all 49 features
+11. Pitch preparation
 ```
 
 ---
@@ -634,16 +657,109 @@ Our pre-layer rule engine (20 rules, RBI/CIBIL/NABARD sourced) is a stronger, mo
 
 ## 15. QUESTIONS FOR THE AI
 
-Given this complete context:
+Given this complete context and the 22 flaws documented in Section 16:
 
-1. **Is the circularity truly broken?** Review the v3 approach (cs-training behavioral + randomly-paired Home Credit demographics) and check for any remaining leaks.
+1. **Fix the model wiring:** How should we wire `ntc_credit_model.pkl` (CalibratedClassifierCV, 49 features + preprocessor) into `scorer.py` while maintaining SHAP compatibility?
 
-2. **How should we rebuild the MSME model?** We have loan_dataset_20000.csv (demographics + behavioral + real repayment outcome). Should we use it?
+2. **Fix feature_engine.py:** The root feature_engine outputs 32 features, the v3 model needs 49. Which 25 missing features can be derived from bank transactions, and which should be removed from the model entirely?
 
-3. **What's the best use of the remaining time (~7 days)?** Given working NTC model + middleman path + frontend, what maximizes hackathon impact?
+3. **Fix middleman_scorer.py:** Replace the hardcoded PD=0.25 with the real extractors in `ntc_model/middleman/`. How should the confidence-adjusted thresholds work?
 
-4. **How should we frame the honest pitch?** AUC=0.85 on cs-training-derived data, projected 0.72-0.76 on real AA data. How do we present this to judges?
+4. **How should we rebuild the MSME model?** We have loan_dataset_20000.csv. Should we use the same approach as v3 (real behavioral + paired demographics)?
 
-5. **Are there architectural flaws** that would make a technically sophisticated judge dismiss the project?
+5. **What's the best use of remaining time (~6 days)?** Given the 5 critical fixes needed, what order maximizes hackathon demo quality?
 
-6. **Review our pre-layer rules** — are there any edge cases we're still missing? Any rules that could fire incorrectly?
+6. **How to handle CalibratedClassifierCV for SHAP?** The v3 model wraps XGBoost in Platt scaling. SHAP TreeExplainer needs `get_booster()` which doesn't work on the wrapper.
+
+---
+
+## 16. COMPLETE FLAW AUDIT (22 FLAWS)
+
+### 🔴 CRITICAL (5 flaws)
+
+**FLAW C1 — API USES OLD CIRCULAR MODEL**
+- `scorer.py` lines 34-35 load `pdr_ntc_model.pkl` (30 features, OLD circular)
+- Should load `ntc_model/models/ntc_credit_model.pkl` (49 features, v3 fixed)
+- ALL circularity fixes, memorization tests, and validation are NOT deployed
+- The production API still has TARGET↔demo correlation of 0.52
+
+**FLAW C2 — FEATURE ENGINE MISMATCH (32 vs 49 features)**
+- Root `feature_engine.py` outputs 32 features
+- v3 model expects 49 features
+- 25 features MISSING at inference (all default to 0.0 via fillna):
+  `applicant_age_years, employment_vintage_days, income_stability_score, income_seasonality_flag, night_transaction_ratio, weekend_spending_ratio, payment_diversity_score, device_consistency_score, geographic_risk_score, region_risk_tier, region_city_risk_score, family_burden_ratio, income_type_risk_score, family_status_stability_score, contactability_score, address_stability_years, id_document_age_years, owns_property, owns_car, car_age_years, has_email_flag, address_work_mismatch, neighbourhood_default_rate_30, neighbourhood_default_rate_60, employment_to_age_ratio`
+- 7 features EXTRA in feature_engine (not used by v3 model):
+  `operating_cashflow_ratio, avg_invoice_payment_delay, round_number_spike_ratio, repeat_customer_revenue_pct, vendor_payment_discipline, benford_anomaly_score, monthly_income`
+
+**FLAW C3 — MIDDLEMAN SCORER HARDCODED**
+- `middleman_scorer.py` line 38: `probability_default = 0.25`
+- Always returns same PD regardless of input
+- Real extractors exist in `ntc_model/middleman/` but aren't connected
+
+**FLAW C4 — MSME MODEL BROKEN**
+- `pdr_msme_model.pkl` has AUC=0.59 (barely above random 0.50)
+- Any MSME user gets essentially random grades
+
+**FLAW C5 — DUPLICATE FEATURE ENGINES**
+- Root `feature_engine.py`: 32 features, `compute_features(transactions, profile, gst_data)`
+- `ntc_model/feature_engine.py`: 552 lines, `extract_features(statement)` — completely different API
+- `generate_realistic_training_data.py`: embedded `compute_features()` copy
+- None of them produce the 49 features the v3 model needs
+
+### 🟠 HIGH (4 flaws)
+
+**FLAW H1 — v3 MODEL WRAPPER BREAKS SHAP**
+- v3 model type is `CalibratedClassifierCV`, not `XGBClassifier`
+- `model.get_booster()` fails → SHAP TreeExplainer can't initialize
+- `scorer.py` line 42 would crash: `ntc_model.get_booster().feature_names`
+- Fix: access inner estimator via `model.estimators_[0].estimator`
+
+**FLAW H2 — NO PREPROCESSOR IN SCORER**
+- v3 model uses `ntc_preprocessor.pkl` (ColumnTransformer) for scaling
+- `scorer.py` feeds raw values directly to model — no scaling step
+- Wiring v3 model requires adding preprocessor.transform() before predict
+
+**FLAW H3 — PRE-LAYER CHECKS FEATURES THAT DON'T EXIST**
+- Pre-layer checks `income_stability_score`, `income_seasonality_flag`, `night_transaction_ratio`
+- Root `feature_engine.py` never computes these
+- At inference, these use `.get(name, 0)` defaults → rules may not fire correctly
+
+**FLAW H4 — SETU CREDENTIALS HARDCODED**
+- `main.py` lines 75-77: API keys visible in source
+- Pushed to public GitHub repo
+
+### 🟡 MEDIUM (8 flaws)
+
+**FLAW M1 — SCORER HARD-OVERRIDES ARE DEAD CODE**
+- `scorer.py` lines 222-225: overrides `pd_score` for p2p_circular and identity_mismatch
+- Pre-layer now catches both cases BEFORE scorer runs → overrides never execute
+
+**FLAW M2 — GRADE THRESHOLDS INCONSISTENT**
+- `scorer.py`: A<0.05, B<0.15, C<0.30, D<0.50, E>=0.50
+- `test_full_pipeline.py`: APPROVE<0.35, REVIEW<0.55, REJECT>=0.55
+- Demo users tested with different thresholds than production
+
+**FLAW M3 — NTC_002 SEVERITY MISMATCH**
+- Expected: C/MANUAL REVIEW (cash-dependent worker, needs human review)
+- Actual: E/REJECTED (min_bal=5 triggers hard rejection)
+- Pre-layer is more aggressive than intended for cash-dependent workers
+
+**FLAW M4 — STALE TRAINING SCRIPTS**
+- `generate_realistic_training_data.py` generates OLD 30-feature data
+- `train.py` trains OLD model
+- Both superseded by `build_ntc_training_v3.py` + `ntc_model/main.py`
+
+**FLAW M5 — RADAR CHART DATA STATIC**
+- `demo_users.json` has pre-computed radar scores that don't update with model changes
+
+**FLAW M6 — DEMO USERS HAVE 12 FEATURES, MODEL NEEDS 49**
+- Demo users in `demo_users.json` only specify ~12 features in `ntc_features`
+- Remaining 37+ features default to 0 at scoring time
+
+**FLAW M7 — 393MB+ FILES IN GIT**
+- `accepted_2007_to_2018Q4.csv.gz` (374MB), `application_train.csv` (166MB)
+- Should be gitignored or in LFS
+
+**FLAW M8 — ~30 DEBUG OUTPUT FILES**
+- `out_demo_v1.txt` through `out_demo_v13.txt`, `out_build_v1.txt` through `out_build_v5.txt`, etc.
+- Development artifacts adding noise to repo
