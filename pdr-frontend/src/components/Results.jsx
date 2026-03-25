@@ -1,6 +1,7 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import './Results.css';
 import XaiTransparencySection from './XaiTransparencySection';
+import { generateCreditDecisionPDF } from './PdfReportGenerator';
 
 // ── Per-user profile metadata ─────────────────────────────────
 const PROFILE_DETAILS = {
@@ -216,7 +217,8 @@ const buildRadarScores = (features = {}, isNTC) => {
 };
 
 // ── Main component ────────────────────────────────────────────
-export default function Results({ result, error, onBack, transactions }) {
+export default function Results({ result, error, onBack, transactions, selectedUser }) {
+  const [exporting, setExporting] = useState(false);
   if (error) {
     return (
       <div className="results-container">
@@ -581,7 +583,23 @@ export default function Results({ result, error, onBack, transactions }) {
         <div className="r-footer-left">PDR · Alternative Credit Intelligence</div>
         <div className="r-footer-right">
           <button className="r-btn-outline" onClick={onBack}>← Score another profile</button>
-          <button className="r-btn-solid">Export Decision</button>
+          <button
+            className="r-btn-solid"
+            disabled={exporting}
+            onClick={() => {
+              setExporting(true);
+              try {
+                generateCreditDecisionPDF(selectedUser, result);
+              } catch (e) {
+                console.error('PDF export failed:', e);
+                alert('PDF export failed. Check console for details.');
+              } finally {
+                setTimeout(() => setExporting(false), 1000);
+              }
+            }}
+          >
+            {exporting ? '⏳ Generating…' : '📄 Export Decision'}
+          </button>
         </div>
       </div>
     </>

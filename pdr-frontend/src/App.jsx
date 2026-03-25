@@ -121,6 +121,7 @@ function App() {
           error={error}
           onBack={handleBack}
           transactions={selectedUser?.transactions || []}
+          selectedUser={selectedUser}
         />
       )}
     </>

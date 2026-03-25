@@ -34,15 +34,15 @@ def ks_score(y_true, y_proba, **kwargs):
 ks_scorer = make_scorer(ks_score, needs_proba=True)
 
 param_dist = {
-    "n_estimators":     [200, 300, 400, 500],
-    "max_depth":        [3, 4, 5, 6],
-    "learning_rate":    [0.01, 0.05, 0.08, 0.10],
-    "subsample":        [0.7, 0.8, 0.9, 1.0],
-    "colsample_bytree": [0.6, 0.7, 0.8, 1.0],
-    "min_child_weight": [1, 3, 5, 7],
+    "n_estimators":     [300, 500, 800],
+    "max_depth":        [2, 3, 4],
+    "learning_rate":    [0.01, 0.02, 0.05],
+    "subsample":        [0.6, 0.7, 0.8],
+    "colsample_bytree": [0.6, 0.7, 0.8],
+    "min_child_weight": [5, 7, 10, 15],
     "gamma":            [0, 0.1, 0.2, 0.3],
-    "reg_alpha":        [0, 0.01, 0.05, 0.1],
-    "reg_lambda":       [1.0, 1.5, 2.0, 3.0],
+    "reg_alpha":        [0.1, 0.5, 1.0],
+    "reg_lambda":       [3.0, 5.0, 8.0],
 }
 
 base = xgb.XGBClassifier(
@@ -66,7 +66,7 @@ model = xgb.XGBClassifier(
     **best, objective="binary:logistic", eval_metric="auc",
     scale_pos_weight=spw, use_label_encoder=False,
     random_state=42, tree_method="hist", n_jobs=1,
-    early_stopping_rounds=25
+    early_stopping_rounds=50
 )
 model.fit(X_train, y_train, eval_set=[(X_val, y_val)], verbose=False)
 print(f"Best iteration: {model.best_iteration}")

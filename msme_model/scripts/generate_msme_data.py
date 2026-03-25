@@ -20,7 +20,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 
-N_PER_TYPE = 750
+N_PER_TYPE = 2000
 
 # ── Single distribution per business type ────────────────────
 # These reflect the NATURAL distribution of that business type
