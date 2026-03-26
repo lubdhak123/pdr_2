@@ -316,211 +316,173 @@ function AssessmentForm() {
 
             <form onSubmit={handleNtcSubmit} className="p-10 space-y-12">
               {/* Step 1: Personal Background */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
-                    <h2 className="text-xl font-headline font-bold text-on-surface">Step 1: Personal Background</h2>
+              <div className="flex items-center gap-4">
+                <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
+                <h2 className="text-xl font-headline font-bold text-on-surface">Step 1: Personal Background</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Full Name</label>
+                  <input
+                    className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none transition-all placeholder:text-outline-variant/60"
+                    placeholder="John Doe"
+                    type="text"
+                    value={ntcData.fullName}
+                    onChange={(e) => updateNtc('fullName', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Education Level</label>
+                  <select
+                    className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none transition-all appearance-none cursor-pointer"
+                    value={ntcData.academicBackgroundTier}
+                    onChange={(e) => updateNtc('academicBackgroundTier', e.target.value)}
+                  >
+                    <option>No Schooling</option>
+                    <option>School</option>
+                    <option>Diploma</option>
+                    <option>Graduate</option>
+                    <option>Postgraduate</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Step 2: Loan Details */}
+              <div className="pt-8 border-t border-outline-variant/10 space-y-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
+                  <h2 className="text-xl font-headline font-bold text-on-surface">Step 2: Loan Details</h2>
+                </div>
+                <div className="space-y-6">
+                  {/* Loan Type Toggle */}
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Loan Type</label>
+                    <div className="flex p-1 bg-surface-container-low rounded-lg w-fit border border-outline-variant/20">
+                      <button
+                        type="button"
+                        onClick={() => updateNtc('purposeOfLoanEncoded', 'Cash Loan')}
+                        className={`px-6 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-colors ${ntcData.purposeOfLoanEncoded === 'Cash Loan'
+                            ? 'bg-slate-900 text-white'
+                            : 'text-on-surface-variant hover:bg-surface-container-high'
+                          }`}
+                      >
+                        Cash Loan
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateNtc('purposeOfLoanEncoded', 'Revolving Credit')}
+                        className={`px-6 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-colors ${ntcData.purposeOfLoanEncoded === 'Revolving Credit'
+                            ? 'bg-slate-900 text-white'
+                            : 'text-on-surface-variant hover:bg-surface-container-high'
+                          }`}
+                      >
+                        Revolving Credit
+                      </button>
+                    </div>
                   </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-2">
-                      <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Full Name</label>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Monthly Annuity ₹</label>
                       <input
-                        className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none transition-all placeholder:text-outline-variant/60"
-                        placeholder="John Doe"
-                        type="text"
-                        value={ntcData.fullName}
-                        onChange={(e) => updateNtc('fullName', e.target.value)}
+                        className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none"
+                        placeholder="5000"
+                        type="number"
+                        value={ntcData.monthlyAnnuity}
+                        onChange={(e) => updateNtc('monthlyAnnuity', e.target.value)}
                       />
+                      <p className="text-[11px] text-on-surface-variant/80 italic font-medium leading-tight">Your monthly loan repayment amount</p>
                     </div>
                     <div className="space-y-2">
-                      <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Education Level</label>
-                      <select
-                        className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none transition-all appearance-none cursor-pointer"
-                        value={ntcData.academicBackgroundTier}
-                        onChange={(e) => updateNtc('academicBackgroundTier', e.target.value)}
-                      >
-                        <option>No Schooling</option>
-                        <option>School</option>
-                        <option>Diploma</option>
-                        <option>Graduate</option>
-                        <option>Postgraduate</option>
-                      </select>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Annual Income ₹</label>
+                      <input
+                        className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none"
+                        placeholder="600000"
+                        type="number"
+                        value={ntcData.annualIncome}
+                        onChange={(e) => updateNtc('annualIncome', e.target.value)}
+                      />
+                      <p className="text-[11px] text-on-surface-variant/80 italic font-medium leading-tight">Used to calculate repayment burden</p>
                     </div>
                   </div>
 
-                  {/* Step 2: Loan Details */}
-                  <div className="pt-8 border-t border-outline-variant/10 space-y-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
-                      <h2 className="text-xl font-headline font-bold text-on-surface">Step 2: Loan Details</h2>
+                  {/* Repayment Burden — auto-calculated */}
+                  <div className="bg-surface-container-high/40 p-6 rounded-xl border border-outline-variant/10 flex items-center justify-between">
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Repayment Burden</label>
+                      <p className="text-xs text-on-surface-variant">Auto-calculated based on annuity and income</p>
                     </div>
-                    <div className="space-y-6">
-                      {/* Loan Type Toggle */}
-                      <div className="space-y-2">
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Loan Type</label>
-                        <div className="flex p-1 bg-surface-container-low rounded-lg w-fit border border-outline-variant/20">
-                          <button
-                            type="button"
-                            onClick={() => updateNtc('purposeOfLoanEncoded', 'Cash Loan')}
-                            className={`px-6 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-colors ${ntcData.purposeOfLoanEncoded === 'Cash Loan'
-                                ? 'bg-slate-900 text-white'
-                                : 'text-on-surface-variant hover:bg-surface-container-high'
-                              }`}
-                          >
-                            Cash Loan
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => updateNtc('purposeOfLoanEncoded', 'Revolving Credit')}
-                            className={`px-6 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-colors ${ntcData.purposeOfLoanEncoded === 'Revolving Credit'
-                                ? 'bg-slate-900 text-white'
-                                : 'text-on-surface-variant hover:bg-surface-container-high'
-                              }`}
-                          >
-                            Revolving Credit
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-2">
-                          <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Monthly Annuity ₹</label>
-                          <input
-                            className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none"
-                            placeholder="5000"
-                            type="number"
-                            value={ntcData.monthlyAnnuity}
-                            onChange={(e) => updateNtc('monthlyAnnuity', e.target.value)}
-                          />
-                          <p className="text-[11px] text-on-surface-variant/80 italic font-medium leading-tight">Your monthly loan repayment amount</p>
-                        </div>
-                        <div className="space-y-2">
-                          <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Annual Income ₹</label>
-                          <input
-                            className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none"
-                            placeholder="600000"
-                            type="number"
-                            value={ntcData.annualIncome}
-                            onChange={(e) => updateNtc('annualIncome', e.target.value)}
-                          />
-                          <p className="text-[11px] text-on-surface-variant/80 italic font-medium leading-tight">Used to calculate repayment burden</p>
-                        </div>
-                      </div>
-
-                      {/* Repayment Burden — auto-calculated */}
-                      <div className="bg-surface-container-high/40 p-6 rounded-xl border border-outline-variant/10 flex items-center justify-between">
-                        <div className="space-y-1">
-                          <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Repayment Burden</label>
-                          <p className="text-xs text-on-surface-variant">Auto-calculated based on annuity and income</p>
-                        </div>
-                        <div className="text-2xl font-headline font-extrabold text-slate-900">{rentWalletShare}%</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Step 3: Telecom & Identity */}
-                  <div className="pt-8 border-t border-outline-variant/10 space-y-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
-                      <h2 className="text-xl font-headline font-bold text-on-surface">Step 3: Telecom &amp; Identity</h2>
-                    </div>
-                    <div className="space-y-2 max-w-md">
-                      <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Phone Number Age</label>
-                      <div className="relative">
-                        <input
-                          className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none"
-                          placeholder="365"
-                          type="number"
-                          value={ntcData.telecomNumberVintageDays}
-                          onChange={(e) => updateNtc('telecomNumberVintageDays', parseInt(e.target.value) || 0)}
-                        />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-on-surface-variant font-medium">days</span>
-                      </div>
-                      <p className="text-[11px] text-on-surface-variant/80 italic font-medium mt-2">Days since last phone number change</p>
-                    </div>
-                  </div>
-
-                  {/* Step 4: Bank Data Upload */}
-                  <div className="pt-8 border-t border-outline-variant/10 space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
-                      <h2 className="text-xl font-headline font-bold text-on-surface">Step 4: Bank Data Upload</h2>
-                    </div>
-                    <BankStatementUpload
-                      formType="ntc"
-                      onFileSelect={(file) => updateNtc('bankStatementFile', file)}
-                    />
-                  </div>
-                </div>
-
-                {/* Submit Area */}
-                <div className="bg-surface-container-low p-8 flex flex-col items-center gap-6 border-t border-outline-variant/10">
-                  <div className="flex items-center gap-2 text-on-surface-variant">
-                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>security</span>
-                    <p className="text-xs font-medium">Your data is processed according to global privacy and credit standards.</p>
-                  </div>
-                  <button
-                    className="w-full max-w-md bg-slate-900 text-white font-bold py-5 rounded-full flex items-center justify-center gap-3 hover:bg-slate-800 transition-all active:scale-[0.98] shadow-xl shadow-slate-900/10 uppercase tracking-[0.15em] text-sm disabled:opacity-60 disabled:cursor-not-allowed"
-                    type="submit"
-                    disabled={ntcSubmitting}
-                  >
-                    {ntcSubmitting ? (
-                      <>
-                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        Assess Credit Risk
-                        <span className="material-symbols-outlined">trending_flat</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-
-              {/* Bottom Context Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 flex flex-col items-center text-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
-                    <span className="material-symbols-outlined">speed</span>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold">Real-time Analysis</h4>
-                    <p className="text-[11px] text-on-surface-variant">Scores are calculated using live market benchmarks.</p>
-                  </div>
-                </div>
-                <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 flex flex-col items-center text-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
-                    <span className="material-symbols-outlined">account_tree</span>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold">Risk Weighting</h4>
-                    <p className="text-[11px] text-on-surface-variant">Algorithm accounts for sector-specific volatility.</p>
-                  </div>
-                </div>
-                <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 flex flex-col items-center text-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
-                    <span className="material-symbols-outlined">clinical_notes</span>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold">Instant Report</h4>
-                    <p className="text-[11px] text-on-surface-variant">Receive a detailed PDF breakdown upon submission.</p>
+                    <div className="text-2xl font-headline font-extrabold text-slate-900">{rentWalletShare}%</div>
                   </div>
                 </div>
               </div>
 
-              {/* Bottom Actions */}
-              <div className="flex justify-center gap-6 mt-8">
-                <button className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" type="button">
-                  <span className="material-symbols-outlined text-sm">save</span> Save Progress
+              {/* Step 3: Telecom & Identity */}
+              <div className="pt-8 border-t border-outline-variant/10 space-y-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
+                  <h2 className="text-xl font-headline font-bold text-on-surface">Step 3: Telecom &amp; Identity</h2>
+                </div>
+                <div className="space-y-2 max-w-md">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Phone Number Age</label>
+                  <div className="relative">
+                    <input
+                      className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none"
+                      placeholder="365"
+                      type="number"
+                      value={ntcData.telecomNumberVintageDays}
+                      onChange={(e) => updateNtc('telecomNumberVintageDays', parseInt(e.target.value) || 0)}
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-on-surface-variant font-medium">days</span>
+                  </div>
+                  <p className="text-[11px] text-on-surface-variant/80 italic font-medium mt-2">Days since last phone number change</p>
+                </div>
+              </div>
+
+              {/* Step 4: Bank Data Upload */}
+              <section className="pt-8 border-t border-outline-variant/10 space-y-6">
+                <div className="flex items-center gap-4">
+              <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
+              <h2 className="text-xl font-headline font-bold text-on-surface">Step 4: Bank Data Upload</h2>
+                </div>
+                <BankStatementUpload
+              formType="ntc"
+              onFileSelect={(file) => updateNtc('bankStatementFile', file)}
+                />
+              </section>
+            </form>
+            </div>
+          )}
+
+          {/* Action Area */}
+          {activeForm === 'ntc' && (
+            <div className="w-full max-w-[750px] mt-10 space-y-8">
+              <div className="text-center">
+                <p className="text-xs text-on-surface-variant mb-6">Your data is processed according to global privacy and credit standards.</p>
+                <button
+                  onClick={handleNtcSubmit}
+                  className="w-full py-5 text-white rounded-xl font-bold text-lg hover:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-3 shadow-lg bg-emerald-600"
+                >
+                  ACCESS CREDIT RISK <span className="material-symbols-outlined">trending_up</span>
                 </button>
-                <div className="w-[1px] h-4 bg-outline-variant/30"></div>
-                <button className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" type="button">
-                  <span className="material-symbols-outlined text-sm">print</span> Print Draft
-                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col items-center text-center space-y-2">
+                  <span className="material-symbols-outlined text-tertiary">bolt</span>
+                  <h4 className="text-xs font-bold uppercase tracking-widest">Real-Time Analysis</h4>
+                </div>
+                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col items-center text-center space-y-2">
+                  <span className="material-symbols-outlined text-tertiary">balance</span>
+                  <h4 className="text-xs font-bold uppercase tracking-widest">Risk Weighting</h4>
+                </div>
+                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col items-center text-center space-y-2">
+                  <span className="material-symbols-outlined text-tertiary">description</span>
+                  <h4 className="text-xs font-bold uppercase tracking-widest">Instant Report</h4>
+                </div>
+              </div>
+              <div className="flex justify-center gap-12 pt-4">
+                <button className="text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors underline underline-offset-4">Save Progress</button>
+                <button className="text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors underline underline-offset-4">Print Draft</button>
               </div>
             </div>
           )}
