@@ -315,6 +315,20 @@ function LandingPage() {
           </div>
         </section>
 
+        {/* EXPLORE DEMO PROFILES */}
+        <section className="py-20 bg-surface-container-low border-t border-outline-variant/10">
+          <div className="max-w-3xl mx-auto px-6 text-center">
+            <h2 className="text-2xl md:text-3xl font-headline font-bold text-slate-700 tracking-tight mb-4">Explore Demo Profiles</h2>
+            <p className="text-base text-on-surface-variant leading-relaxed mb-8 max-w-xl mx-auto">
+              See how PDR scores different borrower archetypes — from salaried professionals to seasonal farmers to fraud cases.
+            </p>
+            <Link to="/demo" className="inline-flex items-center gap-2 px-8 py-3 rounded-lg bg-slate-100 text-slate-700 font-semibold text-sm border border-slate-200 hover:bg-slate-200 hover:border-slate-300 active:scale-95 transition-all duration-200">
+              See Demo Profiles
+              <span className="material-symbols-outlined text-base">arrow_forward</span>
+            </Link>
+          </div>
+        </section>
+
         {/* FOOTER / BOTTOM CTA */}
         <section className="bg-[#0F172A] py-24">
           <div className="max-w-7xl mx-auto px-6 text-center">

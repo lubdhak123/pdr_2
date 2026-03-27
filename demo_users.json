@@ -312,6 +312,32 @@
       "gst_data": {
         "available": false,
         "declared_turnover": 0
+      },
+      "form_fields": {
+        "full_name": "Priya Venkataraman",
+        "phone_number": "9845012345",
+        "age": 29,
+        "address": "42, Thiruvalluvar Street, T. Nagar",
+        "city": "Chennai",
+        "residential_stability": "5+ years",
+        "education_level": "Graduate",
+        "employment_type": "Salaried",
+        "company_name": "Tata Consultancy Services",
+        "monthly_salary": 85000,
+        "annual_income": 1020000,
+        "purpose_of_loan": "Home Improvement",
+        "loan_amount_requested": 300000,
+        "monthly_annuity": 12500,
+        "family_members": 4,
+        "dependents": 1,
+        "family_income_stability": "Dual Earner",
+        "assets": [
+          "Owned House",
+          "Vehicle",
+          "Gold / Jewelry"
+        ],
+        "telecom_vintage": "5+ years",
+        "identity_device_mismatch": false
       }
     },
     {
@@ -630,11 +656,35 @@
       "gst_data": {
         "available": false,
         "declared_turnover": 0
+      },
+      "form_fields": {
+        "full_name": "Ramesh Gowda",
+        "phone_number": "9740056789",
+        "age": 38,
+        "address": "12, 3rd Cross, Jayalakshmipuram",
+        "city": "Mysuru",
+        "residential_stability": "1-3 years",
+        "education_level": "School",
+        "employment_type": "Daily Wage",
+        "company_name": "Mysuru Construction Works",
+        "monthly_salary": 42000,
+        "annual_income": 504000,
+        "purpose_of_loan": "Personal",
+        "loan_amount_requested": 100000,
+        "monthly_annuity": 5500,
+        "family_members": 6,
+        "dependents": 4,
+        "family_income_stability": "Single Earner",
+        "assets": [
+          "Agricultural Land"
+        ],
+        "telecom_vintage": "2 - 5 years",
+        "identity_device_mismatch": false
       }
     },
     {
       "user_id": "NTC_003",
-      "persona": "Synthetic Fraud — Balance Inflation",
+      "persona": "Synthetic Fraud \u2014 Balance Inflation",
       "model": "NTC",
       "expected_grade": "E",
       "expected_outcome": "REJECTED",
@@ -653,7 +703,7 @@
       "ntc_features": {
         "utility_payment_consistency": 1,
         "avg_utility_dpd": 0.0,
-        "rent_wallet_share": 0.10,
+        "rent_wallet_share": 0.1,
         "subscription_commitment_ratio": 0.01,
         "emergency_buffer_months": 2.1,
         "min_balance_violation_count": 1,
@@ -662,7 +712,7 @@
         "cash_withdrawal_dependency": 0.12,
         "bounced_transaction_count": 0,
         "telecom_number_vintage_days": 88,
-        "telecom_recharge_drop_ratio": 1.10
+        "telecom_recharge_drop_ratio": 1.1
       },
       "radar": {
         "Payment Discipline": 25,
@@ -796,15 +846,40 @@
       "gst_data": {
         "available": false,
         "declared_turnover": 0
+      },
+      "form_fields": {
+        "full_name": "Deepak Malhotra",
+        "phone_number": "7001234567",
+        "age": 31,
+        "address": "B-204, Sunshine Apartments, Sector 18",
+        "city": "Noida",
+        "residential_stability": "Less than 1 year",
+        "education_level": "Postgraduate",
+        "employment_type": "Self-Employed",
+        "company_name": "DM Enterprises",
+        "monthly_salary": 150000,
+        "annual_income": 1800000,
+        "purpose_of_loan": "Personal",
+        "loan_amount_requested": 1500000,
+        "monthly_annuity": 45000,
+        "family_members": 2,
+        "dependents": 0,
+        "family_income_stability": "Single Earner",
+        "assets": [
+          "Vehicle",
+          "Other Invest."
+        ],
+        "telecom_vintage": "Less than 6 months",
+        "identity_device_mismatch": true
       }
     },
     {
       "user_id": "MSME_001",
-      "persona": "Seasonal Agri Business — Legitimate but Misunderstood",
+      "persona": "Seasonal Agri Business \u2014 Legitimate but Misunderstood",
       "model": "MSME",
       "expected_grade": "B",
       "expected_outcome": "APPROVED WITH CONDITIONS",
-      "story": "A generic model would reject this farmer — near-zero balance for months, lumpy income, high invoice delay. But the PDR MSME model understands agricultural cycles. Two large APMC credits, consistent seed/input purchases, and 6 years of business vintage tell a different story.",
+      "story": "A generic model would reject this farmer \u2014 near-zero balance for months, lumpy income, high invoice delay. But the PDR MSME model understands agricultural cycles. Two large APMC credits, consistent seed/input purchases, and 6 years of business vintage tell a different story.",
       "user_profile": {
         "name": "Sukhwinder Singh",
         "phone": "9815056789",
@@ -959,15 +1034,32 @@
       "gst_data": {
         "available": false,
         "declared_turnover": 0
+      },
+      "form_fields": {
+        "applicant_name": "Sukhwinder Singh",
+        "business_name": "Singh Agro Traders",
+        "city": "Ludhiana",
+        "industry_type": "Agriculture",
+        "number_of_employees": 8,
+        "gstin": "03AABCS9429A1ZP",
+        "business_type": "Agri/Seasonal",
+        "business_vintage_months": 48,
+        "turnover_spike": false,
+        "loan_amount": 500000,
+        "customer_concentration_ratio": 0.45,
+        "repeat_customer_revenue_pct": 0.55,
+        "gst_filing_consistency_score": 8,
+        "gst_declared_turnover": 1800000,
+        "identity_device_mismatch": false
       }
     },
     {
       "user_id": "MSME_002",
-      "persona": "Wash Trader — Circular Transaction Fraud",
+      "persona": "Wash Trader \u2014 Circular Transaction Fraud",
       "model": "MSME",
       "expected_grade": "E",
       "expected_outcome": "REJECTED",
-      "story": "GST declares ₹50L turnover. Bank shows ₹6L. Money flows A→B→A every month like clockwork. Business is 8 months old with a brand new SIM. Turnover spiked 45 days before application. Every forensic flag fires simultaneously — this is exactly the pattern PDR was built to catch.",
+      "story": "GST declares \u20b950L turnover. Bank shows \u20b96L. Money flows A\u2192B\u2192A every month like clockwork. Business is 8 months old with a brand new SIM. Turnover spiked 45 days before application. Every forensic flag fires simultaneously \u2014 this is exactly the pattern PDR was built to catch.",
       "user_profile": {
         "name": "Mohammed Farouk",
         "phone": "9711098765",
@@ -1115,7 +1207,6 @@
           "narration": "ATM CASH WITHDRAWAL",
           "balance": 0
         },
-        
         {
           "date": "2024-06-03",
           "amount": 500000,
@@ -1141,11 +1232,28 @@
       "gst_data": {
         "available": true,
         "declared_turnover": 5000000
+      },
+      "form_fields": {
+        "applicant_name": "Mohammed Farouk",
+        "business_name": "Farouk Trading Co.",
+        "city": "Surat",
+        "industry_type": "Trading",
+        "number_of_employees": 3,
+        "gstin": "24AABCF5678A1Z3",
+        "business_type": "Retailer/Kirana",
+        "business_vintage_months": 14,
+        "turnover_spike": true,
+        "loan_amount": 2500000,
+        "customer_concentration_ratio": 0.82,
+        "repeat_customer_revenue_pct": 0.91,
+        "gst_filing_consistency_score": 4,
+        "gst_declared_turnover": 8500000,
+        "identity_device_mismatch": true
       }
     },
     {
       "user_id": "MSME_003",
-      "persona": "Cash-Only Kirana — No Digital Footprint",
+      "persona": "Cash-Only Kirana \u2014 No Digital Footprint",
       "model": "MSME_MIDDLEMAN",
       "expected_grade": "B",
       "expected_outcome": "APPROVED",
@@ -1229,7 +1337,24 @@
         "Liquidity Health": 45,
         "Forensic / Fraud": 82
       },
-      "key_flags": []
+      "key_flags": [],
+      "form_fields": {
+        "applicant_name": "Selvaraj Murugan",
+        "business_name": "Murugan Kirana Store",
+        "city": "Coimbatore",
+        "industry_type": "Retail",
+        "number_of_employees": 2,
+        "gstin": "",
+        "business_type": "Retailer/Kirana",
+        "business_vintage_months": 84,
+        "turnover_spike": false,
+        "loan_amount": 200000,
+        "customer_concentration_ratio": 0.15,
+        "repeat_customer_revenue_pct": 0.72,
+        "gst_filing_consistency_score": 0,
+        "gst_declared_turnover": 0,
+        "identity_device_mismatch": false
+      }
     }
   ]
 }

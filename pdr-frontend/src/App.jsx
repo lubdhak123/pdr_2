@@ -4,6 +4,7 @@ import axios from 'axios'
 import './App.css'
 import LandingPage from './pages/LandingPage'
 import AssessmentForm from './pages/AssessmentForm'
+import DemoProfiles from './pages/DemoProfiles'
 import UserSelect from './components/UserSelect'
 import Results from './components/Results'
 import demoData from '../../demo_users.json'
@@ -142,7 +143,8 @@ function App() {
       <Routes location={location}>
         <Route path="/" element={<LandingPage />} />
         <Route path="/solutions" element={<AssessmentForm />} />
-        <Route path="/demo" element={<DemoFlow />} />
+        <Route path="/demo" element={<DemoProfiles />} />
+        <Route path="/demo-scoring" element={<DemoFlow />} />
         <Route path="/demo/result/:userId" element={<DemoFlow />} />
         <Route path="/docs" element={<DocsPage />} />
       </Routes>
