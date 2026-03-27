@@ -190,7 +190,7 @@ function AssessmentForm() {
           </div>
           <div className="flex items-center gap-4">
             <button className="text-slate-600 font-medium hover:text-slate-900 transition-all duration-300 active:scale-95">Login</button>
-            <button className="text-white px-6 py-2.5 rounded-full font-semibold active:scale-95 transition-transform duration-200 text-sm bg-emerald-600">Request Demo</button>
+            <button className="text-white px-6 py-2.5 rounded-full font-semibold active:scale-95 transition-transform duration-200 text-sm bg-[#00662A]">Request Demo</button>
           </div>
         </div>
       </nav>
@@ -524,7 +524,7 @@ function AssessmentForm() {
                 <p className="text-xs text-on-surface-variant mb-6">Your data is processed according to global privacy and credit standards.</p>
                 <button
                   onClick={handleMsmeSubmit}
-                  className="w-full py-5 text-white rounded-xl font-bold text-lg hover:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-3 shadow-2xl bg-emerald-600"
+                  className="w-full py-5 text-white rounded-xl font-bold text-lg hover:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-3 shadow-2xl bg-[#00662A]"
                 >
                   ACCESS CREDIT RISK <span className="material-symbols-outlined">trending_up</span>
                 </button>
@@ -863,7 +863,7 @@ function AssessmentForm() {
                 <p className="text-xs text-on-surface-variant mb-6">Your data is processed according to global privacy and credit standards.</p>
                 <button
                   onClick={handleNtcSubmit}
-                  className="w-full py-5 text-white rounded-xl font-bold text-lg hover:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-3 shadow-2xl bg-emerald-600"
+                  className="w-full py-5 text-white rounded-xl font-bold text-lg hover:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-3 shadow-2xl bg-[#00662A]"
                 >
                   ACCESS CREDIT RISK <span className="material-symbols-outlined">trending_up</span>
                 </button>

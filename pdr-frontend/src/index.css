@@ -20,6 +20,18 @@ button {
   font-family: inherit;
 }
 
+/* Fade-in for sequenced loading steps */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Page transition animation */
 @keyframes pageEnter {
   from {
@@ -39,9 +51,14 @@ button {
 /* Strong black card elevation — scoped to content areas only */
 main .bg-surface-container-lowest,
 section .bg-surface-container-lowest {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35), 0 6px 16px rgba(0, 0, 0, 0.2) !important;
 }
 main .bg-tertiary,
 section .bg-tertiary {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), 0 6px 16px rgba(0, 0, 0, 0.25) !important;
+}
+/* Dark shadows on all white cards */
+main .bg-white,
+section .bg-white {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35), 0 6px 16px rgba(0, 0, 0, 0.2) !important;
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import demoData from '../../../demo_users.json';
 
@@ -16,9 +16,54 @@ const typeBadge = {
   MSME_MIDDLEMAN: { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200', label: 'MSME' },
 };
 
+const AA_STEPS = [
+  { text: 'Establishing secure connection to AA gateway...', duration: 600 },
+  { text: 'Verifying loan officer consent token...', duration: 500 },
+  { text: 'Requesting FIP data from linked bank accounts...', duration: 700 },
+  { text: 'Decrypting financial information packets...', duration: 500 },
+  { text: 'Parsing 6-month transaction histories...', duration: 400 },
+  { text: 'Mapping to PDR credit assessment schema...', duration: 300 },
+];
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 function DemoProfiles() {
   const navigate = useNavigate();
   const users = demoData.demo_users;
+
+  const [phase, setPhase] = useState('initial');
+  const [visibleCount, setVisibleCount] = useState(0);
+  const [doneCount, setDoneCount] = useState(0);
+  const [readyVisible, setReadyVisible] = useState(false);
+  const [cardsVisible, setCardsVisible] = useState(false);
+  const fetchingRef = useRef(false);
+
+  const progressPct = AA_STEPS.length > 0
+    ? Math.round((doneCount / AA_STEPS.length) * 100)
+    : 0;
+
+  const handleFetch = useCallback(async () => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
+    setPhase('fetching');
+
+    for (let i = 0; i < AA_STEPS.length; i++) {
+      setVisibleCount(i + 1);
+      await sleep(AA_STEPS[i].duration);
+      setDoneCount(i + 1);
+    }
+
+    setReadyVisible(true);
+    await sleep(500);
+    setPhase('loaded');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setCardsVisible(true);
+      });
+    });
+  }, []);
 
   const handleSelect = (user) => {
     localStorage.setItem('pdr_demo_user', JSON.stringify({
@@ -48,69 +93,184 @@ function DemoProfiles() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-6 pt-16 pb-24">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <div className="inline-block px-4 py-1.5 mb-6 rounded-full bg-tertiary-container text-on-tertiary-container text-xs font-bold tracking-widest uppercase font-label">
-            Demo Archetypes
-          </div>
-          <h1 className="text-4xl md:text-5xl font-headline font-extrabold text-slate-900 tracking-tighter mb-4">
-            Explore Demo Profiles
-          </h1>
-          <p className="text-lg text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-            See how PDR scores different borrower archetypes — from salaried professionals to seasonal farmers to fraud cases.
-          </p>
-        </div>
 
-        {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {users.map((user) => {
-            const grade = gradeColors[user.expected_grade] || gradeColors.C;
-            const type = typeBadge[user.model] || typeBadge.NTC;
-            const displayName = user.user_profile?.name || 'Unknown';
+        {/* ── STATE 1: INITIAL ── */}
+        {phase === 'initial' && (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+            {/* AA Shield Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-[#0F172A] flex items-center justify-center mb-8 shadow-lg">
+              <span className="material-symbols-outlined text-white text-3xl">verified_user</span>
+            </div>
 
-            return (
-              <div
-                key={user.user_id}
-                className="group bg-surface-container-lowest rounded-2xl border border-outline-variant/15 hover:border-tertiary/40 transition-all duration-500 flex flex-col overflow-hidden"
-              >
-                <div className="p-8 flex flex-col flex-1">
-                  {/* Badges row */}
-                  <div className="flex items-center gap-2 mb-5">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${type.bg} ${type.text} ${type.border}`}>
-                      {type.label}
-                    </span>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${grade.bg} ${grade.text} ${grade.border}`}>
-                      Grade {user.expected_grade}
-                    </span>
-                  </div>
+            <h1 className="text-4xl md:text-5xl font-headline font-extrabold text-slate-900 tracking-tighter mb-4">
+              Account Aggregator Gateway
+            </h1>
+            <p className="text-lg text-on-surface-variant max-w-xl mx-auto leading-relaxed mb-10">
+              Pull verified financial profiles through India's consent-based data sharing framework
+            </p>
 
-                  {/* Name */}
-                  <h3 className="text-xl font-headline font-bold text-slate-900 mb-1">{displayName}</h3>
-                  <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/60 mb-4">{user.persona}</p>
+            <button
+              onClick={handleFetch}
+              className="gradient-cta text-white px-10 py-4 rounded-lg text-lg font-bold flex items-center gap-3 shadow-lg shadow-tertiary/20 active:scale-95 transition-transform duration-200"
+            >
+              <span className="material-symbols-outlined text-xl">sync_lock</span>
+              Initiate AA Data Pull
+            </button>
 
-                  {/* Story */}
-                  <p className="text-sm text-on-surface-variant leading-relaxed flex-1">{user.story}</p>
-
-                  {/* Select button */}
-                  <button
-                    onClick={() => handleSelect(user)}
-                    className="mt-6 w-full py-3 rounded-lg text-sm font-bold tracking-wide bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
-                  >
-                    Select Profile
-                    <span className="material-symbols-outlined text-base">arrow_forward</span>
-                  </button>
-                </div>
+            {/* Trust indicators */}
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-10">
+              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                <span className="material-symbols-outlined text-sm text-slate-400">account_balance</span>
+                RBI Licensed Framework
               </div>
-            );
-          })}
-        </div>
+              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                <span className="material-symbols-outlined text-sm text-slate-400">lock</span>
+                End-to-End Encrypted
+              </div>
+              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                <span className="material-symbols-outlined text-sm text-slate-400">task_alt</span>
+                Consent Verified
+              </div>
+            </div>
 
-        {/* Back link */}
-        <div className="text-center mt-12">
-          <Link to="/" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">
-            &larr; Back to Home
-          </Link>
-        </div>
+            <p className="mt-8 text-[11px] text-slate-300 tracking-wide">
+              Simulated AA flow for demonstration purposes
+            </p>
+          </div>
+        )}
+
+        {/* ── STATE 2: FETCHING ── */}
+        {phase === 'fetching' && (
+          <div className="flex flex-col items-center justify-center min-h-[60vh]">
+            <div className="w-full max-w-lg bg-[#0F172A] rounded-2xl shadow-2xl overflow-hidden">
+              {/* Progress bar */}
+              <div className="h-1 w-full bg-slate-800">
+                <div
+                  className="h-full bg-emerald-400 transition-all duration-500 ease-out"
+                  style={{ width: `${progressPct}%` }}
+                ></div>
+              </div>
+
+              {/* Title bar */}
+              <div className="flex items-center gap-3 px-5 py-3 border-b border-slate-700/50">
+                <span className="material-symbols-outlined text-emerald-400 text-base">verified_user</span>
+                <span className="text-[11px] font-mono text-slate-400 tracking-wide">aa-gateway · secure-session</span>
+              </div>
+
+              {/* Step log */}
+              <div className="px-6 py-6 font-mono text-sm space-y-3 min-h-[280px]">
+                {AA_STEPS.slice(0, visibleCount).map((step, i) => {
+                  const isDone = i < doneCount;
+                  return (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3 animate-[fadeIn_0.25s_ease-out]"
+                    >
+                      {isDone ? (
+                        <span className="material-symbols-outlined text-emerald-400 text-base mt-0.5 shrink-0">check_circle</span>
+                      ) : (
+                        <span className="material-symbols-outlined text-slate-400 text-base mt-0.5 shrink-0 animate-spin">progress_activity</span>
+                      )}
+                      <span className={isDone ? 'text-slate-500' : 'text-slate-200'}>
+                        {step.text}
+                      </span>
+                    </div>
+                  );
+                })}
+                {readyVisible && (
+                  <div className="flex items-start gap-3 pt-2 animate-[fadeIn_0.25s_ease-out]">
+                    <span className="material-symbols-outlined text-emerald-400 text-base mt-0.5 shrink-0">rocket_launch</span>
+                    <span className="text-emerald-400 font-bold">Profiles ready for assessment.</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── STATE 3: LOADED ── */}
+        {phase === 'loaded' && (
+          <>
+            {/* Header */}
+            <div className={`text-center mb-10 transition-all duration-500 ${cardsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+              <div className="inline-block px-4 py-1.5 mb-6 rounded-full bg-tertiary-container text-on-tertiary-container text-xs font-bold tracking-widest uppercase font-label">
+                AA Gateway
+              </div>
+              <h1 className="text-4xl md:text-5xl font-headline font-extrabold text-slate-900 tracking-tighter mb-4">
+                Explore Demo Profiles
+              </h1>
+              <p className="text-lg text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
+                See how PDR scores different borrower archetypes — from salaried professionals to seasonal farmers to fraud cases.
+              </p>
+            </div>
+
+            {/* Loaded count badge + instruction */}
+            <div className={`flex flex-col items-center gap-2 mb-8 transition-all duration-500 delay-100 ${cardsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200 tracking-wide">
+                <span className="material-symbols-outlined text-sm">check_circle</span>
+                {users.length} applicant profiles retrieved via AA
+              </span>
+              <p className="text-xs text-slate-400">Select an applicant to begin credit assessment</p>
+            </div>
+
+            {/* Cards Grid */}
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-700 delay-150 ${cardsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
+              {users.map((user) => {
+                const grade = gradeColors[user.expected_grade] || gradeColors.C;
+                const type = typeBadge[user.model] || typeBadge.NTC;
+                const displayName = user.user_profile?.name || 'Unknown';
+
+                return (
+                  <div
+                    key={user.user_id}
+                    className="group bg-surface-container-lowest rounded-2xl border border-outline-variant/15 hover:border-tertiary/40 transition-all duration-500 flex flex-col overflow-hidden"
+                  >
+                    <div className="p-8 flex flex-col flex-1">
+                      {/* Badges row */}
+                      <div className="flex items-center gap-2 mb-5">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${type.bg} ${type.text} ${type.border}`}>
+                          {type.label}
+                        </span>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${grade.bg} ${grade.text} ${grade.border}`}>
+                          Grade {user.expected_grade}
+                        </span>
+                      </div>
+
+                      {/* Name */}
+                      <h3 className="text-xl font-headline font-bold text-slate-900 mb-1">{displayName}</h3>
+                      <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/60 mb-4">{user.persona}</p>
+
+                      {/* Story */}
+                      <p className="text-sm text-on-surface-variant leading-relaxed flex-1">{user.story}</p>
+
+                      {/* Data source line */}
+                      <p className="mt-4 text-[11px] text-slate-400 flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-xs">verified_user</span>
+                        Data source: AA Gateway &middot; 6-month history
+                      </p>
+
+                      {/* Select button */}
+                      <button
+                        onClick={() => handleSelect(user)}
+                        className="mt-4 w-full py-3 rounded-lg text-sm font-bold tracking-wide bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+                      >
+                        Select Profile
+                        <span className="material-symbols-outlined text-base">arrow_forward</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Back link */}
+            <div className={`text-center mt-12 transition-all duration-500 delay-200 ${cardsVisible ? 'opacity-100' : 'opacity-0'}`}>
+              <Link to="/" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">
+                &larr; Back to Home
+              </Link>
+            </div>
+          </>
+        )}
       </main>
     </div>
   );

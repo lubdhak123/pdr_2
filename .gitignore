@@ -15,7 +15,6 @@ pdr_manual_bridge/__pycache__/
 # Large datasets
 data/
 datasets/
-*.pkl
 *.joblib
 datasets.zip
 
