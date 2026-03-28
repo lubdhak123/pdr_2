@@ -121,13 +121,13 @@ export default function XaiTransparencySection({ userProfile }) {
 
       {/* SECTION A: SHAP Force Plot */}
       <div className='mb-8'>
-        <h3 className='text-sm font-semibold text-slate-600 uppercase tracking-wider mb-4 flex items-center gap-2'>
+        <h3 className='text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2'>
           <BarChart2 className='w-4 h-4' /> Feature Attribution (Tug-of-War)
         </h3>
         
         <div className='relative w-full h-12 bg-white rounded-lg border border-slate-200 overflow-visible flex items-center mb-2 shadow-inner'>
            <div className='absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-400 z-10' />
-           <div className='absolute left-1/2 top-[-10px] -ml-8 text-[10px] font-bold text-slate-500 bg-white px-1 z-20 rounded border border-slate-200 shadow-sm'>Base Risk</div>
+           <div className='absolute left-1/2 top-[-10px] -ml-8 text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-white px-1 z-20 rounded border border-slate-200 shadow-sm'>Base Risk</div>
 
            {/* Left side (Positive / Strength) */}
            <div className='w-1/2 h-full flex justify-end items-center px-1 z-0 relative'>
@@ -164,7 +164,7 @@ export default function XaiTransparencySection({ userProfile }) {
            </div>
         </div>
         
-        <div className='flex justify-between text-xs text-slate-500 font-medium px-1'>
+        <div className='flex justify-between text-xs text-slate-500 dark:text-slate-400 font-medium px-1'>
           <div className='flex items-center gap-1'><TrendingUp className='w-3 h-3 text-green-600' /> Pushing toward Approval</div>
           <div className='flex items-center gap-1'>Pushing toward Risk <TrendingDown className='w-3 h-3 text-red-600' /></div>
         </div>
@@ -173,7 +173,7 @@ export default function XaiTransparencySection({ userProfile }) {
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
         {/* SECTION B: Human-Readable Reason Codes */}
         <div className='bg-white p-5 rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md'>
-          <h3 className='text-sm font-semibold text-slate-600 uppercase tracking-wider mb-4 flex items-center gap-2'>
+          <h3 className='text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2'>
             <Info className='w-4 h-4' /> Plain-English Reason Codes
           </h3>
           <ul className='space-y-3 m-0 p-0 list-none'>
@@ -184,7 +184,7 @@ export default function XaiTransparencySection({ userProfile }) {
                 ) : (
                   <span className='mt-1 flex-shrink-0 w-2 h-2 rounded-full bg-red-500 shadow-sm' />
                 )}
-                <span className='text-slate-700 leading-relaxed'>
+                <span className='text-slate-700 dark:text-slate-300 leading-relaxed'>
                   {code.text}
                 </span>
               </li>
@@ -194,7 +194,7 @@ export default function XaiTransparencySection({ userProfile }) {
 
         {/* SECTION C: Trust Intelligence "Forensic Check" Badge */}
         <div className='bg-white p-5 rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md flex flex-col items-center justify-center text-center'>
-          <h3 className='text-sm font-semibold text-slate-600 uppercase tracking-wider mb-4 w-full text-left'>
+          <h3 className='text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-4 w-full text-left'>
             Trust Intelligence Layer
           </h3>
           

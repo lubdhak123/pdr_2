@@ -128,8 +128,8 @@ function DocsPage() {
   return (
     <div className="min-h-screen bg-surface flex items-center justify-center">
       <div className="text-center">
-        <h1 className="text-4xl font-headline font-bold text-slate-900 mb-4">Documentation</h1>
-        <p className="text-on-surface-variant text-lg">Coming soon.</p>
+        <h1 className="text-4xl font-headline font-bold text-slate-900 dark:text-white mb-4">Documentation</h1>
+        <p className="text-on-surface-variant dark:text-slate-400 text-lg">Coming soon.</p>
       </div>
     </div>
   )

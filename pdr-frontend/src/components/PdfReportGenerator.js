@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /**
  * Credit Decision Explanation PDF Report Generator
  * Generates audit-friendly, lender-style PDF reports using jsPDF.

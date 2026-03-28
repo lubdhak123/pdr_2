@@ -756,3 +756,134 @@
   align-items: center;
   gap: 6px;
 }
+
+/* Dark Mode Overrides */
+.dark .r-name {
+  color: #f3f4f6;
+}
+
+.dark .r-persona, .dark .r-back-btn, .dark .r-source-desc, .dark .r-verdict-para, .dark .mini-chart-name, .dark .r-chart-subtitle, .dark .r-chart-title, .dark .r-footer-left {
+  color: #9ca3af;
+}
+
+.dark .r-divider {
+  border-color: #374151;
+}
+
+.dark .r-source-banner, .dark .r-verdict-card, .dark .r-feature-cell, .dark .r-chart-box {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark .r-verdict-headline, .dark .r-shap-reason, .dark .r-f-value, .dark .r-section-title {
+  color: #f3f4f6;
+}
+
+.dark .r-verdict-mini-chart, .dark .r-flags {
+  border-color: #334155;
+}
+
+.dark .mini-chart-bar-area, .dark .r-shap-bar-wrapper {
+  background: #334155;
+}
+
+.dark .r-shap-row {
+  border-color: #334155;
+}
+
+.dark .shap-medium {
+  background: #334155;
+  color: #d1d5db;
+}
+
+.dark .r-footer {
+  background: #0f172a;
+  border-color: #1e293b;
+}
+
+.dark .r-btn-outline {
+  background: #1e293b;
+  border-color: #334155;
+  color: #d1d5db;
+}
+
+.dark .r-btn-outline:hover {
+  background: #334155;
+}
+
+.dark .r-btn-solid {
+  background: #f3f4f6;
+  color: #0f172a;
+}
+
+.dark .r-btn-solid:hover {
+  background: #d1d5db;
+}
+
+.dark .out-approved {
+  background: rgba(22, 101, 52, 0.2);
+  color: #4ade80;
+}
+
+.dark .out-cond {
+  background: rgba(29, 78, 216, 0.2);
+  color: #60a5fa;
+}
+
+.dark .out-review {
+  background: rgba(146, 64, 14, 0.2);
+  color: #fbbf24;
+}
+
+.dark .out-rejected {
+  background: rgba(153, 27, 27, 0.2);
+  color: #f87171;
+}
+
+.dark .tag-ntc {
+  background: #1e293b;
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+.dark .tag-msme {
+  background: #2e1065;
+  color: #c4b5fd;
+  border-color: #4c1d95;
+}
+
+.dark .r-section-badge {
+  background: #1e293b;
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+.dark .chip-strong {
+  background: rgba(22, 101, 52, 0.2);
+  color: #4ade80;
+}
+
+.dark .chip-watch {
+  background: rgba(133, 77, 14, 0.2);
+  color: #fbbf24;
+}
+
+.dark .chip-risk {
+  background: rgba(153, 27, 27, 0.2);
+  color: #f87171;
+}
+
+.dark .r-flag-chip {
+  background: rgba(153, 27, 27, 0.2);
+  color: #f87171;
+  border-color: #7f1d1d;
+}
+
+.dark .tooltip-text {
+  background-color: #334155;
+  color: #f3f4f6;
+}
+
+.dark .tooltip-text::after {
+  border-color: #334155 transparent transparent transparent;
+}

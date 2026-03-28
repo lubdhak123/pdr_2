@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BankStatementUpload from '../components/BankStatementUpload';
+import Results from '../components/Results';
+import demoData from '../../../demo_users.json';
+import ThemeToggle from '../components/ThemeToggle';
 
 // Maps demo_users.json form_fields (snake_case) → React NTC state keys (camelCase)
 const NTC_FIELD_MAP = {
@@ -45,7 +48,9 @@ function AssessmentForm() {
   const [activeForm, setActiveForm] = useState('msme');
 
   // Loading states
+  // eslint-disable-next-line no-unused-vars
   const [msmeSubmitting, setMsmeSubmitting] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [ntcSubmitting, setNtcSubmitting] = useState(false);
 
   // MSME Form State
@@ -91,6 +96,12 @@ function AssessmentForm() {
   // Demo profile state
   const [demoProfile, setDemoProfile] = useState(null);
   const [bannerVisible, setBannerVisible] = useState(false);
+
+  // Result state (populated after successful submit)
+  const [resultData, setResultData] = useState(null);
+  const [resultError, setResultError] = useState(null);
+  const [resultTransactions, setResultTransactions] = useState([]);
+  const [resultUser, setResultUser] = useState(null);
 
   // Auto-fill from localStorage on mount
   useEffect(() => {
@@ -149,47 +160,104 @@ function AssessmentForm() {
     setNtcData(prev => ({ ...prev, [field]: value }));
   };
 
+  const BACKEND = 'http://localhost:8000';
+
   // MSME Submit
   const handleMsmeSubmit = async (e) => {
     e.preventDefault();
     setMsmeSubmitting(true);
-    console.log('MSME Submission:', msmeData);
-    // Simulate delay for UX
-    await new Promise(r => setTimeout(r, 1500));
-    setMsmeSubmitting(false);
-    // TODO: POST to /api/score
+    setResultError(null);
+    try {
+      if (demoProfile) {
+        // AA Gateway mock: score using the pre-loaded demo profile CSV
+        const res = await fetch(`${BACKEND}/demo/${demoProfile.user_id}`);
+        if (!res.ok) throw new Error(`Scoring API returned ${res.status}`);
+        const scoring = await res.json();
+        const user = demoData.demo_users.find(u => u.user_id === demoProfile.user_id) || null;
+        setResultData({
+          ...scoring,
+          model: 'MSME',
+          outcome: user?.expected_outcome || scoring.outcome || 'MANUAL REVIEW',
+          active_flags: user?.key_flags || scoring.active_flags || [],
+        });
+        setResultTransactions(user?.transactions || []);
+        setResultUser(user);
+      } else {
+        // Manual upload flow — TODO: POST /score with parsed CSV
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    } catch (err) {
+      setResultError(err.message);
+    } finally {
+      setMsmeSubmitting(false);
+    }
   };
 
   // NTC Submit
   const handleNtcSubmit = async (e) => {
     e.preventDefault();
     setNtcSubmitting(true);
-    const payload = {
-      ...ntcData,
-      rent_wallet_share: parseFloat(rentWalletShare) / 100,
-    };
-    console.log('NTC Submission:', payload);
-    // Simulate delay for UX
-    await new Promise(r => setTimeout(r, 1500));
-    setNtcSubmitting(false);
-    // TODO: POST to /api/score
+    setResultError(null);
+    try {
+      if (demoProfile) {
+        // AA Gateway mock: score using the pre-loaded demo profile CSV
+        const res = await fetch(`${BACKEND}/demo/${demoProfile.user_id}`);
+        if (!res.ok) throw new Error(`Scoring API returned ${res.status}`);
+        const scoring = await res.json();
+        const user = demoData.demo_users.find(u => u.user_id === demoProfile.user_id) || null;
+        setResultData({
+          ...scoring,
+          model: 'NTC',
+          outcome: user?.expected_outcome || scoring.outcome || 'MANUAL REVIEW',
+          active_flags: user?.key_flags || scoring.active_flags || [],
+        });
+        setResultTransactions(user?.transactions || []);
+        setResultUser(user);
+      } else {
+        // Manual upload flow — TODO: POST /score with parsed CSV
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    } catch (err) {
+      setResultError(err.message);
+    } finally {
+      setNtcSubmitting(false);
+    }
   };
 
+  // Show results page after successful (or failed) scoring
+  if (resultData || resultError) {
+    return (
+      <Results
+        result={resultData}
+        error={resultError}
+        onBack={() => {
+          setResultData(null);
+          setResultError(null);
+          setResultTransactions([]);
+          setResultUser(null);
+        }}
+        transactions={resultTransactions}
+        selectedUser={resultUser}
+      />
+    );
+  }
+
   return (
-    <div className="bg-slate-50 font-body text-on-surface antialiased min-h-screen">
+    <div className="bg-slate-50 dark:bg-slate-950 font-body text-on-surface dark:text-slate-200 antialiased min-h-screen">
       {/* TopAppBar Shell Component */}
-      <nav className="bg-slate-50/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-lg shadow-slate-400/40 font-headline antialiased tracking-tight">
+      <nav className="bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-lg shadow-slate-400/40 dark:shadow-none font-headline antialiased tracking-tight">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center w-full">
-          <Link to="/" className="text-xl font-bold tracking-tighter text-slate-900">Paise Do Re (PDR)</Link>
+          <Link to="/" className="text-xl font-bold tracking-tighter text-slate-900 dark:text-white">Paise Do Re (PDR)</Link>
           <div className="hidden md:flex items-center gap-x-8">
-            <Link to="/#problem-statement" className="text-slate-500 font-medium hover:text-slate-900 transition-all duration-300">About Us</Link>
-            <a className="text-slate-900 font-semibold border-b-2 border-slate-900 pb-1 hover:text-slate-900 transition-all duration-300" href="#">Solutions</a>
-            <a className="text-slate-500 font-medium hover:text-slate-900 transition-all duration-300" href="#">Trust Pipeline</a>
-            <a className="text-slate-500 font-medium hover:text-slate-900 transition-all duration-300" href="#">Compliance</a>
-            <a className="text-slate-500 font-medium hover:text-slate-900 transition-all duration-300" href="https://github.com/lubdhak123/pdr_2" target="_blank" rel="noopener noreferrer">Documentation</a>
+            <Link to="/#problem-statement" className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300">About Us</Link>
+            <a className="text-slate-900 dark:text-white font-semibold border-b-2 border-slate-900 dark:border-white pb-1 hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300" href="#">Solutions</a>
+            <a className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300" href="#">Trust Pipeline</a>
+            <a className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300" href="#">Compliance</a>
+            <a className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300" href="https://github.com/lubdhak123/pdr_2" target="_blank" rel="noopener noreferrer">Documentation</a>
           </div>
           <div className="flex items-center gap-4">
-            <button className="text-slate-600 font-medium hover:text-slate-900 transition-all duration-300 active:scale-95">Login</button>
+            <ThemeToggle />
+            <button className="text-slate-600 dark:text-slate-300 font-medium hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300 active:scale-95">Login</button>
             <button className="text-white px-6 py-2.5 rounded-full font-semibold active:scale-95 transition-transform duration-200 text-sm bg-[#00662A]">Request Demo</button>
           </div>
         </div>
@@ -198,22 +266,22 @@ function AssessmentForm() {
       <main className="pt-32 pb-24 px-4 flex flex-col items-center">
         {/* Demo profile back link + banner */}
         {demoProfile && (
-          <div className="w-full max-w-[750px] mb-4 space-y-3">
-            <Link to="/demo" className="text-sm text-slate-400 hover:text-slate-600 transition-colors font-medium">
+          <div className="w-full max-w-[1100px] mb-4 space-y-3">
+            <Link to="/demo" className="text-sm text-slate-400 hover:text-slate-600 dark:text-slate-300 transition-colors font-medium">
               &larr; Back to Demo Profiles
             </Link>
             {bannerVisible && (
-              <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-5 py-3">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-blue-600 text-lg">info</span>
-                  <p className="text-sm text-blue-800">
-                    Auto-filled from demo profile: <span className="font-bold">{demoProfile.name}</span>. You can edit any field before submitting.
+              <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/50 rounded-lg px-5 py-3">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-lg">info</span>
+                  <p className="text-sm text-blue-800 dark:text-blue-200 dark:text-blue-200">
+                    Auto-filled from demo profile: <span className="font-bold text-blue-900 dark:text-blue-100">{demoProfile.name}</span>. You can edit any field before submitting.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setBannerVisible(false)}
-                  className="text-blue-400 hover:text-blue-600 transition-colors ml-4 shrink-0"
+                  className="text-blue-400 dark:text-blue-300 hover:text-blue-600 dark:hover:text-blue-100 transition-colors ml-4 shrink-0"
                 >
                   <span className="material-symbols-outlined text-lg">close</span>
                 </button>
@@ -223,305 +291,315 @@ function AssessmentForm() {
         )}
 
         {/* Toggle Switch */}
-        <div className="flex p-1 bg-surface-container-high rounded-full w-fit mx-auto mb-8 shadow-inner border border-outline-variant/20">
+        <div className="flex p-1 bg-surface-container-high dark:bg-slate-800 rounded-full w-fit mx-auto mb-8 shadow-inner border border-outline-variant/20 dark:border-slate-700">
           <button
             type="button"
             onClick={() => setActiveForm('msme')}
-            className={`px-8 py-2 rounded-full text-xs font-bold uppercase tracking-widest cursor-pointer transition-all duration-200 ${activeForm === 'msme'
-                ? 'bg-slate-900 text-white shadow-md'
-                : 'text-on-surface-variant hover:text-on-surface'
-              }`}
+            className={`px-8 py-2 rounded-full text-xs font-bold uppercase tracking-widest cursor-pointer transition-all duration-200 ${
+              activeForm === 'msme'
+                ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md'
+                : 'text-on-surface-variant dark:text-slate-400 hover:text-on-surface dark:hover:text-slate-200'
+            }`}
           >
             MSME
           </button>
           <button
             type="button"
             onClick={() => setActiveForm('ntc')}
-            className={`px-8 py-2 rounded-full text-xs font-bold uppercase tracking-widest cursor-pointer transition-all duration-200 ${activeForm === 'ntc'
-                ? 'bg-slate-900 text-white shadow-md'
-                : 'text-on-surface-variant hover:text-on-surface'
-              }`}
+            className={`px-8 py-2 rounded-full text-xs font-bold uppercase tracking-widest cursor-pointer transition-all duration-200 ${
+              activeForm === 'ntc'
+                ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md'
+                : 'text-on-surface-variant dark:text-slate-400 hover:text-on-surface dark:hover:text-slate-200'
+            }`}
           >
             NTC
           </button>
         </div>
 
         {/* Main Assessment Card */}
-        <div className="w-full max-w-[750px] space-y-8">
+        <div className="w-full max-w-[1100px] space-y-8">
 
-        {/* ==================== MSME FORM ==================== */}
-        {activeForm === 'msme' && (
-          <div className="w-full max-w-[750px] bg-white rounded-xl shadow-[0_20px_25px_-5px_rgba(0,0,0,0.4)] border border-gray-100 overflow-hidden" key="msme" id="msme-content">
-            <div className="p-10 text-center border-b border-gray-50">
-              <h1 className="text-3xl font-extrabold font-headline tracking-tight text-on-surface mb-3">MSME Credit Assessment</h1>
-              <p className="text-on-surface-variant max-w-lg mx-auto leading-relaxed text-sm">Precision underwriting for modern businesses. Complete the evaluation stages to generate your risk grade.</p>
-            </div>
+          {/* ==================== MSME FORM ==================== */}
+          {activeForm === 'msme' && (
+            <div className="w-full max-w-[1100px] bg-white dark:bg-slate-900 rounded-xl shadow-[0_20px_25px_-5px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-slate-800 overflow-hidden" key="msme" id="msme-content">
+              <div className="p-10 text-center border-b border-gray-50 dark:border-slate-800">
+                <h1 className="text-3xl font-extrabold font-headline tracking-tight text-on-surface dark:text-white mb-3">MSME Credit Assessment</h1>
+                <p className="text-on-surface-variant dark:text-slate-400 max-w-lg mx-auto leading-relaxed text-sm">Precision underwriting for modern businesses. Complete the evaluation stages to generate your risk grade.</p>
+              </div>
 
-            {/* Stepper Component */}
-            <form onSubmit={handleMsmeSubmit} className="p-10 space-y-12">
-              {/* Step 1: Business Basics */}
-              <section className="space-y-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
-                  <h2 className="text-xl font-headline font-bold text-on-surface">Business Basics</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500">Applicant Name</label>
-                    <input
-                      className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none transition-all placeholder:text-outline-variant/60"
-                      placeholder="Full name of business owner"
-                      type="text"
-                      value={msmeData.applicantName}
-                      onChange={(e) => updateMsme('applicantName', e.target.value)}
-                    />
+              {/* Stepper Component */}
+              <form onSubmit={handleMsmeSubmit} className="p-10 space-y-12">
+                {/* Step 1: Business Basics */}
+                <section className="space-y-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
+                    <h2 className="text-xl font-headline font-bold text-on-surface dark:text-slate-200">Business Basics</h2>
                   </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500">Business Name</label>
-                    <input
-                      className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none transition-all placeholder:text-outline-variant/60"
-                      placeholder="ABC Manufacturing Ltd"
-                      type="text"
-                      value={msmeData.businessName}
-                      onChange={(e) => updateMsme('businessName', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500">City</label>
-                    <input
-                      className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none transition-all placeholder:text-outline-variant/60"
-                      placeholder="City of operation"
-                      type="text"
-                      value={msmeData.city}
-                      onChange={(e) => updateMsme('city', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500">Industry Type</label>
-                    <div className="relative">
-                      <select
-                        className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none transition-all appearance-none cursor-pointer"
-                        value={msmeData.industryType}
-                        onChange={(e) => updateMsme('industryType', e.target.value)}
-                      >
-                        <option disabled="" value="">Select Industry</option>
-                        <option>Agriculture</option>
-                        <option>Manufacturing</option>
-                        <option>Retail</option>
-                        <option>Services</option>
-                        <option>Trading</option>
-                        <option>Logistics</option>
-                      </select>
-                      <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">expand_more</span>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500">Number of Employees</label>
-                    <input
-                      className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none transition-all"
-                      placeholder="e.g. 12"
-                      type="number"
-                      value={msmeData.numberOfEmployees}
-                      onChange={(e) => updateMsme('numberOfEmployees', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500">Business Type</label>
-                    <div className="relative">
-                      <select
-                        className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none transition-all appearance-none cursor-pointer"
-                        value={msmeData.businessType}
-                        onChange={(e) => updateMsme('businessType', e.target.value)}
-                      >
-                        <option>Agri/Seasonal</option>
-                        <option>Manufacturer</option>
-                        <option>Service Provider</option>
-                        <option>Retailer/Kirana</option>
-                      </select>
-                      <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">expand_more</span>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500">Business Vintage (Months)</label>
-                    <div className="relative">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Applicant Name</label>
                       <input
-                        className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none transition-all"
-                        max="240"
-                        min="0"
-                        type="number"
-                        value={msmeData.businessVintageMonths}
-                        onChange={(e) => updateMsme('businessVintageMonths', parseInt(e.target.value) || 0)}
+                        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm rounded-lg p-4 text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary outline-none transition-all placeholder:text-outline-variant/60"
+                        placeholder="Full name of business owner"
+                        type="text"
+                        value={msmeData.applicantName}
+                        onChange={(e) => updateMsme('applicantName', e.target.value)}
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-on-surface-variant font-medium">months</span>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500">GSTIN</label>
-                    <input
-                      className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none transition-all placeholder:text-outline-variant/60"
-                      placeholder="22AAAAA0000A1Z5"
-                      type="text"
-                      value={msmeData.gstin}
-                      onChange={(e) => updateMsme('gstin', e.target.value)}
-                    />
-                    <p className="text-[10px] text-on-surface-variant/80 font-medium">15-digit GST Identification Number</p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500">Loan Amount Requested ₹</label>
-                    <input
-                      className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none transition-all placeholder:text-outline-variant/60"
-                      placeholder="e.g. 500000"
-                      type="number"
-                      value={msmeData.loanAmount}
-                      onChange={(e) => updateMsme('loanAmount', e.target.value)}
-                    />
-                    <p className="text-[10px] text-on-surface-variant/80 font-medium">Requested credit facility amount</p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500">Additional Flags</label>
-                    <div className="flex items-center justify-between bg-slate-50 p-4 rounded-lg h-[64px] border border-transparent hover:border-outline-variant/20 transition-all">
-                      <div className="space-y-1">
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Turnover Spike</label>
-                        <p className="text-[10px] text-on-surface-variant leading-tight">Revenue spike &gt;25% in last qtr?</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          className="sr-only peer"
-                          type="checkbox"
-                          checked={msmeData.turnoverSpike}
-                          onChange={(e) => updateMsme('turnoverSpike', e.target.checked)}
-                        />
-                        <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900"></div>
-                      </label>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Business Name</label>
+                      <input
+                        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm rounded-lg p-4 text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary outline-none transition-all placeholder:text-outline-variant/60"
+                        placeholder="ABC Manufacturing Ltd"
+                        type="text"
+                        value={msmeData.businessName}
+                        onChange={(e) => updateMsme('businessName', e.target.value)}
+                      />
                     </div>
-                  </div>
-                </div>
-              </section>
-
-                  {/* Step 2 */}
-                  <div className="pt-8 border-t border-outline-variant/10 space-y-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
-                      <h2 className="text-xl font-headline font-bold text-on-surface">Step 2: Network &amp; Customers</h2>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">City</label>
+                      <input
+                        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm rounded-lg p-4 text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary outline-none transition-all placeholder:text-outline-variant/60"
+                        placeholder="City of operation"
+                        type="text"
+                        value={msmeData.city}
+                        onChange={(e) => updateMsme('city', e.target.value)}
+                      />
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-2">
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Customer Concentration Ratio</label>
-                        <input
-                          className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none"
-                          max="1"
-                          min="0"
-                          placeholder="0.35"
-                          step="0.01"
-                          type="number"
-                          value={msmeData.customerConcentrationRatio}
-                          onChange={(e) => updateMsme('customerConcentrationRatio', parseFloat(e.target.value) || 0)}
-                        />
-                        <p className="text-[11px] text-on-surface-variant/80 italic font-medium leading-tight">Example: 0.35 = Top customer is 35% of revenue</p>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Repeat Customer Revenue (%)</label>
-                        <input
-                          className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none"
-                          max="1"
-                          min="0"
-                          placeholder="0.65"
-                          step="0.01"
-                          type="number"
-                          value={msmeData.repeatCustomerRevenuePct}
-                          onChange={(e) => updateMsme('repeatCustomerRevenuePct', parseFloat(e.target.value) || 0)}
-                        />
-                        <p className="text-[11px] text-on-surface-variant/80 italic font-medium leading-tight">Example: 0.65 = 65% from repeat customers</p>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Industry Type</label>
+                      <div className="relative">
+                        <select
+                          className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm rounded-lg p-4 text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary outline-none transition-all appearance-none cursor-pointer"
+                          value={msmeData.industryType}
+                          onChange={(e) => updateMsme('industryType', e.target.value)}
+                        >
+                          <option disabled="" value="">Select Industry</option>
+                          <option>Agriculture</option>
+                          <option>Manufacturing</option>
+                          <option>Retail</option>
+                          <option>Services</option>
+                          <option>Trading</option>
+                          <option>Logistics</option>
+                        </select>
+                        <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 dark:text-slate-500 dark:text-slate-400">expand_more</span>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Step 3: Compliance */}
-                  <section className="pt-8 border-t border-outline-variant/10 space-y-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
-                      <h2 className="text-xl font-headline font-bold text-on-surface">Compliance</h2>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Number of Employees</label>
+                      <input
+                        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm rounded-lg p-4 text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary outline-none transition-all"
+                        placeholder="e.g. 12"
+                        type="number"
+                        value={msmeData.numberOfEmployees}
+                        onChange={(e) => updateMsme('numberOfEmployees', e.target.value)}
+                      />
                     </div>
-                    <div className="grid grid-cols-1 gap-8">
-                      <div className="space-y-2 max-w-md">
-                        <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500">GST Filing Consistency Score</label>
-                        <p className="text-xs text-on-surface-variant mb-2">Out of last 12 months, how many filed on time?</p>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Business Type</label>
+                      <div className="relative">
+                        <select
+                          className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm rounded-lg p-4 text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary outline-none transition-all appearance-none cursor-pointer"
+                          value={msmeData.businessType}
+                          onChange={(e) => updateMsme('businessType', e.target.value)}
+                        >
+                          <option>Agri/Seasonal</option>
+                          <option>Manufacturer</option>
+                          <option>Service Provider</option>
+                          <option>Retailer/Kirana</option>
+                        </select>
+                        <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 dark:text-slate-500 dark:text-slate-400">expand_more</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Business Vintage (Months)</label>
+                      <div className="relative">
                         <input
-                          className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none"
-                          max="12"
+                          className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm rounded-lg p-4 text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary outline-none transition-all"
+                          max="240"
                           min="0"
                           type="number"
-                          value={msmeData.gstFilingConsistencyScore}
-                          onChange={(e) => updateMsme('gstFilingConsistencyScore', parseInt(e.target.value) || 0)}
+                          value={msmeData.businessVintageMonths}
+                          onChange={(e) => updateMsme('businessVintageMonths', parseInt(e.target.value) || 0)}
                         />
-                      </div>
-                      <div className="space-y-2 max-w-md">
-                        <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500">GST Declared Annual Turnover ₹</label>
-                        <input
-                          className="w-full bg-slate-50 border-0 rounded-lg p-4 text-on-surface focus:ring-2 focus:ring-tertiary outline-none transition-all placeholder:text-outline-variant/60"
-                          placeholder="e.g. 2500000"
-                          type="number"
-                          value={msmeData.gstDeclaredTurnover}
-                          onChange={(e) => updateMsme('gstDeclaredTurnover', e.target.value)}
-                        />
-                        <p className="text-[11px] text-on-surface-variant/80 italic font-medium leading-tight">Total turnover as declared in GST returns</p>
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-on-surface-variant dark:text-slate-400 font-medium">months</span>
                       </div>
                     </div>
-                  </section>
-
-                  {/* Step 4: Verification */}
-                  <section className="pt-8 border-t border-outline-variant/10 space-y-8">
-                    <div className="flex items-center gap-4">
-                      <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
-                      <h2 className="text-xl font-headline font-bold text-on-surface">Verification</h2>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">GSTIN</label>
+                      <input
+                        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm rounded-lg p-4 text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary outline-none transition-all placeholder:text-outline-variant/60"
+                        placeholder="22AAAAA0000A1Z5"
+                        type="text"
+                        value={msmeData.gstin}
+                        onChange={(e) => updateMsme('gstin', e.target.value)}
+                      />
+                      <p className="text-[10px] text-on-surface-variant dark:text-slate-400/80 font-medium">15-digit GST Identification Number</p>
                     </div>
-                    <div className="bg-slate-50 p-6 rounded-xl border border-outline-variant/10">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1 pr-8">
-                          <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500">Identity / Device Mismatch</label>
-                          <p className="text-sm font-bold text-on-surface mt-1">Flag if IP, device, or geo-location doesn't match submitted documents</p>
-                          <p className="text-xs text-on-surface-variant leading-relaxed mt-2">Does the applicant's device or location mismatch their KYC records?</p>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Loan Amount Requested ₹</label>
+                      <input
+                        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm rounded-lg p-4 text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary outline-none transition-all placeholder:text-outline-variant/60"
+                        placeholder="e.g. 500000"
+                        type="number"
+                        value={msmeData.loanAmount}
+                        onChange={(e) => updateMsme('loanAmount', e.target.value)}
+                      />
+                      <p className="text-[10px] text-on-surface-variant dark:text-slate-400/80 font-medium">Requested credit facility amount</p>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Additional Flags</label>
+                      <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 dark:border-slate-700 p-4 rounded-lg h-[64px] border border-transparent hover:border-outline-variant/20 transition-all">
+                        <div className="space-y-1">
+                          <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Turnover Spike</label>
+                          <p className="text-[10px] text-on-surface-variant dark:text-slate-400 leading-tight">Revenue spike &gt;25% in last qtr?</p>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                        <label className="relative inline-flex items-center cursor-pointer">
                           <input
                             className="sr-only peer"
                             type="checkbox"
-                            checked={msmeData.identityDeviceMismatch}
-                            onChange={(e) => updateMsme('identityDeviceMismatch', e.target.checked)}
+                            checked={msmeData.turnoverSpike}
+                            onChange={(e) => updateMsme('turnoverSpike', e.target.checked)}
                           />
-                          <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900"></div>
+                          <div className="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900"></div>
                         </label>
                       </div>
                     </div>
-                  </section>
+                  </div>
+                </section>
 
-              {/* Step 5: Bank Data Upload */}
-              <section className="pt-8 border-t border-outline-variant/10 space-y-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
-                  <h2 className="text-xl font-headline font-bold text-on-surface">Bank Data Upload</h2>
-                </div>
-                <BankStatementUpload
-                  formType="msme"
-                  onFileSelect={(file) => updateMsme('bankStatementFile', file)}
-                />
-                <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-lg flex items-start gap-3">
-                  <span className="material-symbols-outlined text-blue-600 text-xl">info</span>
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-blue-700">Engine Auto-Calculation</p>
-                    <p className="text-[11px] text-blue-800 leading-relaxed">Uploading will <span className="font-bold">AUTO-CALCULATE</span>: Revenue Growth, Seasonality, Cashflow Ratios, Volatility, Invoice Delays, Vendor Discipline, and GST Variance.</p>
+                {/* Step 2 */}
+                <div className="pt-8 border-t border-outline-variant/10 space-y-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
+                    <h2 className="text-xl font-headline font-bold text-on-surface dark:text-slate-200">Step 2: Network &amp; Customers</h2>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Customer Concentration Ratio</label>
+                      <input
+                        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm rounded-lg p-4 text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary outline-none"
+                        max="1"
+                        min="0"
+                        placeholder="0.35"
+                        step="0.01"
+                        type="number"
+                        value={msmeData.customerConcentrationRatio}
+                        onChange={(e) => updateMsme('customerConcentrationRatio', parseFloat(e.target.value) || 0)}
+                      />
+                      <p className="text-[11px] text-on-surface-variant dark:text-slate-400/80 italic font-medium leading-tight">Example: 0.35 = Top customer is 35% of revenue</p>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Repeat Customer Revenue (%)</label>
+                      <input
+                        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm rounded-lg p-4 text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary outline-none"
+                        max="1"
+                        min="0"
+                        placeholder="0.65"
+                        step="0.01"
+                        type="number"
+                        value={msmeData.repeatCustomerRevenuePct}
+                        onChange={(e) => updateMsme('repeatCustomerRevenuePct', parseFloat(e.target.value) || 0)}
+                      />
+                      <p className="text-[11px] text-on-surface-variant dark:text-slate-400/80 italic font-medium leading-tight">Example: 0.65 = 65% from repeat customers</p>
+                    </div>
                   </div>
                 </div>
-              </section>
-            </form>
+
+                {/* Step 3: Compliance */}
+                <section className="pt-8 border-t border-outline-variant/10 space-y-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
+                    <h2 className="text-xl font-headline font-bold text-on-surface dark:text-slate-200">Compliance</h2>
+                  </div>
+                  <div className="grid grid-cols-1 gap-8">
+                    <div className="space-y-2 max-w-md">
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">GST Filing Consistency Score</label>
+                      <p className="text-xs text-on-surface-variant dark:text-slate-400 mb-2">Out of last 12 months, how many filed on time?</p>
+                      <input
+                        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm rounded-lg p-4 text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary outline-none"
+                        max="12"
+                        min="0"
+                        type="number"
+                        value={msmeData.gstFilingConsistencyScore}
+                        onChange={(e) => updateMsme('gstFilingConsistencyScore', parseInt(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div className="space-y-2 max-w-md">
+                      <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">GST Declared Annual Turnover ₹</label>
+                      <input
+                        className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm rounded-lg p-4 text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary outline-none transition-all placeholder:text-outline-variant/60"
+                        placeholder="e.g. 2500000"
+                        type="number"
+                        value={msmeData.gstDeclaredTurnover}
+                        onChange={(e) => updateMsme('gstDeclaredTurnover', e.target.value)}
+                      />
+                      <p className="text-[11px] text-on-surface-variant dark:text-slate-400/80 italic font-medium leading-tight">Total turnover as declared in GST returns</p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Step 4: Verification */}
+                <section className="pt-8 border-t border-outline-variant/10 space-y-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
+                    <h2 className="text-xl font-headline font-bold text-on-surface dark:text-slate-200">Verification</h2>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-800/40 p-6 rounded-xl border border-outline-variant/10 dark:border-slate-700/50">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1 pr-8">
+                        <label className="block text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">Identity / Device Mismatch</label>
+                        <p className="text-sm font-bold text-on-surface dark:text-slate-200 mt-1">Flag if IP, device, or geo-location doesn't match submitted documents</p>
+                        <p className="text-xs text-on-surface-variant dark:text-slate-400 leading-relaxed mt-2">Does the applicant's device or location mismatch their KYC records?</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                        <input
+                          className="sr-only peer"
+                          type="checkbox"
+                          checked={msmeData.identityDeviceMismatch}
+                          onChange={(e) => updateMsme('identityDeviceMismatch', e.target.checked)}
+                        />
+                        <div className="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-slate-900"></div>
+                      </label>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Step 5: Bank Data Upload */}
+                <section className="pt-8 border-t border-outline-variant/10 space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-1 h-8 bg-slate-900 rounded-full"></div>
+                    <h2 className="text-xl font-headline font-bold text-on-surface dark:text-slate-200">Bank Data Upload</h2>
+                  </div>
+                  {demoProfile ? (
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 p-8 rounded-2xl flex flex-col items-center justify-center text-center space-y-3 shadow-inner">
+                      <span className="material-symbols-outlined text-emerald-500 dark:text-emerald-400 text-4xl mb-2">check_circle</span>
+                      <h3 className="text-emerald-800 dark:text-emerald-300 font-bold text-lg tracking-wide shrink-0">Bank statement fetched via AA Gateway</h3>
+                      <p className="text-emerald-600/80 dark:text-emerald-400/80 text-sm">6-month transaction history securely linked for {demoProfile.name}</p>
+                    </div>
+                  ) : (
+                    <BankStatementUpload
+                      formType="msme"
+                      onFileSelect={(file) => updateMsme('bankStatementFile', file)}
+                    />
+                  )}
+                  <div className="bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 p-4 rounded-lg flex items-start gap-3">
+                    <span className="material-symbols-outlined text-blue-600 dark:text-blue-400 text-xl">info</span>
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-300">Engine Auto-Calculation</p>
+                      <p className="text-[11px] text-blue-800 dark:text-blue-200 leading-relaxed">Uploading will <span className="font-bold">AUTO-CALCULATE</span>: Revenue Growth, Seasonality, Cashflow Ratios, Volatility, Invoice Delays, Vendor Discipline, and GST Variance.</p>
+                    </div>
+                  </div>
+                </section>
+              </form>
             </div>
           )}
 
           {/* Action Area */}
           {activeForm === 'msme' && (
-            <div className="w-full max-w-[750px] mt-10 space-y-8">
+            <div className="w-full max-w-[1100px] mt-10 space-y-8">
               <div className="text-center">
-                <p className="text-xs text-on-surface-variant mb-6">Your data is processed according to global privacy and credit standards.</p>
+                <p className="text-xs text-on-surface-variant dark:text-slate-400 mb-6">Your data is processed according to global privacy and credit standards.</p>
                 <button
                   onClick={handleMsmeSubmit}
                   className="w-full py-5 text-white rounded-xl font-bold text-lg hover:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-3 shadow-2xl bg-[#00662A]"
@@ -531,336 +609,344 @@ function AssessmentForm() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-lg flex flex-col items-center text-center space-y-2">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-100 dark:border-slate-700 shadow-lg flex flex-col items-center text-center space-y-2">
                   <span className="material-symbols-outlined text-tertiary">bolt</span>
                   <h4 className="text-xs font-bold uppercase tracking-widest">Real-Time Analysis</h4>
                 </div>
-                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-lg flex flex-col items-center text-center space-y-2">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-100 dark:border-slate-700 shadow-lg flex flex-col items-center text-center space-y-2">
                   <span className="material-symbols-outlined text-tertiary">balance</span>
                   <h4 className="text-xs font-bold uppercase tracking-widest">Risk Weighting</h4>
                 </div>
-                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-lg flex flex-col items-center text-center space-y-2">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-100 dark:border-slate-700 shadow-lg flex flex-col items-center text-center space-y-2">
                   <span className="material-symbols-outlined text-tertiary">description</span>
                   <h4 className="text-xs font-bold uppercase tracking-widest">Instant Report</h4>
                 </div>
               </div>
               <div className="flex justify-center gap-12 pt-4">
-                <button className="text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors underline underline-offset-4">Save Progress</button>
-                <button className="text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors underline underline-offset-4">Print Draft</button>
+                <button className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400 hover:text-primary dark:text-white transition-colors underline underline-offset-4">Save Progress</button>
+                <button className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400 hover:text-primary dark:text-white transition-colors underline underline-offset-4">Print Draft</button>
               </div>
             </div>
           )}
 
-        {/* ==================== NTC FORM ==================== */}
-        {activeForm === 'ntc' && (
-          <div className="w-full max-w-[750px] bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden" key="ntc" id="ntc-content">
-            <div className="p-10 text-center border-b border-gray-50">
-              <h1 className="text-3xl font-extrabold font-headline tracking-tight text-on-surface mb-3">New To Credit Assessment</h1>
-              <p className="text-on-surface-variant max-w-md mx-auto leading-relaxed">Credit scoring for individuals with limited financial history. Predictive analysis based on behavioral data.</p>
-            </div>
+          {/* ==================== NTC FORM ==================== */}
+          {activeForm === 'ntc' && (
+            <div className="w-full max-w-[1100px] bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-gray-100 dark:border-slate-800 overflow-hidden" key="ntc" id="ntc-content">
+              <div className="p-10 text-center border-b border-gray-50 dark:border-slate-800">
+                <h1 className="text-3xl font-extrabold font-headline tracking-tight text-on-surface dark:text-white mb-3">New To Credit Assessment</h1>
+                <p className="text-on-surface-variant dark:text-slate-400 max-w-md mx-auto leading-relaxed">Credit scoring for individuals with limited financial history. Predictive analysis based on behavioral data.</p>
+              </div>
 
-            <form onSubmit={handleNtcSubmit} className="p-10 space-y-12">
-              {/* STEP 1: Personal Background */}
-              <section className="space-y-6">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-1.5 h-8 bg-primary rounded-full"></div>
-                  <h2 className="text-xl font-bold font-headline">STEP 1: Personal Background</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Full Name</label>
-                    <input
-                      className="w-full px-4 py-3 rounded-lg form-input-styled border-transparent focus:ring-2 focus:ring-tertiary focus:bg-white transition-all duration-200"
-                      placeholder="John Doe"
-                      type="text"
-                      value={ntcData.fullName}
-                      onChange={(e) => updateNtc('fullName', e.target.value)}
-                    />
+              <form onSubmit={handleNtcSubmit} className="p-10 space-y-12">
+                {/* STEP 1: Personal Background */}
+                <section className="space-y-6">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-1.5 h-8 bg-primary rounded-full"></div>
+                    <h2 className="text-xl font-bold font-headline">STEP 1: Personal Background</h2>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Phone Number</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">+91</span>
-                      <input
-                        className="w-full pl-14 pr-4 py-3 rounded-lg form-input-styled border-transparent focus:ring-2 focus:ring-tertiary focus:bg-white transition-all duration-200"
-                        placeholder="98765 43210"
-                        type="tel"
-                        value={ntcData.phoneNumber}
-                        onChange={(e) => updateNtc('phoneNumber', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Education Level</label>
-                    <select
-                      className="w-full px-4 py-3 rounded-lg form-input-styled border-transparent focus:ring-2 focus:ring-tertiary focus:bg-white transition-all duration-200 appearance-none"
-                      value={ntcData.academicBackgroundTier}
-                      onChange={(e) => updateNtc('academicBackgroundTier', e.target.value)}
-                    >
-                      <option>No Schooling</option>
-                      <option>School</option>
-                      <option>Diploma</option>
-                      <option>Graduate</option>
-                      <option>Postgraduate</option>
-                    </select>
-                  </div>
-                </div>
-              </section>
-
-              {/* STEP 2: Financial Background */}
-              <section className="space-y-6">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-1.5 h-8 bg-primary rounded-full"></div>
-                  <h2 className="text-xl font-bold font-headline">STEP 2: Financial Background</h2>
-                </div>
-                <div className="space-y-6">
-                  {/* Employment Type Toggle */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Employment Type</label>
-                    <div className="flex p-1 bg-surface-container-high rounded-full w-fit border border-outline-variant/20">
-                      <button
-                        type="button"
-                        onClick={() => updateNtc('employmentType', 'Salaried')}
-                        className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${ntcData.employmentType === 'Salaried'
-                            ? 'bg-white shadow-md text-primary'
-                            : 'text-on-surface-variant hover:bg-slate-200/50'
-                          }`}
-                      >
-                        Salaried
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => updateNtc('employmentType', 'Self-Employed')}
-                        className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${ntcData.employmentType === 'Self-Employed'
-                            ? 'bg-white shadow-md text-primary'
-                            : 'text-on-surface-variant hover:bg-slate-200/50'
-                          }`}
-                      >
-                        Self-Employed
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => updateNtc('employmentType', 'Daily Wage')}
-                        className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${ntcData.employmentType === 'Daily Wage'
-                            ? 'bg-white shadow-md text-primary'
-                            : 'text-on-surface-variant hover:bg-slate-200/50'
-                          }`}
-                      >
-                        Daily Wage
-                      </button>
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Annual Income ₹</label>
+                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Full Name</label>
+                      <input
+                        className="w-full px-4 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary focus:bg-white dark:focus:bg-slate-800 outline-none transition-all duration-200 placeholder:text-outline-variant/60"
+                        placeholder="John Doe"
+                        type="text"
+                        value={ntcData.fullName}
+                        onChange={(e) => updateNtc('fullName', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Phone Number</label>
                       <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">₹</span>
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400 font-medium">+91</span>
                         <input
-                          className="w-full pl-8 pr-4 py-3 rounded-lg form-input-styled border-transparent focus:ring-2 focus:ring-tertiary focus:bg-white transition-all duration-200"
-                          placeholder="600,000"
-                          type="number"
-                          value={ntcData.annualIncome}
-                          onChange={(e) => updateNtc('annualIncome', e.target.value)}
+                          className="w-full pl-14 pr-4 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary focus:bg-white dark:focus:bg-slate-800 outline-none transition-all duration-200 placeholder:text-outline-variant/60"
+                          placeholder="98765 43210"
+                          type="tel"
+                          value={ntcData.phoneNumber}
+                          onChange={(e) => updateNtc('phoneNumber', e.target.value)}
                         />
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Purpose of Loan</label>
+                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Education Level</label>
                       <select
-                        className="w-full px-4 py-3 rounded-lg form-input-styled border-transparent focus:ring-2 focus:ring-tertiary focus:bg-white transition-all duration-200 appearance-none"
-                        value={ntcData.purposeOfLoanEncoded}
-                        onChange={(e) => updateNtc('purposeOfLoanEncoded', e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary focus:bg-white dark:focus:bg-slate-800 outline-none transition-all duration-200 placeholder:text-outline-variant/60 appearance-none"
+                        value={ntcData.academicBackgroundTier}
+                        onChange={(e) => updateNtc('academicBackgroundTier', e.target.value)}
                       >
-                        <option>Home Improvement</option>
-                        <option>Vehicle Purchase</option>
-                        <option>Education</option>
-                        <option>Medical</option>
-                        <option>Personal</option>
+                        <option>No Schooling</option>
+                        <option>School</option>
+                        <option>Diploma</option>
+                        <option>Graduate</option>
+                        <option>Postgraduate</option>
                       </select>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Loan Amount Requested ₹</label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">₹</span>
-                        <input
-                          className="w-full pl-8 pr-4 py-3 rounded-lg form-input-styled border-transparent focus:ring-2 focus:ring-tertiary focus:bg-white transition-all duration-200"
-                          placeholder="2,00,000"
-                          type="number"
-                          value={ntcData.loanAmountNtc}
-                          onChange={(e) => updateNtc('loanAmountNtc', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Monthly EMI / Annuity ₹</label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant font-medium">₹</span>
-                        <input
-                          className="w-full pl-8 pr-4 py-3 rounded-lg form-input-styled border-transparent focus:ring-2 focus:ring-tertiary focus:bg-white transition-all duration-200"
-                          placeholder="8,500"
-                          type="number"
-                          value={ntcData.monthlyAnnuity}
-                          onChange={(e) => updateNtc('monthlyAnnuity', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Repayment Burden</label>
-                      <div className="w-full px-4 py-3 rounded-lg bg-surface-container-high border-transparent flex justify-between items-center shadow-md">
-                        <span className="text-on-surface-variant text-sm font-medium">Debt-to-Income</span>
-                        <span className="text-on-surface font-bold">{rentWalletShare}%</span>
-                      </div>
-                    </div>
                   </div>
-                </div>
-              </section>
+                </section>
 
-              {/* STEP 3: Family Details */}
-              <section className="space-y-6">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-1.5 h-8 bg-primary rounded-full"></div>
-                  <h2 className="text-xl font-bold font-headline">STEP 3: Family Details</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Number of Family Members</label>
-                    <input
-                      className="w-full px-4 py-3 rounded-lg form-input-styled border-transparent focus:ring-2 focus:ring-tertiary focus:bg-white transition-all duration-200"
-                      placeholder="4"
-                      type="number"
-                      value={ntcData.numberOfFamilyMembers}
-                      onChange={(e) => updateNtc('numberOfFamilyMembers', e.target.value)}
-                    />
+                {/* STEP 2: Financial Background */}
+                <section className="space-y-6">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-1.5 h-8 bg-primary rounded-full"></div>
+                    <h2 className="text-xl font-bold font-headline">STEP 2: Financial Background</h2>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Number of Earning Family Members</label>
-                    <input
-                      className="w-full px-4 py-3 rounded-lg form-input-styled border-transparent focus:ring-2 focus:ring-tertiary focus:bg-white transition-all duration-200"
-                      placeholder="1"
-                      type="number"
-                      value={ntcData.earningFamilyMembers}
-                      onChange={(e) => updateNtc('earningFamilyMembers', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Dependents</label>
-                    <input
-                      className="w-full px-4 py-3 rounded-lg form-input-styled border-transparent focus:ring-2 focus:ring-tertiary focus:bg-white transition-all duration-200"
-                      placeholder="2"
-                      type="number"
-                      value={ntcData.dependents}
-                      onChange={(e) => updateNtc('dependents', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Residential Stability</label>
-                    <select
-                      className="w-full px-4 py-3 rounded-lg form-input-styled border-transparent focus:ring-2 focus:ring-tertiary focus:bg-white transition-all duration-200 appearance-none"
-                      value={ntcData.residentialStability}
-                      onChange={(e) => updateNtc('residentialStability', e.target.value)}
-                    >
-                      <option>Less than 1 year</option>
-                      <option>1-3 years</option>
-                      <option>3-5 years</option>
-                      <option>5+ years</option>
-                    </select>
-                  </div>
-                </div>
-              </section>
+                  <div className="space-y-6">
+                    {/* Employment Type Toggle */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Employment Type</label>
+                      <div className="flex p-1 bg-surface-container-high rounded-full w-fit border border-outline-variant/20">
+                        <button
+                          type="button"
+                          onClick={() => updateNtc('employmentType', 'Salaried')}
+                          className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${ntcData.employmentType === 'Salaried'
+                            ? 'bg-white dark:bg-slate-700 shadow-md text-primary dark:text-slate-100'
+                            : 'text-on-surface-variant dark:text-slate-400 hover:bg-slate-200/50'
+                            }`}
+                        >
+                          Salaried
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateNtc('employmentType', 'Self-Employed')}
+                          className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${ntcData.employmentType === 'Self-Employed'
+                            ? 'bg-white dark:bg-slate-700 shadow-md text-primary dark:text-slate-100'
+                            : 'text-on-surface-variant dark:text-slate-400 hover:bg-slate-200/50'
+                            }`}
+                        >
+                          Self-Employed
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateNtc('employmentType', 'Daily Wage')}
+                          className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${ntcData.employmentType === 'Daily Wage'
+                            ? 'bg-white dark:bg-slate-700 shadow-md text-primary dark:text-slate-100'
+                            : 'text-on-surface-variant dark:text-slate-400 hover:bg-slate-200/50'
+                            }`}
+                        >
+                          Daily Wage
+                        </button>
+                      </div>
+                    </div>
 
-              {/* STEP 4: Asset Entry */}
-              <section className="space-y-6">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-1.5 h-8 bg-primary rounded-full"></div>
-                  <h2 className="text-xl font-bold font-headline">STEP 4: Asset Entry</h2>
-                </div>
-                <div className="space-y-4">
-                  <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant block mb-2">Select all assets owned</label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {['Owned House', 'Vehicle', 'Agricultural Land', 'Gold / Jewelry', 'Business Stock', 'Other Invest.'].map((asset) => (
-                      <label key={asset} className="cursor-pointer">
-                        <input
-                          className="hidden peer"
-                          type="checkbox"
-                          checked={ntcData.assets.includes(asset)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              updateNtc('assets', [...ntcData.assets, asset]);
-                            } else {
-                              updateNtc('assets', ntcData.assets.filter(a => a !== asset));
-                            }
-                          }}
-                        />
-                        <div className="px-4 py-3 rounded-xl border border-gray-100 bg-slate-100 shadow-md text-xs font-semibold text-center peer-checked:bg-tertiary peer-checked:text-white transition-all">
-                          {asset}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Annual Income ₹</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400 font-medium">₹</span>
+                          <input
+                            className="w-full pl-8 pr-4 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary focus:bg-white dark:focus:bg-slate-800 outline-none transition-all duration-200 placeholder:text-outline-variant/60"
+                            placeholder="600,000"
+                            type="number"
+                            value={ntcData.annualIncome}
+                            onChange={(e) => updateNtc('annualIncome', e.target.value)}
+                          />
                         </div>
-                      </label>
-                    ))}
-                  </div>
-                  <div className="mt-4 flex justify-end">
-                    <span className="bg-tertiary-container text-on-tertiary-container px-4 py-1.5 rounded-full text-[10px] font-bold tracking-wider shadow-md">ASSET SCORE: {ntcData.assets.length}/6</span>
-                  </div>
-                </div>
-              </section>
-
-              {/* STEP 5: Telecom & Identity Verification */}
-              <section className="space-y-6">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-1.5 h-8 bg-primary rounded-full"></div>
-                  <h2 className="text-xl font-bold font-headline">STEP 5: Telecom &amp; Identity Verification</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Telecom Number Vintage</label>
-                    <select
-                      className="w-full px-4 py-3 rounded-lg form-input-styled border-transparent focus:ring-2 focus:ring-tertiary focus:bg-white transition-all duration-200 appearance-none"
-                      value={ntcData.telecomVintageRange}
-                      onChange={(e) => updateNtc('telecomVintageRange', e.target.value)}
-                    >
-                      <option>Less than 6 months</option>
-                      <option>6 months - 2 years</option>
-                      <option>2 - 5 years</option>
-                      <option>5+ years</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Identity-Device Mismatch</label>
-                    <div className="flex items-center gap-4 py-3">
-                      <span className="text-sm font-medium text-on-surface-variant">No</span>
-                      <button
-                        type="button"
-                        className="w-12 h-6 bg-surface-container-highest rounded-full relative transition-colors duration-300"
-                        onClick={() => updateNtc('identityDeviceMismatch', !ntcData.identityDeviceMismatch)}
-                      >
-                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ${ntcData.identityDeviceMismatch ? 'left-7' : 'left-1'}`}></div>
-                      </button>
-                      <span className="text-sm font-medium text-on-surface-variant">Yes</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Purpose of Loan</label>
+                        <select
+                          className="w-full px-4 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary focus:bg-white dark:focus:bg-slate-800 outline-none transition-all duration-200 placeholder:text-outline-variant/60 appearance-none"
+                          value={ntcData.purposeOfLoanEncoded}
+                          onChange={(e) => updateNtc('purposeOfLoanEncoded', e.target.value)}
+                        >
+                          <option>Home Improvement</option>
+                          <option>Vehicle Purchase</option>
+                          <option>Education</option>
+                          <option>Medical</option>
+                          <option>Personal</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Loan Amount Requested ₹</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400 font-medium">₹</span>
+                          <input
+                            className="w-full pl-8 pr-4 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary focus:bg-white dark:focus:bg-slate-800 outline-none transition-all duration-200 placeholder:text-outline-variant/60"
+                            placeholder="2,00,000"
+                            type="number"
+                            value={ntcData.loanAmountNtc}
+                            onChange={(e) => updateNtc('loanAmountNtc', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Monthly EMI / Annuity ₹</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant dark:text-slate-400 font-medium">₹</span>
+                          <input
+                            className="w-full pl-8 pr-4 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary focus:bg-white dark:focus:bg-slate-800 outline-none transition-all duration-200 placeholder:text-outline-variant/60"
+                            placeholder="8,500"
+                            type="number"
+                            value={ntcData.monthlyAnnuity}
+                            onChange={(e) => updateNtc('monthlyAnnuity', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Repayment Burden</label>
+                        <div className="w-full px-4 py-3 rounded-lg bg-surface-container-high border-transparent flex justify-between items-center shadow-md">
+                          <span className="text-on-surface-variant dark:text-slate-400 text-sm font-medium">Debt-to-Income</span>
+                          <span className="text-on-surface dark:text-slate-200 font-bold">{rentWalletShare}%</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </section>
+                </section>
 
-              {/* STEP 6: Bank Data Upload */}
-              <section className="space-y-6">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-1.5 h-8 bg-primary rounded-full"></div>
-                  <h2 className="text-xl font-bold font-headline">STEP 6: Bank Data Upload</h2>
-                </div>
-                <BankStatementUpload
-              formType="ntc"
-              onFileSelect={(file) => updateNtc('bankStatementFile', file)}
-                />
-              </section>
-            </form>
+                {/* STEP 3: Family Details */}
+                <section className="space-y-6">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-1.5 h-8 bg-primary rounded-full"></div>
+                    <h2 className="text-xl font-bold font-headline">STEP 3: Family Details</h2>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Number of Family Members</label>
+                      <input
+                        className="w-full px-4 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary focus:bg-white dark:focus:bg-slate-800 outline-none transition-all duration-200 placeholder:text-outline-variant/60"
+                        placeholder="4"
+                        type="number"
+                        value={ntcData.numberOfFamilyMembers}
+                        onChange={(e) => updateNtc('numberOfFamilyMembers', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Number of Earning Family Members</label>
+                      <input
+                        className="w-full px-4 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary focus:bg-white dark:focus:bg-slate-800 outline-none transition-all duration-200 placeholder:text-outline-variant/60"
+                        placeholder="1"
+                        type="number"
+                        value={ntcData.earningFamilyMembers}
+                        onChange={(e) => updateNtc('earningFamilyMembers', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Dependents</label>
+                      <input
+                        className="w-full px-4 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary focus:bg-white dark:focus:bg-slate-800 outline-none transition-all duration-200 placeholder:text-outline-variant/60"
+                        placeholder="2"
+                        type="number"
+                        value={ntcData.dependents}
+                        onChange={(e) => updateNtc('dependents', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Residential Stability</label>
+                      <select
+                        className="w-full px-4 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary focus:bg-white dark:focus:bg-slate-800 outline-none transition-all duration-200 placeholder:text-outline-variant/60 appearance-none"
+                        value={ntcData.residentialStability}
+                        onChange={(e) => updateNtc('residentialStability', e.target.value)}
+                      >
+                        <option>Less than 1 year</option>
+                        <option>1-3 years</option>
+                        <option>3-5 years</option>
+                        <option>5+ years</option>
+                      </select>
+                    </div>
+                  </div>
+                </section>
+
+                {/* STEP 4: Asset Entry */}
+                <section className="space-y-6">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-1.5 h-8 bg-primary rounded-full"></div>
+                    <h2 className="text-xl font-bold font-headline">STEP 4: Asset Entry</h2>
+                  </div>
+                  <div className="space-y-4">
+                    <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400 block mb-2">Select all assets owned</label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {['Owned House', 'Vehicle', 'Agricultural Land', 'Gold / Jewelry', 'Business Stock', 'Other Invest.'].map((asset) => (
+                        <label key={asset} className="cursor-pointer">
+                          <input
+                            className="hidden peer"
+                            type="checkbox"
+                            checked={ntcData.assets.includes(asset)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                updateNtc('assets', [...ntcData.assets, asset]);
+                              } else {
+                                updateNtc('assets', ntcData.assets.filter(a => a !== asset));
+                              }
+                            }}
+                          />
+                          <div className="px-4 py-3 rounded-xl border border-gray-100 bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 shadow-md text-xs font-semibold text-center peer-checked:bg-tertiary peer-checked:text-white transition-all">
+                            {asset}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="mt-4 flex justify-end">
+                      <span className="bg-tertiary-container text-on-tertiary-container px-4 py-1.5 rounded-full text-[10px] font-bold tracking-wider shadow-md">ASSET SCORE: {ntcData.assets.length}/6</span>
+                    </div>
+                  </div>
+                </section>
+
+                {/* STEP 5: Telecom & Identity Verification */}
+                <section className="space-y-6">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-1.5 h-8 bg-primary rounded-full"></div>
+                    <h2 className="text-xl font-bold font-headline">STEP 5: Telecom &amp; Identity Verification</h2>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Telecom Number Vintage</label>
+                      <select
+                        className="w-full px-4 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 shadow-sm text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-tertiary focus:bg-white dark:focus:bg-slate-800 outline-none transition-all duration-200 placeholder:text-outline-variant/60 appearance-none"
+                        value={ntcData.telecomVintageRange}
+                        onChange={(e) => updateNtc('telecomVintageRange', e.target.value)}
+                      >
+                        <option>Less than 6 months</option>
+                        <option>6 months - 2 years</option>
+                        <option>2 - 5 years</option>
+                        <option>5+ years</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400">Identity-Device Mismatch</label>
+                      <div className="flex items-center gap-4 py-3">
+                        <span className="text-sm font-medium text-on-surface-variant dark:text-slate-400">No</span>
+                        <button
+                          type="button"
+                          className="w-12 h-6 bg-surface-container-highest rounded-full relative transition-colors duration-300"
+                          onClick={() => updateNtc('identityDeviceMismatch', !ntcData.identityDeviceMismatch)}
+                        >
+                          <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ${ntcData.identityDeviceMismatch ? 'left-7' : 'left-1'}`}></div>
+                        </button>
+                        <span className="text-sm font-medium text-on-surface-variant dark:text-slate-400">Yes</span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* STEP 6: Bank Data Upload */}
+                <section className="space-y-6">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-1.5 h-8 bg-primary rounded-full"></div>
+                    <h2 className="text-xl font-bold font-headline">STEP 6: Bank Data Upload</h2>
+                  </div>
+                  {demoProfile ? (
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 p-8 rounded-2xl flex flex-col items-center justify-center text-center space-y-3 shadow-inner">
+                      <span className="material-symbols-outlined text-emerald-500 dark:text-emerald-400 text-4xl mb-2">check_circle</span>
+                      <h3 className="text-emerald-800 dark:text-emerald-300 font-bold text-lg tracking-wide shrink-0">Bank statement fetched via AA Gateway</h3>
+                      <p className="text-emerald-600/80 dark:text-emerald-400/80 text-sm">6-month transaction history securely linked for {demoProfile.name}</p>
+                    </div>
+                  ) : (
+                    <BankStatementUpload
+                      formType="ntc"
+                      onFileSelect={(file) => updateNtc('bankStatementFile', file)}
+                    />
+                  )}
+                </section>
+              </form>
             </div>
           )}
 
           {/* Action Area */}
           {activeForm === 'ntc' && (
-            <div className="w-full max-w-[750px] mt-10 space-y-8">
+            <div className="w-full max-w-[1100px] mt-10 space-y-8">
               <div className="text-center">
-                <p className="text-xs text-on-surface-variant mb-6">Your data is processed according to global privacy and credit standards.</p>
+                <p className="text-xs text-on-surface-variant dark:text-slate-400 mb-6">Your data is processed according to global privacy and credit standards.</p>
                 <button
                   onClick={handleNtcSubmit}
                   className="w-full py-5 text-white rounded-xl font-bold text-lg hover:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-3 shadow-2xl bg-[#00662A]"
@@ -869,22 +955,22 @@ function AssessmentForm() {
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-lg flex flex-col items-center text-center space-y-2">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-100 dark:border-slate-700 shadow-lg flex flex-col items-center text-center space-y-2">
                   <span className="material-symbols-outlined text-tertiary">bolt</span>
                   <h4 className="text-xs font-bold uppercase tracking-widest">Real-Time Analysis</h4>
                 </div>
-                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-lg flex flex-col items-center text-center space-y-2">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-100 dark:border-slate-700 shadow-lg flex flex-col items-center text-center space-y-2">
                   <span className="material-symbols-outlined text-tertiary">balance</span>
                   <h4 className="text-xs font-bold uppercase tracking-widest">Risk Weighting</h4>
                 </div>
-                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-lg flex flex-col items-center text-center space-y-2">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-100 dark:border-slate-700 shadow-lg flex flex-col items-center text-center space-y-2">
                   <span className="material-symbols-outlined text-tertiary">description</span>
                   <h4 className="text-xs font-bold uppercase tracking-widest">Instant Report</h4>
                 </div>
               </div>
               <div className="flex justify-center gap-12 pt-4">
-                <button className="text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors underline underline-offset-4">Save Progress</button>
-                <button className="text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors underline underline-offset-4">Print Draft</button>
+                <button className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400 hover:text-primary dark:text-white transition-colors underline underline-offset-4">Save Progress</button>
+                <button className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400 hover:text-primary dark:text-white transition-colors underline underline-offset-4">Print Draft</button>
               </div>
             </div>
           )}
@@ -894,20 +980,20 @@ function AssessmentForm() {
       </main>
 
       {/* Bottom Navigation (Mobile Only) */}
-      <nav className="md:hidden fixed bottom-0 w-full bg-white flex justify-around items-center py-3 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] border-t border-slate-100">
-        <Link to="/" className="flex flex-col items-center text-on-surface-variant">
+      <nav className="md:hidden fixed bottom-0 w-full bg-white dark:bg-slate-900 flex justify-around items-center py-3 z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] border-t border-slate-100 dark:border-slate-800">
+        <Link to="/" className="flex flex-col items-center text-on-surface-variant dark:text-slate-400">
           <span className="material-symbols-outlined">dashboard</span>
           <span className="text-[10px] mt-1">Home</span>
         </Link>
-        <div className="flex flex-col items-center text-slate-900 font-bold">
+        <div className="flex flex-col items-center text-slate-900 dark:text-white font-bold">
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>assignment</span>
           <span className="text-[10px] mt-1">Assess</span>
         </div>
-        <div className="flex flex-col items-center text-on-surface-variant">
+        <div className="flex flex-col items-center text-on-surface-variant dark:text-slate-400">
           <span className="material-symbols-outlined">query_stats</span>
           <span className="text-[10px] mt-1">Stats</span>
         </div>
-        <div className="flex flex-col items-center text-on-surface-variant">
+        <div className="flex flex-col items-center text-on-surface-variant dark:text-slate-400">
           <span className="material-symbols-outlined">account_circle</span>
           <span className="text-[10px] mt-1">Profile</span>
         </div>

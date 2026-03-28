@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import demoData from '../../../demo_users.json';
+import ThemeToggle from '../components/ThemeToggle';
 
 const gradeColors = {
   A: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
@@ -76,17 +77,18 @@ function DemoProfiles() {
   };
 
   return (
-    <div className="bg-surface text-on-surface min-h-screen font-body antialiased">
+    <div className="bg-surface dark:bg-slate-950 text-on-surface dark:text-slate-200 min-h-screen font-body antialiased">
       {/* Nav */}
-      <nav className="bg-[#f7f9fb]/80 backdrop-blur-xl top-0 sticky z-50 shadow-sm shadow-slate-200/50 font-['Manrope'] antialiased tracking-tight">
+      <nav className="bg-[#f7f9fb]/80 dark:bg-slate-950/80 backdrop-blur-xl top-0 sticky z-50 shadow-sm shadow-slate-200/50 dark:shadow-none font-['Manrope'] antialiased tracking-tight">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link to="/" className="text-xl font-bold tracking-tighter text-slate-900">Paise Do Re (PDR)</Link>
+          <Link to="/" className="text-xl font-bold tracking-tighter text-slate-900 dark:text-slate-50">Paise Do Re (PDR)</Link>
           <div className="hidden md:flex items-center gap-x-8">
-            <Link to="/" className="text-slate-500 font-medium hover:text-slate-900 transition-all duration-300">Home</Link>
-            <Link to="/solutions" className="text-slate-500 font-medium hover:text-slate-900 transition-all duration-300">Solutions</Link>
-            <span className="text-slate-900 font-semibold border-b-2 border-slate-900 pb-1">Demo Profiles</span>
+            <Link to="/" className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300">Home</Link>
+            <Link to="/solutions" className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300">Solutions</Link>
+            <span className="text-slate-900 dark:text-white font-semibold border-b-2 border-slate-900 dark:border-white pb-1">Demo Profiles</span>
           </div>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <Link to="/solutions" className="gradient-cta text-white px-6 py-2.5 rounded-lg font-semibold active:scale-95 transition-transform duration-200">Score a Business</Link>
           </div>
         </div>
@@ -102,11 +104,11 @@ function DemoProfiles() {
               <span className="material-symbols-outlined text-white text-3xl">verified_user</span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-headline font-extrabold text-slate-900 tracking-tighter mb-4">
-              Account Aggregator Gateway
+            <h1 className="text-4xl md:text-5xl font-headline font-extrabold text-slate-900 dark:text-slate-50 tracking-tighter mb-4">
+              Fetch users
             </h1>
-            <p className="text-lg text-on-surface-variant max-w-xl mx-auto leading-relaxed mb-10">
-              Pull verified financial profiles through India's consent-based data sharing framework
+            <p className="text-lg text-on-surface-variant dark:text-slate-400 max-w-xl mx-auto leading-relaxed mb-10">
+              Pull financial profiles from server
             </p>
 
             <button
@@ -114,26 +116,10 @@ function DemoProfiles() {
               className="gradient-cta text-white px-10 py-4 rounded-lg text-lg font-bold flex items-center gap-3 shadow-lg shadow-tertiary/20 active:scale-95 transition-transform duration-200"
             >
               <span className="material-symbols-outlined text-xl">sync_lock</span>
-              Initiate AA Data Pull
+              Initiate Data Pull
             </button>
 
-            {/* Trust indicators */}
-            <div className="flex flex-wrap items-center justify-center gap-6 mt-10">
-              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                <span className="material-symbols-outlined text-sm text-slate-400">account_balance</span>
-                RBI Licensed Framework
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                <span className="material-symbols-outlined text-sm text-slate-400">lock</span>
-                End-to-End Encrypted
-              </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                <span className="material-symbols-outlined text-sm text-slate-400">task_alt</span>
-                Consent Verified
-              </div>
-            </div>
-
-            <p className="mt-8 text-[11px] text-slate-300 tracking-wide">
+            <p className="mt-8 text-[13px] text-slate-800 tracking-wide">
               Simulated AA flow for demonstration purposes
             </p>
           </div>
@@ -142,19 +128,19 @@ function DemoProfiles() {
         {/* ── STATE 2: FETCHING ── */}
         {phase === 'fetching' && (
           <div className="flex flex-col items-center justify-center min-h-[60vh]">
-            <div className="w-full max-w-lg bg-[#0F172A] rounded-2xl shadow-2xl overflow-hidden">
+            <div className="w-full max-w-lg bg-white dark:bg-[#0F172A] rounded-2xl shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
               {/* Progress bar */}
-              <div className="h-1 w-full bg-slate-800">
+              <div className="h-1 w-full bg-slate-100 dark:bg-slate-800">
                 <div
-                  className="h-full bg-emerald-400 transition-all duration-500 ease-out"
+                  className="h-full bg-emerald-500 dark:bg-emerald-400 transition-all duration-500 ease-out"
                   style={{ width: `${progressPct}%` }}
                 ></div>
               </div>
 
               {/* Title bar */}
-              <div className="flex items-center gap-3 px-5 py-3 border-b border-slate-700/50">
-                <span className="material-symbols-outlined text-emerald-400 text-base">verified_user</span>
-                <span className="text-[11px] font-mono text-slate-400 tracking-wide">aa-gateway · secure-session</span>
+              <div className="flex items-center gap-3 px-5 py-3 border-b border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-transparent">
+                <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-base">verified_user</span>
+                <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 tracking-wide">aa-gateway · secure-session</span>
               </div>
 
               {/* Step log */}
@@ -167,11 +153,11 @@ function DemoProfiles() {
                       className="flex items-start gap-3 animate-[fadeIn_0.25s_ease-out]"
                     >
                       {isDone ? (
-                        <span className="material-symbols-outlined text-emerald-400 text-base mt-0.5 shrink-0">check_circle</span>
+                        <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-base mt-0.5 shrink-0">check_circle</span>
                       ) : (
-                        <span className="material-symbols-outlined text-slate-400 text-base mt-0.5 shrink-0 animate-spin">progress_activity</span>
+                        <span className="material-symbols-outlined text-slate-400 dark:text-slate-500 text-base mt-0.5 shrink-0 animate-spin">progress_activity</span>
                       )}
-                      <span className={isDone ? 'text-slate-500' : 'text-slate-200'}>
+                      <span className={isDone ? 'text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-slate-200 font-medium'}>
                         {step.text}
                       </span>
                     </div>
@@ -179,8 +165,8 @@ function DemoProfiles() {
                 })}
                 {readyVisible && (
                   <div className="flex items-start gap-3 pt-2 animate-[fadeIn_0.25s_ease-out]">
-                    <span className="material-symbols-outlined text-emerald-400 text-base mt-0.5 shrink-0">rocket_launch</span>
-                    <span className="text-emerald-400 font-bold">Profiles ready for assessment.</span>
+                    <span className="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-base mt-0.5 shrink-0">rocket_launch</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">Profiles ready for assessment.</span>
                   </div>
                 )}
               </div>
@@ -196,26 +182,24 @@ function DemoProfiles() {
               <div className="inline-block px-4 py-1.5 mb-6 rounded-full bg-tertiary-container text-on-tertiary-container text-xs font-bold tracking-widest uppercase font-label">
                 AA Gateway
               </div>
-              <h1 className="text-4xl md:text-5xl font-headline font-extrabold text-slate-900 tracking-tighter mb-4">
+              <h1 className="text-4xl md:text-5xl font-headline font-extrabold text-slate-900 dark:text-slate-50 tracking-tighter mb-4">
                 Explore Demo Profiles
               </h1>
-              <p className="text-lg text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
+              <p className="text-lg text-on-surface-variant dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
                 See how PDR scores different borrower archetypes — from salaried professionals to seasonal farmers to fraud cases.
               </p>
             </div>
 
             {/* Loaded count badge + instruction */}
             <div className={`flex flex-col items-center gap-2 mb-8 transition-all duration-500 delay-100 ${cardsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200 tracking-wide">
-                <span className="material-symbols-outlined text-sm">check_circle</span>
-                {users.length} applicant profiles retrieved via AA
-              </span>
+
               <p className="text-xs text-slate-400">Select an applicant to begin credit assessment</p>
             </div>
 
             {/* Cards Grid */}
             <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-700 delay-150 ${cardsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
               {users.map((user) => {
+                // eslint-disable-next-line no-unused-vars
                 const grade = gradeColors[user.expected_grade] || gradeColors.C;
                 const type = typeBadge[user.model] || typeBadge.NTC;
                 const displayName = user.user_profile?.name || 'Unknown';
@@ -223,7 +207,7 @@ function DemoProfiles() {
                 return (
                   <div
                     key={user.user_id}
-                    className="group bg-surface-container-lowest rounded-2xl border border-outline-variant/15 hover:border-tertiary/40 transition-all duration-500 flex flex-col overflow-hidden"
+                    className="group bg-surface-container-lowest dark:bg-slate-900 rounded-2xl border border-outline-variant/15 dark:border-slate-800 hover:border-tertiary/40 dark:hover:border-tertiary/40 transition-all duration-500 flex flex-col overflow-hidden"
                   >
                     <div className="p-8 flex flex-col flex-1">
                       {/* Badges row */}
@@ -231,17 +215,15 @@ function DemoProfiles() {
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${type.bg} ${type.text} ${type.border}`}>
                           {type.label}
                         </span>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${grade.bg} ${grade.text} ${grade.border}`}>
-                          Grade {user.expected_grade}
-                        </span>
+
                       </div>
 
                       {/* Name */}
-                      <h3 className="text-xl font-headline font-bold text-slate-900 mb-1">{displayName}</h3>
-                      <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant/60 mb-4">{user.persona}</p>
+                      <h3 className="text-xl font-headline font-bold text-slate-900 dark:text-slate-50 mb-1">{displayName}</h3>
+                      <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400/60 dark:text-slate-400 mb-4">{user.persona}</p>
 
                       {/* Story */}
-                      <p className="text-sm text-on-surface-variant leading-relaxed flex-1">{user.story}</p>
+                      <p className="text-sm text-on-surface-variant dark:text-slate-300 leading-relaxed flex-1">{user.story}</p>
 
                       {/* Data source line */}
                       <p className="mt-4 text-[11px] text-slate-400 flex items-center gap-1.5">
@@ -252,7 +234,7 @@ function DemoProfiles() {
                       {/* Select button */}
                       <button
                         onClick={() => handleSelect(user)}
-                        className="mt-4 w-full py-3 rounded-lg text-sm font-bold tracking-wide bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+                        className="mt-4 w-full py-3 rounded-lg text-sm font-bold tracking-wide gradient-cta text-white shadow-lg shadow-emerald-900/20 dark:shadow-none hover:opacity-90 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
                       >
                         Select Profile
                         <span className="material-symbols-outlined text-base">arrow_forward</span>
@@ -265,7 +247,7 @@ function DemoProfiles() {
 
             {/* Back link */}
             <div className={`text-center mt-12 transition-all duration-500 delay-200 ${cardsVisible ? 'opacity-100' : 'opacity-0'}`}>
-              <Link to="/" className="text-sm text-slate-400 hover:text-slate-600 transition-colors">
+              <Link to="/" className="text-sm text-slate-400 hover:text-slate-600 dark:text-slate-300 transition-colors">
                 &larr; Back to Home
               </Link>
             </div>

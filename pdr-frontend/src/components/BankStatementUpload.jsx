@@ -38,11 +38,11 @@ function BankStatementUpload({ onFileSelect, formType }) {
     <div className="space-y-4">
       <div className="bg-surface-container-low border-2 border-dashed border-outline-variant/50 rounded-xl p-8 flex flex-col items-center text-center space-y-4">
         <div className="w-16 h-16 bg-surface-container-highest rounded-full flex items-center justify-center">
-          <span className="material-symbols-outlined text-slate-900 text-3xl">cloud_upload</span>
+          <span className="material-symbols-outlined text-slate-900 dark:text-white text-3xl">cloud_upload</span>
         </div>
         <div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-slate-900">UPLOAD BANK STATEMENT CSV</h3>
-          <p className="text-xs text-on-surface-variant mt-2 max-w-sm">
+          <h3 className="text-sm font-bold uppercase tracking-widest text-slate-900 dark:text-white">UPLOAD BANK STATEMENT CSV</h3>
+          <p className="text-xs text-on-surface-variant dark:text-slate-400 mt-2 max-w-sm">
             {formType === 'msme'
               ? '6-12 months of bank statements. Expected columns: date, amount, type (debit/credit), description'
               : 'We derive 26 behavioral signals from your bank statement — no manual entry needed'}
@@ -67,7 +67,7 @@ function BankStatementUpload({ onFileSelect, formType }) {
       {/* File selected confirmation */}
       {selectedFile && (
         <div className="flex items-center justify-between bg-tertiary-container/20 border border-tertiary/20 px-4 py-3 rounded-lg">
-          <span className="text-sm text-on-surface font-medium">
+          <span className="text-sm text-on-surface dark:text-slate-200 font-medium">
             <span className="text-tertiary font-bold">✓</span> {selectedFile.name} selected
           </span>
           <button

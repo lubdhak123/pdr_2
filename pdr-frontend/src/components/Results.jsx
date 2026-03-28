@@ -2,8 +2,9 @@ import React, { useRef, useEffect, useState } from 'react';
 import './Results.css';
 import XaiTransparencySection from './XaiTransparencySection';
 import { generateCreditDecisionPDF } from './PdfReportGenerator';
+import { useTheme } from './ThemeContext';
 
-// ── Per-user profile metadata ─────────────────────────────────
+// ... (PROFILE_DETAILS unchanged)
 const PROFILE_DETAILS = {
   'NTC_001': { name: 'Priya Venkataraman', city: 'Chennai', persona: 'Clean Salaried Professional' },
   'NTC_002': { name: 'Ramesh Gowda', city: 'Mysuru', persona: 'Cash-Dependent Informal Worker' },
@@ -219,29 +220,20 @@ const buildRadarScores = (features = {}, isNTC) => {
 // ── Main component ────────────────────────────────────────────
 export default function Results({ result, error, onBack, transactions, selectedUser }) {
   const [exporting, setExporting] = useState(false);
-  if (error) {
-    return (
-      <div className="results-container">
-        <button className="r-back-btn" onClick={onBack}>← Back to select</button>
-        <div className="error-banner">
-          <h3>Error Occurred</h3>
-          <p>{error}</p>
-        </div>
-      </div>
-    );
-  }
-  if (!result) return null;
+  const { theme } = useTheme();
+  
+  const isDark = theme === 'dark';
+  const chartTextColor = isDark ? '#9ca3af' : '#6b7280';
+  const chartGridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)';
+  const profile = result?.profile || PROFILE_DETAILS[result?.user_id] || {};
+  const isNTC = result?.user_id?.startsWith('NTC') || result?.model === 'NTC';
+  const features = result?.features || {};
+  const radar = result ? buildRadarScores(features, isNTC) : { labels: [], scores: [] };
 
-  const profile = result.profile || PROFILE_DETAILS[result.user_id] || {};
-  const isNTC = result.user_id?.startsWith('NTC') || result.model === 'NTC';
-  const features = result.features || {};
-  const featureDefs = isNTC ? NTC_FEATURES : MSME_FEATURES;
-  const radar = buildRadarScores(features, isNTC);
+  const outcomeStyle = OUTCOME_STYLES[result?.outcome] || OUTCOME_STYLES['MANUAL REVIEW'];
+  const grade = (result?.grade || 'C').toUpperCase();
 
-  const outcomeStyle = OUTCOME_STYLES[result.outcome] || OUTCOME_STYLES['MANUAL REVIEW'];
-  const grade = (result.grade || 'C').toUpperCase();
-
-  const hasShap = result.shap_reasons?.length > 0;
+  const hasShap = result?.shap_reasons?.length > 0;
   const maxAbsShap = hasShap ? Math.max(...result.shap_reasons.map(s => Math.abs(s.shap_value))) : 1;
   const normalizedShaps = hasShap
     ? result.shap_reasons.map(s => ({ ...s, normalizedPct: (Math.abs(s.shap_value) / maxAbsShap) * 100 }))
@@ -339,7 +331,14 @@ export default function Results({ result, error, onBack, transactions, selectedU
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { position: 'top', labels: { boxWidth: 10, font: { size: 11 } } },
+            legend: { 
+              position: 'top', 
+              labels: { 
+                boxWidth: 10, 
+                font: { size: 11 },
+                color: chartTextColor
+              } 
+            },
             tooltip: {
               mode: 'index', intersect: false,
               callbacks: { label: ctx => `₹${(ctx.raw / 1000).toFixed(1)}k` }
@@ -348,9 +347,17 @@ export default function Results({ result, error, onBack, transactions, selectedU
           scales: {
             y: {
               beginAtZero: true,
-              ticks: { font: { size: 10 }, callback: v => '₹' + (v / 1000).toFixed(0) + 'k' }
+              grid: { color: chartGridColor },
+              ticks: { 
+                font: { size: 10 }, 
+                color: chartTextColor,
+                callback: v => '₹' + (v / 1000).toFixed(0) + 'k' 
+              }
             },
-            x: { ticks: { font: { size: 10 } } },
+            x: { 
+              grid: { display: false },
+              ticks: { font: { size: 10 }, color: chartTextColor } 
+            },
           },
         },
       });
@@ -359,11 +366,11 @@ export default function Results({ result, error, onBack, transactions, selectedU
     // ── Radar chart ───────────────────────────────────────────
     if (radarChartRef.current) {
       const gradeColors = {
-        A: { bg: 'rgba(22,163,74,0.15)', bc: '#16a34a' },
-        B: { bg: 'rgba(37,99,235,0.15)', bc: '#2563eb' },
-        C: { bg: 'rgba(202,138,4,0.15)', bc: '#ca8a04' },
-        D: { bg: 'rgba(234,88,12,0.15)', bc: '#ea580c' },
-        E: { bg: 'rgba(220,38,38,0.15)', bc: '#dc2626' },
+        A: { bg: isDark ? 'rgba(34,197,94,0.2)' : 'rgba(22,163,74,0.15)', bc: '#22c55e' },
+        B: { bg: isDark ? 'rgba(59,130,246,0.2)' : 'rgba(37,99,235,0.15)', bc: '#3b82f6' },
+        C: { bg: isDark ? 'rgba(234,179,8,0.2)' : 'rgba(202,138,4,0.15)', bc: '#eab308' },
+        D: { bg: isDark ? 'rgba(249,115,22,0.2)' : 'rgba(234,88,12,0.15)', bc: '#f97316' },
+        E: { bg: isDark ? 'rgba(239,68,68,0.2)' : 'rgba(220,38,38,0.15)', bc: '#ef4444' },
       };
       const { bg, bc } = gradeColors[grade] || gradeColors.C;
 
@@ -393,16 +400,36 @@ export default function Results({ result, error, onBack, transactions, selectedU
             r: {
               min: 0, max: 100,
               ticks: { display: false, stepSize: 25 },
-              grid: { color: 'rgba(0,0,0,0.06)' },
-              pointLabels: { font: { size: 10 }, color: '#6b7280' },
+              angleLines: { color: chartGridColor },
+              grid: { color: chartGridColor },
+              pointLabels: { 
+                font: { size: 10 }, 
+                color: chartTextColor 
+              },
             },
           },
         },
       });
     }
-  }, [result, transactions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result, transactions, isDark, chartTextColor, chartGridColor]);
 
   // ── Render ──────────────────────────────────────────────────
+  if (error) {
+    return (
+      <div className="results-container">
+        <button className="r-back-btn" onClick={onBack}>← Back to profiles</button>
+        <div className="error-banner">
+          <h3>Error Occurred</h3>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+  if (!result) return null;
+
+  const featureDefs = isNTC ? NTC_FEATURES : MSME_FEATURES;
+
   return (
     <>
       <div className="results-container">
