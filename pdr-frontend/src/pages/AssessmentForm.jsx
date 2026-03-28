@@ -43,6 +43,36 @@ const MSME_FIELD_MAP = {
   identity_device_mismatch: 'identityDeviceMismatch',
 };
 
+// Generates synthetic transactions from declared annual income.
+// Uses fixed absolute expenses so income ratios genuinely change with income level.
+function generateTransactions(annualIncome, bouncedCount = 0) {
+  const monthly = Math.round(annualIncome / 12);
+  if (monthly <= 0) return [];
+
+  const FIXED_RENT = 8000;
+  const FIXED_UTILITY = 1500;
+  const txns = [];
+  const today = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+  for (let i = 11; i >= 0; i--) {
+    const salaryDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const rentDate   = new Date(today.getFullYear(), today.getMonth() - i, 5);
+    const utilDate   = new Date(today.getFullYear(), today.getMonth() - i, 8);
+    txns.push({ date: fmt(salaryDate), amount: monthly,        type: 'CREDIT', narration: 'SALARY CREDIT EMPLOYER LTD', balance: monthly });
+    txns.push({ date: fmt(rentDate),   amount: -FIXED_RENT,    type: 'DEBIT',  narration: 'RENT PAYMENT',               balance: monthly - FIXED_RENT });
+    txns.push({ date: fmt(utilDate),   amount: -FIXED_UTILITY, type: 'DEBIT',  narration: 'ELECTRICITY BILL TANGEDCO',  balance: monthly - FIXED_RENT - FIXED_UTILITY });
+  }
+
+  for (let b = 0; b < bouncedCount; b++) {
+    const bd = new Date(today.getFullYear(), today.getMonth() - b, 15);
+    txns.push({ date: fmt(bd), amount: -500, type: 'DEBIT', narration: 'ECS BOUNCE CHARGE', balance: 1000 });
+  }
+
+  return txns.sort((a, b) => a.date.localeCompare(b.date));
+}
+
 function AssessmentForm() {
   // Toggle state
   const [activeForm, setActiveForm] = useState('msme');
@@ -144,6 +174,11 @@ function AssessmentForm() {
       // Malformed localStorage — ignore silently
     }
   }, []);
+
+  // Derived: is the currently loaded demo profile a dynamic-income (manual entry) profile?
+  const isDynamicProfile = demoProfile
+    ? (demoData.demo_users.find(u => u.user_id === demoProfile.user_id)?.user_profile?.dynamic_income === true)
+    : false;
 
   // Repayment Burden (NTC — auto-calculate live)
   const rentWalletShare = ntcData.annualIncome > 0
@@ -280,14 +315,23 @@ function AssessmentForm() {
         : null;
 
       if (user) {
-        // Build profile from current form state (respects edits) + demo transactions
         const profile = buildNtcProfile(ntcData, user.user_profile);
+
+        // For dynamic_income profiles: generate transactions from declared Annual Income
+        const isDynamic = user.user_profile?.dynamic_income === true;
+        const transactions = isDynamic
+          ? generateTransactions(
+              parseFloat(ntcData.annualIncome) || 0,
+              user.user_profile?.bounced_transaction_count || 0
+            )
+          : (user.transactions || []);
+
         const res = await fetch(`${BACKEND}/score`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             user_profile: profile,
-            transactions: user.transactions || [],
+            transactions,
             gst_data: user.gst_data || { available: false },
           }),
         });
@@ -296,9 +340,11 @@ function AssessmentForm() {
         setResultData({
           ...scoring,
           model: 'NTC',
-          active_flags: user.key_flags || scoring.active_flags || [],
+          active_flags: isDynamic
+            ? (scoring.active_flags || [])
+            : (user.key_flags || scoring.active_flags || []),
         });
-        setResultTransactions(user.transactions || []);
+        setResultTransactions(transactions);
         setResultUser(user);
       } else {
         // Manual upload — no demo user
@@ -1013,11 +1059,19 @@ function AssessmentForm() {
                     <h2 className="text-xl font-bold font-headline">STEP 6: Bank Data Upload</h2>
                   </div>
                   {demoProfile ? (
-                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 p-8 rounded-2xl flex flex-col items-center justify-center text-center space-y-3 shadow-inner">
-                      <span className="material-symbols-outlined text-emerald-500 dark:text-emerald-400 text-4xl mb-2">check_circle</span>
-                      <h3 className="text-emerald-800 dark:text-emerald-300 font-bold text-lg tracking-wide shrink-0">Bank statement fetched via AA Gateway</h3>
-                      <p className="text-emerald-600/80 dark:text-emerald-400/80 text-sm">6-month transaction history securely linked for {demoProfile.name}</p>
-                    </div>
+                    isDynamicProfile ? (
+                      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 p-8 rounded-2xl flex flex-col items-center justify-center text-center space-y-3 shadow-inner">
+                        <span className="material-symbols-outlined text-blue-500 dark:text-blue-400 text-4xl mb-2">edit_note</span>
+                        <h3 className="text-blue-800 dark:text-blue-300 font-bold text-lg tracking-wide">Transactions generated from declared income</h3>
+                        <p className="text-blue-600/80 dark:text-blue-400/80 text-sm">Change the <strong>Annual Income</strong> field above and resubmit — the score updates in real time</p>
+                      </div>
+                    ) : (
+                      <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 p-8 rounded-2xl flex flex-col items-center justify-center text-center space-y-3 shadow-inner">
+                        <span className="material-symbols-outlined text-emerald-500 dark:text-emerald-400 text-4xl mb-2">check_circle</span>
+                        <h3 className="text-emerald-800 dark:text-emerald-300 font-bold text-lg tracking-wide shrink-0">Bank statement fetched via AA Gateway</h3>
+                        <p className="text-emerald-600/80 dark:text-emerald-400/80 text-sm">6-month transaction history securely linked for {demoProfile.name}</p>
+                      </div>
+                    )
                   ) : (
                     <BankStatementUpload
                       formType="ntc"

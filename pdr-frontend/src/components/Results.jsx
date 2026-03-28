@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import './Results.css';
 import XaiTransparencySection from './XaiTransparencySection';
+import TransactionForensics from './TransactionForensics';
 import { generateCreditDecisionPDF } from './PdfReportGenerator';
 import { useTheme } from './ThemeContext';
 
@@ -220,6 +221,7 @@ const buildRadarScores = (features = {}, isNTC) => {
 // ── Main component ────────────────────────────────────────────
 export default function Results({ result, error, onBack, transactions, selectedUser }) {
   const [exporting, setExporting] = useState(false);
+  const [showForensics, setShowForensics] = useState(false);
   const { theme } = useTheme();
   
   const isDark = theme === 'dark';
@@ -591,6 +593,55 @@ export default function Results({ result, error, onBack, transactions, selectedU
             })}
           </div>
         </div>
+
+        {/* Transaction Forensics toggle button */}
+        {transactions?.length > 0 && (
+          <div style={{ margin: '8px 0 4px' }}>
+            <button
+              onClick={() => setShowForensics(v => !v)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 20px',
+                borderRadius: 10,
+                border: '1.5px solid #e2e8f0',
+                background: showForensics ? '#0f172a' : '#fff',
+                color: showForensics ? '#f1f5f9' : '#0f172a',
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.18s',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                {showForensics ? 'visibility_off' : 'manage_search'}
+              </span>
+              {showForensics ? 'Hide Transaction Forensics' : 'View Transaction Forensics'}
+              {result.active_flags?.some(f =>
+                ['P2P_CIRCULAR_LOOP','ROUND_NUMBER_TRANSACTIONS','TURNOVER_INFLATION_SPIKE',
+                 'BENFORD_ANOMALY','GST_BANK_MISMATCH','BALANCE_INFLATION_SPIKE',
+                 'HIGH_CASH_DEPENDENCY','MIN_BALANCE_VIOLATIONS','LATE_UTILITY_PAYMENTS','NEW_SIM_RISK']
+                .includes(f)) && (
+                <span style={{
+                  background: '#fef2f2', color: '#991b1b',
+                  border: '1px solid #fecaca',
+                  borderRadius: 20, padding: '1px 8px', fontSize: 10, fontWeight: 700,
+                }}>
+                  Signals detected
+                </span>
+              )}
+            </button>
+          </div>
+        )}
+
+        {showForensics && (
+          <TransactionForensics
+            transactions={transactions}
+            activeFlags={result.active_flags}
+            features={features}
+          />
+        )}
 
         <XaiTransparencySection
           userProfile={{

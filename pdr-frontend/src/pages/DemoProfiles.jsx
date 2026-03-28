@@ -211,7 +211,7 @@ function DemoProfiles() {
                   Salaried professionals, informal workers, and gig workers without a formal credit bureau history. Scored using behavioral and alternative data signals.
                 </p>
                 <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 font-bold text-sm">
-                  <span>View 3 NTC profiles</span>
+                  <span>View {users.filter(u => u.model === 'NTC').length} NTC profiles</span>
                   <span className="material-symbols-outlined text-base group-hover:translate-x-1 transition-transform">arrow_forward</span>
                 </div>
               </button>

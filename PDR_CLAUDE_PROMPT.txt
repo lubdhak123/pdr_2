@@ -1,10 +1,10 @@
 # PDR Alternative Credit Scoring System — Complete Context Prompt for Claude
 
-> **Last updated:** 2026-03-23  
-> **Repo:** `github.com/lubdhak123/pdr_2`  
-> **Branch:** `main`  
-> **Local path:** `C:\Users\kanis\OneDrive\Documents\alternative_credit_scoring\`  
-> **Hackathon:** 8 days remaining
+> **Last updated:** 2026-03-28 (Phase 12)
+> **Repo:** `github.com/lubdhak123/pdr_2`
+> **Branch:** `main`
+> **Local path:** `C:\Users\kanis\OneDrive\Documents\alternative_credit_scoring\`
+> **Hackathon:** 2 days remaining
 
 ---
 
@@ -32,270 +32,213 @@ PDR (Proxy Data Rating) is an **alternative credit scoring system** for **Indian
 ```
 alternative_credit_scoring/
 │
-├── main.py                          # FastAPI app (POST /score, /aa/*, /setu/*)
+├── main.py                          # FastAPI app (POST /score, /aa/*, /setu/*, /score/declined)
 ├── scorer.py                        # Scoring orchestrator (loads models, runs pipeline)
 ├── feature_engine.py                # Root-level feature extractor (legacy, 32 features)
 ├── pre_layer.py                     # Rule engine (3 tiers: hard reject, edge case, review)
-├── demo_users.json                  # Demo personas for API testing
+├── demo_users.json                  # 6 demo personas for API/frontend testing
 ├── setu_handler.py                  # Real Setu AA integration (sandbox)
 ├── verify.py                        # Pipeline verification script
+├── audit_model_features.py          # Feature audit tool
 ├── .gitignore
 │
-├── ntc_model/                       # ★ MAIN NTC PIPELINE (our primary work)
-│   ├── config.py                    #   XGBoost params, thresholds, paths
-│   ├── feature_engine.py            #   ★ 44-feature extractor (behavioral + demographic)
-│   ├── build_ntc_training_v2.py     #   Training data generator (Home Credit base)
-│   ├── data_loader.py               #   CSV → stratified train/val/test split
-│   ├── preprocessor.py              #   StandardScaler pipeline
-│   ├── trainer.py                   #   XGBoost training with early stopping
-│   ├── evaluator.py                 #   AUC, KS, Gini, calibration, SHAP
-│   ├── ntc_credit_features.py       #   Feature engineering from Home Credit columns
-│   ├── main.py                      #   Orchestrator: load → split → train → evaluate
-│   ├── demo_pipeline_test.py        #   Tests 4 demo profiles end-to-end
-│   ├── synthetic_transaction_generator.py  # Generates demo bank statements
-│   ├── memorization_test.py         #   Detects if model memorized training data
-│   ├── real_world_stress_test.py    #   8-scenario stress test
-│   ├── test_calib.py                #   Calibration verification
-│   │
-│   ├── models/                      #   Trained artifacts
-│   │   ├── ntc_credit_model.pkl     #   ★ THE NTC XGBoost model
-│   │   ├── ntc_preprocessor.pkl     #   StandardScaler fitted on training data
-│   │   ├── X_test.parquet           #   Held-out test features
-│   │   ├── X_test_raw.parquet       #   Raw (pre-scaled) test features
-│   │   └── y_test.parquet           #   Test labels
-│   │
+├── ntc_model/                       # ★ MAIN NTC PIPELINE
+│   ├── config.py
+│   ├── feature_engine.py            #   44-feature extractor
+│   ├── build_ntc_training_v2.py
+│   ├── trainer.py
+│   ├── evaluator.py
+│   ├── models/
+│   │   └── ntc_credit_model.pkl     #   ★ THE NTC XGBoost model (CalibratedClassifierCV)
 │   ├── datasets/
-│   │   └── ntc_credit_training_v2.csv  # 44-feature training data (15K rows)
-│   │
-│   ├── reports/                     #   Evaluation charts
-│   │   ├── roc_curve.png
-│   │   ├── precision_recall.png
-│   │   ├── score_distribution.png
-│   │   └── shap_importance.png
-│   │
-│   └── middleman/                   # ★ MIDDLEMAN DATA PATH (latest addition)
-│       ├── __init__.py
-│       ├── middleman_feature_engine.py  # Master orchestrator (5 sources → 1 feature vector)
-│       ├── test_middleman_path.py       # End-to-end test (4 profiles, all pass)
-│       │
-│       ├── simulators/              #   Generate realistic demo data
-│       │   ├── supplier_simulator.py    # Invoice payment history
-│       │   ├── gst_simulator.py         # GSTR-3B filing records
-│       │   ├── telecom_simulator.py     # SIM age + recharge history
-│       │   ├── utility_simulator.py     # Electricity bill payments
-│       │   └── bc_agent_simulator.py    # Cash deposits + field verification
-│       │
-│       ├── extractors/              #   Parse middleman JSON → credit features
-│       │   ├── supplier_extractor.py    # → 12 features (vendor discipline, Benford, etc.)
-│       │   ├── gst_extractor.py         # → 5 features (filing consistency, variance, etc.)
-│       │   ├── telecom_extractor.py     # → 4 features (SIM vintage, drop ratio, etc.)
-│       │   ├── utility_extractor.py     # → 5 features (payment consistency, DPD, etc.)
-│       │   └── bc_agent_extractor.py    # → 5 features (buffer, cash dependency, etc.)
-│       │
-│       └── demo_data/middleman/     #   Generated demo JSON files
-│           ├── full_data_good_kirana_*.json     (5 files, 1 per middleman)
-│           ├── partial_data_growing_msme_*.json  (3 files)
-│           ├── minimal_data_stressed_*.json      (2 files)
-│           └── new_business_clean_*.json         (3 files)
+│   │   └── ntc_credit_training_v2.csv
+│   └── middleman/                   # Middleman Data Path
+│       ├── middleman_feature_engine.py
+│       ├── simulators/              #   5 simulators
+│       └── extractors/              #   5 extractors
 │
-├── msme_model/                      # MSME pipeline (teammate's work, needs fixing)
-│   ├── scripts/
-│   │   ├── generate_msme_data.py    #   Synthetic data generator (score-driven labels)
-│   │   ├── preprocess.py            #   Feature engineering + train/val/test split
-│   │   ├── train.py                 #   XGBoost training with RandomizedSearchCV
-│   │   ├── evaluate.py              #   Full evaluation report
-│   │   ├── validate.py              #   Business logic validation
-│   │   ├── scorecard.py             #   WoE scorecard generation
-│   │   └── calibrate_bands.py       #   Score band calibration
-│   └── reports/                     #   Evaluation charts
+├── msme_model/
+│   └── models/
+│       └── xgb_msme_raw.pkl         # Raw XGBoost (NOT CalibratedClassifierCV — avoids pickle error)
 │
-├── pdr-frontend/                    # React frontend (Vite)
+├── pdr-frontend/                    # React + Vite frontend
+│   ├── index.html                   # Loads Chart.js from CDN (window.Chart)
 │   └── src/
-│       ├── App.jsx                  #   Main app with 3 screens
+│       ├── App.jsx                  # DemoFlow: UserSelect → Results (GET /demo/{userId})
+│       ├── pages/
+│       │   ├── AssessmentForm.jsx   # Full multi-step NTC + MSME form (POST /score)
+│       │   ├── LandingPage.jsx
+│       │   └── DemoProfiles.jsx
 │       └── components/
-│           ├── Results.jsx          #   Scoring results dashboard
+│           ├── Results.jsx          # ★ Main results dashboard
 │           ├── Results.css
-│           └── UserSelect.jsx       #   User selection screen
+│           ├── TransactionForensics.jsx  # ★ NEW — per-transaction fraud annotation
+│           ├── XaiTransparencySection.jsx
+│           ├── PdfReportGenerator.jsx
+│           ├── UserSelect.jsx
+│           └── ThemeContext.jsx     # Dark mode context
 │
 └── pdr_manual_bridge/               # Manual scoring bridge (legacy)
-    ├── manual_score.py
-    ├── manual_processor.py
-    ├── generate_test_users.py
-    └── evaluate_batch.py
 ```
 
 ---
 
 ## 3. NTC MODEL — ARCHITECTURE & METRICS
 
-### 3.1 Training Data Generation (`build_ntc_training_v2.py`)
-
-- **Source:** Home Credit dataset (`accepted_2007_to_2018Q4.csv.gz`)
-- **Rows:** ~15,000 after filtering
-- **TARGET formula:** `0.70 × behavioral_score + 0.30 × demographic_risk + noise → threshold → binary TARGET`
-  - **70% behavioral:** utility_payment_consistency, eod_balance_volatility, bounced_transaction_count, etc.
-  - **30% demographic:** employment_vintage_days, applicant_age_years, owns_property, income_type_risk_score, etc.
-  - This ensures demographics have a consistent, non-random impact on the target variable.
-  - Previously used a coin flip; now uses a deterministic demographic risk score.
+### 3.1 Training Data
+- **Source:** Home Credit dataset → 15K rows, 44 features
+- **TARGET formula:** `0.70 × behavioral_score + 0.30 × demographic_risk + noise`
 
 ### 3.2 Feature Set (44 features)
 
-The NTC model uses **44 features** in this exact order:
-
 ```
-BEHAVIORAL (extracted from bank statements):
- 1. utility_payment_consistency     [0,1]    On-time utility payment ratio
- 2. avg_utility_dpd                 [0,90]   Average days past due on utilities
- 3. rent_wallet_share               [0,1]    Rent+EMI / Income ratio
- 4. subscription_commitment_ratio   [0,1]    Fixed subscriptions / Income
- 5. emergency_buffer_months         [0,24]   Surplus / Monthly spend
- 6. eod_balance_volatility          [0,1]    CV of daily closing balances
- 7. essential_vs_lifestyle_ratio    [0,1]    Essential / (Essential+Lifestyle)
- 8. cash_withdrawal_dependency      [0,1]    Cash withdrawals / Total debits
- 9. bounced_transaction_count       [0,10]   Count of bounced transactions
-10. telecom_recharge_drop_ratio     [0,1]    Recent recharge drop vs history
-11. min_balance_violation_count     [0,8]    Months below ₹1000 minimum
-12. income_stability_score          [0,1]    1 - CV of monthly income
-13. income_seasonality_flag         {0,1}    1 if income concentrated in ≤2 months
+BEHAVIORAL (from bank statements):
+ 1. utility_payment_consistency     [0,1]
+ 2. avg_utility_dpd                 [0,90]
+ 3. rent_wallet_share               [0,1]
+ 4. subscription_commitment_ratio   [0,1]
+ 5. emergency_buffer_months         [0,24]
+ 6. eod_balance_volatility          [0,1]
+ 7. essential_vs_lifestyle_ratio    [0,1]
+ 8. cash_withdrawal_dependency      [0,1]
+ 9. bounced_transaction_count       [0,10]
+10. telecom_recharge_drop_ratio     [0,1]
+11. min_balance_violation_count     [0,8]
+12. income_stability_score          [0,1]
+13. income_seasonality_flag         {0,1}
 
 ALTERNATIVE DATA:
-14. telecom_number_vintage_days     [0,3650] Days since SIM activation
-15. academic_background_tier        {1..4}   Education level (1=low, 4=PhD)
-16. purpose_of_loan_encoded         {1..5}   Loan purpose category
+14. telecom_number_vintage_days     [0,3650]
+15. academic_background_tier        {1..4}
+16. purpose_of_loan_encoded         {1..5}
 
-DEMOGRAPHIC (from applicant_metadata):
-17. employment_vintage_days         [0,∞]    Days since first salary/employment
-18. applicant_age_years             [18,70]  Age in years
-19. owns_property                   {0,1}    Flag
-20. owns_car                        {0,1}    Flag
-21. region_risk_tier                {1..3}   1=low risk, 3=high risk
-22. address_stability_years         [0,30]   Years at current address
-23. id_document_age_years           [0,30]   Years since ID issued
-24. family_burden_ratio             [0,1]    Dependents / Income proxy
-25. has_email_flag                   {0,1}    Has email on file
-26. income_type_risk_score          {1..5}   1=salaried, 5=unemployed
-27. family_status_stability_score   {1..3}   Marital stability proxy
-28. contactability_score            {1..3}   Phone + email reachability
-29. car_age_years                   [0,99]   99 = no car
-30. region_city_risk_score          {1..3}   City-level risk
-31. address_work_mismatch           {0,1}    Lives far from workplace
-32. employment_to_age_ratio         [0,1]    Employment years / (Age - 18)
-33. neighbourhood_default_rate_30   [0,1]    30-day cluster default rate
-34. neighbourhood_default_rate_60   [0,1]    60-day cluster default rate
+DEMOGRAPHIC:
+17. employment_vintage_days         [0,∞]
+18. applicant_age_years             [18,70]
+19. owns_property                   {0,1}
+20. owns_car                        {0,1}
+21. region_risk_tier                {1..3}
+22. address_stability_years         [0,30]
+23. id_document_age_years           [0,30]
+24. family_burden_ratio             [0,1]
+25. has_email_flag                  {0,1}
+26. income_type_risk_score          {1..5}
+27. family_status_stability_score   {1..3}
+28. contactability_score            {1..3}
+29. car_age_years                   [0,99]
+30. region_city_risk_score          {1..3}
+31. address_work_mismatch           {0,1}
+32. employment_to_age_ratio         [0,1]
+33. neighbourhood_default_rate_30   [0,1]
+34. neighbourhood_default_rate_60   [0,1]
 
 FORENSIC / MSME:
-35. p2p_circular_loop_flag          {0,1}    A→B→A money loops detected
-36. gst_to_bank_variance            [0,3]    |GST declared - bank credits| / bank
-37. customer_concentration_ratio    [0,1]    Revenue from top customer(s)
-38. turnover_inflation_spike        {0,1}    Unnatural volume spike pre-application
-39. identity_device_mismatch        {0,1}    Multiple accounts same device
-40. business_vintage_months         [0,300]  Months since business started
-41. gst_filing_consistency_score    [0,12]   Filing streak length
-42. revenue_seasonality_index       [0,1]    Gini of monthly revenue
-43. revenue_growth_trend            [-1,2]   Recent vs earlier income growth
-44. cashflow_volatility             [0,1]    CV of daily net cashflow
+35. p2p_circular_loop_flag          {0,1}
+36. gst_to_bank_variance            [0,3]
+37. customer_concentration_ratio    [0,1]
+38. turnover_inflation_spike        {0,1}
+39. identity_device_mismatch        {0,1}
+40. business_vintage_months         [0,300]
+41. gst_filing_consistency_score    [0,12]
+42. revenue_seasonality_index       [0,1]
+43. revenue_growth_trend            [-1,2]
+44. cashflow_volatility             [0,1]
 ```
 
 ### 3.3 Model Performance
 
 ```
-Algorithm     : XGBoost (binary:logistic)
+Algorithm     : XGBoost (binary:logistic) wrapped in CalibratedClassifierCV
 AUC-ROC       : 0.9378
 Gini          : 0.8756
 KS Statistic  : 0.7262
-Calibration   : max error 0.072 (within 0.10 limit)
-Stress test   : 8/8 rankings correct
-Memorization  : NOT memorized (validated)
+Calibration   : max error 0.072
 ```
 
-### 3.4 Decision Thresholds
+### 3.4 CRITICAL: monthly_income is transaction-derived
 
-```python
-P(default) < 0.35  → APPROVE
-0.35 ≤ P(default) < 0.55  → MANUAL_REVIEW
-P(default) ≥ 0.55  → REJECT
-```
+`monthly_income` = `sum(transaction credits) / months_span` — computed entirely from bank statement transactions, NOT from the "Annual Income" form field. Changing the form field changes DTI display only. To change the income used in scoring, the transactions in `demo_users.json` must change.
 
 ---
 
-## 4. INFERENCE PIPELINE
+## 4. SCORER PIPELINE (`scorer.py`)
 
-### 4.1 AA Path (Digitally Banked Users)
+### 4.1 Grade / Outcome Thresholds
 
-```
-POST /score or POST /aa/score
-  → scorer.py: score_user(transactions, user_profile, gst_data)
-    → feature_engine.py: extract_features(statement)
-       - Reads transactions from bank statement JSON
-       - Reads applicant_metadata from statement dict
-       - Returns 44-feature dict
-    → pre_layer.py: apply_pre_layer(features)
-       - 3-tier rule engine:
-         Type 1: Hard rejection (fraud, extreme stress)
-         Type 2: Edge case protection (NRI, seasonal, platform workers)
-         Type 3: Manual review triggers
-       - Returns override decision OR None (→ model)
-    → model.predict_proba(features) → P(default)
-    → SHAP explanation (top 5 contributing features)
-    → Grade assignment (A+ to F)
+```python
+GRADE_THRESHOLDS = [
+    (0.05, 'A', 'APPROVED'),
+    (0.15, 'B', 'APPROVED WITH CONDITIONS'),
+    (0.30, 'C', 'MANUAL REVIEW'),
+    (0.50, 'D', 'REJECTED'),
+    (1.01, 'E', 'REJECTED'),
+]
 ```
 
-### 4.2 Middleman Path (Cash-Only MSMEs)
+### 4.2 Loan Policy (added Phase 10)
 
-```
-POST /score/middleman (TO BE ADDED TO main.py)
-  → middleman_feature_engine.py:
-      extract_middleman_features(
-        supplier_data, gst_data, telecom_data,
-        utility_data, bc_agent_data, applicant_metadata
-      )
-    Step 1: Run available extractors (only for provided data)
-    Step 2: Verify minimum 2/5 middlemen (else reject)
-    Step 3: Compute confidence (HIGH/MEDIUM/LOW)
-    Step 4: Reconcile conflicting features (max, mean rules)
-    Step 5: Fill missing features with population defaults
-    Step 6: Add demographics from applicant_metadata
-    Step 7: Validate (44 features, no None/NaN)
-  → Same model, same pre_layer, same decision logic
-  → Confidence-adjusted thresholds:
-      HIGH (5/5):   APPROVE < 0.35, REVIEW < 0.55
-      MEDIUM (3-4): APPROVE < 0.20, REVIEW < 0.50
-      LOW (2):      APPROVE < 0.15, REVIEW < 0.45
+```python
+LOAN_POLICY = {
+    'A': {'rate_min': 11.0, 'rate_max': 14.0, 'income_multiplier': 20,
+          'tenures': [12, 24, 36, 48, 60], 'product': 'Prime Personal / Business Loan'},
+    'B': {'rate_min': 14.0, 'rate_max': 20.0, 'income_multiplier': 12,
+          'tenures': [12, 24, 36, 48], 'product': 'Conditional Loan — Standard NBFC'},
+    'C': {'rate_min': 20.0, 'rate_max': 28.0, 'income_multiplier': 6,
+          'tenures': [12, 24, 36], 'product': 'High-Risk Loan — Manual Review Required'},
+}
 ```
 
-### 4.3 The 5 Middlemen
+`max_loan_amount = monthly_income × income_multiplier` (None for MSME without direct income)
 
-| # | Middleman | What It Provides | Features Extracted |
-|---|-----------|------------------|-------------------|
-| 1 | **Supplier/Wholesaler** | Invoice payment history | vendor_payment_discipline, avg_invoice_payment_delay, cashflow_volatility, revenue_growth_trend, Benford score, round number ratio |
-| 2 | **GST Portal** | GSTR-3B filing records | gst_filing_consistency_score, gst_to_bank_variance, revenue_seasonality_index, business_vintage_months |
-| 3 | **Telecom Operator** | SIM age, recharge history | telecom_number_vintage_days, telecom_recharge_drop_ratio, identity_device_mismatch |
-| 4 | **Utility Company** | Electricity/water bills | utility_payment_consistency, avg_utility_dpd, min_balance_violation_count, eod_balance_volatility |
-| 5 | **BC Agent/Kirana** | Cash deposits, field verification | emergency_buffer_months, cash_withdrawal_dependency, bounced_transaction_count, identity_device_mismatch |
+### 4.3 Alternative Products for Rejected Applicants
 
-### 4.4 Middleman Demo Profiles (ALL PASSING)
+```python
+ALTERNATIVE_PRODUCTS = [
+    {'name': 'Microfinance Loan (NBFC-MFI)', 'max_amount': 50000,  'rate': '24–36% p.a.'},
+    {'name': 'Gold / Asset-Backed Loan',     'max_amount': 200000, 'rate': '12–18% p.a.'},
+    {'name': 'BNPL Credit Line',             'max_amount': 25000,  'rate': '0–24% p.a.'},
+    {'name': 'Self-Help Group (SHG) Loan',   'max_amount': 20000,  'rate': '18–24% p.a.'},
+]
+```
 
-| Profile | Sources | Confidence | P(default) | Decision |
-|---------|---------|-----------|------------|----------|
-| `full_data_good_kirana` | 5/5 | HIGH | 0.0229 | APPROVE ✓ |
-| `partial_data_growing_msme` | 3/5 | MEDIUM | 0.2728 | MANUAL_REVIEW ✓ |
-| `minimal_data_stressed` | 2/5 | LOW | 0.8730 | REJECT ✓ |
-| `new_business_clean` | 3/5 | MEDIUM | 0.2498 | MANUAL_REVIEW ✓ |
+### 4.4 Fraud Hard-Override (in scorer.py)
+
+After model scoring, two hard overrides fire regardless:
+```python
+if features.get('p2p_circular_loop_flag', 0) == 1:
+    pd_score = max(pd_score, 0.85)   # forces Grade E
+if features.get('identity_device_mismatch', 0) == 1:
+    pd_score = max(pd_score, 0.75)   # forces Grade D/E
+```
+
+### 4.5 Model Routing (NTC vs MSME)
+
+```python
+is_ntc = (
+    profile.get('business_vintage_months', 0) == 0
+    or profile.get('business_type') == 'Individual / NTC'
+)
+```
+
+NTC model = `ntc_credit_model.pkl` (CalibratedClassifierCV wrapping XGBoost)
+MSME model = `xgb_msme_raw.pkl` (raw XGBoost — avoids PlattCalibratedModel pickle error)
+
+SHAP for NTC: uses `ntc_model.calibrated_classifiers_[0].estimator` to get the raw booster.
 
 ---
 
 ## 5. PRE-LAYER RULE ENGINE (`pre_layer.py`)
 
-384-line rule engine with thresholds from RBI, CIBIL, and NABARD. Three tiers:
+3-tier rule engine. Returns `(grade, outcome, reason)` tuple OR `None` (→ model runs).
 
-### Type 1 — Hard Rejection (unambiguous fraud/extreme stress)
+### Type 1 — Hard Rejection
 - P2P circular flow + bounced transactions
-- GST variance > 150% (material misrepresentation)
-- 5+ bounces (chronic inability)
+- GST variance > 150%
+- 5+ bounces
 - 3+ minimum balance violations
 - >80% cash dependency + bounces
 
-### Type 2 — Edge Case Protection (legitimate non-standard profiles)
+### Type 2 — Edge Case Protection (fast-track B)
 - NRI/platform worker with low cash dependency
 - Seasonal business with legitimate GST filings
 - New business with strong telecom vintage + clean GST
@@ -303,9 +246,8 @@ POST /score/middleman (TO BE ADDED TO main.py)
 
 ### Type 3 — Manual Review Triggers
 - High customer concentration (>85% from 1-2 clients)
-- Region risk + cashflow volatility combo
+- Region risk + cashflow volatility
 - Income drop > 30% with low buffer
-- Moderate bounce count with digital payments
 
 ---
 
@@ -314,145 +256,205 @@ POST /score/middleman (TO BE ADDED TO main.py)
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
 | `POST /score` | Direct scoring (transactions + profile + GST) |
-| `GET /health` | Health check (model loaded, Setu ready) |
+| `GET /health` | Health check |
 | `GET /demo/{user_id}` | Score a demo user by ID |
-| `GET /aa/health` | AA simulation health |
 | `GET /aa/users` | List all demo users |
-| `POST /aa/users/{uid}/consent` | Grant data access consent |
-| `GET /aa/users/{uid}/profile` | Fetch user profile data |
-| `GET /aa/users/{uid}/statements` | Fetch bank statements |
 | `POST /aa/score` | Full AA-style scoring |
 | `POST /setu/consent` | Real Setu AA consent (sandbox) |
 | `POST /setu/score` | Real Setu FI data fetch + score |
-| `GET /setu/consent/{id}/status` | Check consent status |
+| `POST /score/declined` | **NEW** B2B endpoint — runs PDR on bank-rejected applicants |
 
-**TO BE ADDED (middleman path):**
-| `POST /score/middleman` | Score cash-only MSME via middlemen |
-| `GET /middleman/consent/{msme_id}` | Simulated consent status |
-| `GET /middleman/data/{msme_id}/{source}` | Serve demo middleman data |
+### POST /score/declined (B2B Bank Referral Endpoint)
+
+```python
+class DeclinedRequest(BaseModel):
+    applicant_name: str
+    bank_rejection_reason: str = 'Insufficient credit history'
+    monthly_income: Optional[float] = None
+    loan_amount_requested: Optional[float] = None
+    user_profile: Optional[Dict[str, Any]] = None
+    transactions: Optional[list] = None
+    gst_data: Optional[Dict[str, Any]] = None
+```
+
+Logic:
+- If transactions provided → run full PDR scoring
+- If PDR grades A/B/C → return loan offer (PDR overrules bank decline)
+- If PDR grades D/E → return ALTERNATIVE_PRODUCTS
+- If no data → return generic alternative products
 
 ---
 
-## 7. FRONTEND (`pdr-frontend/`)
+## 7. DEMO PROFILES (`demo_users.json`)
 
-- **Framework:** React + Vite
-- **3 Screens:**
-  1. **Landing page:** Project overview, key stats
-  2. **User selection:** Choose demo persona to score
-  3. **Results dashboard:** Score, grade, SHAP explanations, risk factors
-- **Backend connection:** `http://localhost:8000`
-- **Run:** `cd pdr-frontend && npm run dev`
+Seven personas — six pre-loaded, one dynamically generated:
 
----
+| ID | Name | Type | Grade | Key Flags | Txns |
+|----|------|------|-------|-----------|------|
+| NTC_001 | Priya Venkataraman | NTC | A | None | 38 |
+| NTC_002 | Ramesh Gowda | NTC | D | HIGH_CASH_DEPENDENCY, MIN_BALANCE_VIOLATIONS, LATE_UTILITY_PAYMENTS | 38 |
+| NTC_003 | Deepak Malhotra | NTC | E | NEW_SIM_RISK, P2P_CIRCULAR_LOOP, ROUND_NUMBER_TRANSACTIONS, BALANCE_INFLATION_SPIKE, BENFORD_ANOMALY | 16 |
+| NTC_004 | Arjun Sharma | NTC | varies | None (dynamic) | 0 — generated at submit |
+| MSME_001 | Sukhwinder Singh | MSME | B/C | HIGH_SEASONALITY, HIGH_CONCENTRATION | 16 |
+| MSME_002 | Mohammed Farouk | MSME | E | P2P_CIRCULAR_LOOP, GST_BANK_MISMATCH, TURNOVER_INFLATION_SPIKE, ROUND_NUMBER_TRANSACTIONS, BENFORD_ANOMALY | 18 |
+| MSME_003 | (Third MSME) | MSME | — | None | 0 |
 
-## 8. MSME MODEL — STATUS & ISSUES
+**NTC_004 — Manual Entry Profile (Arjun Sharma):**
+- `"dynamic_income": true` in `user_profile` — the detection flag
+- `"transactions": []` in demo_users.json — no pre-loaded bank data
+- In `handleNtcSubmit`, when `dynamic_income === true`, calls `generateTransactions(annualIncome, bouncedCount)` instead of using stored transactions
+- `generateTransactions` builds 12 monthly salary credits (annualIncome ÷ 12) + fixed ₹8,000 rent + ₹1,500 utility debits per month
+- Expenses are **fixed absolute amounts** (not proportional) so `rent_wallet_share` changes with income: `8000/25000 = 0.32` at ₹3L/year vs `8000/75000 = 0.11` at ₹9L/year
+- Default form value: ₹3,00,000 annual income → expect Grade C/D; raise to ₹9,00,000 → expect Grade A/B
+- STEP 6 shows blue "Transactions generated from declared income" box instead of green AA Gateway box
+- active_flags come from live scoring result, not from hardcoded key_flags array
 
-The MSME model (in `msme_model/`) was built by a teammate. **Current status: BROKEN.**
-
-```
-Test AUC    : 0.5865 (near random — should be >0.80)
-Gini        : 0.1730
-KS          : 0.2240
-Best CV KS  : NaN (scoring bug in cross-validation)
-```
-
-**Root causes:**
-1. Training was interrupted (KeyboardInterrupt in log)
-2. Best iteration = 4 (model barely trained before early stopping)
-3. KS scorer returns NaN for single-class CV folds
-4. Features: 12 MSME-specific (business_vintage, operating_cashflow_ratio, gst_filing_consistency, etc.)
-
-**MSME features (12):**
-```
-business_vintage_months, revenue_growth_trend, revenue_seasonality_index,
-operating_cashflow_ratio, cashflow_volatility, avg_invoice_payment_delay,
-customer_concentration_ratio, repeat_customer_revenue_pct,
-vendor_payment_discipline, gst_filing_consistency_score,
-gst_to_bank_variance, turnover_inflation_spike
-```
-
-**To fix:** Retrain with proper early stopping, fix KS scorer NaN handling, run full evaluation.
+**IMPORTANT — Mohammed Farouk (MSME_002):**
+- Always scores Grade E — this is **intentional and correct**
+- His 18 transactions are all circular loops: +₹1,00,000 from "SHYAM ENTERPRISES" → -₹99,000 back to "SHYAM ENTERPRISES" within 1 day, repeated monthly
+- `p2p_circular_loop_flag=1` fires in feature_engine.py → hard override sets `pd_score = max(pd_score, 0.85)` → Grade E
+- Form field changes affect only `user_profile`, NOT transaction-derived features — so editing the form cannot change his grade
+- Farouk is the **wash trader fraud demo** — do NOT change his transactions
 
 ---
 
-## 9. KNOWN ISSUES & TECH DEBT
+## 8. FRONTEND (`pdr-frontend/`)
+
+### 8.1 Two Entry Flows
+
+**Flow A — DemoFlow (App.jsx):**
+- UserSelect screen → choose profile by card click
+- Calls `GET /demo/{userId}` on backend
+- `selectedUser` = full user object from `demo_users.json` (includes transactions)
+- `transactions={selectedUser?.transactions || []}` passed to Results
+
+**Flow B — AssessmentForm (pages/AssessmentForm.jsx):**
+- Multi-step form: Personal Background → Financial → Family → Assets → Telecom/GST
+- Separate tabs for NTC and MSME
+- On submit: calls `POST /score` with `user_profile` (from form) + `transactions` (from demo_users.json)
+- `setResultTransactions(user.transactions || [])` ensures transactions pass through
+
+### 8.2 Results Dashboard (`Results.jsx`)
+
+Sections displayed (in order):
+1. Credit Decision header (grade, outcome, source)
+2. Verdict card (headline, active flag chips, top SHAP mini bars)
+3. Decision Intelligence (cashflow chart + PDR Risk Radar)
+4. Behavioral Signal Breakdown (SHAP waterfall bars)
+5. Key Feature Values (NTC or MSME feature grid)
+6. **Transaction Forensics button** → toggles forensics panel (see §8.3)
+7. XAI Transparency Section
+8. **Loan Offer / Alternative Path section** (see §8.4)
+
+### 8.3 Transaction Forensics (`TransactionForensics.jsx`)
+
+NEW component (Phase 11). Renders for ALL profiles with transactions.
+
+**Toggle button in Results.jsx:**
+- Button: "View Transaction Forensics" / "Hide Transaction Forensics"
+- Shows a red "Signals detected" badge if active_flags contains any fraud/risk flags
+- State: `const [showForensics, setShowForensics] = useState(false)`
+
+**Component logic:**
+- Accepts: `{ transactions, activeFlags }`
+- All React hooks (useRef, useEffect) declared BEFORE any early return (Rules of Hooks fix — this was the bug that caused silent crash in StrictMode)
+- `annotated = annotate(transactions)` — runs client-side detection:
+  - **Circular loop:** credit from entity X → debit to same X within 3 days, ≥78% amount match. Uses `extractEntity()` to strip UPI prefixes ("UPI TRANSFER FROM/TO", "NEFT", etc.)
+  - **Bounce:** narration matches `/bounce|chg/i`
+  - **Round number:** `|amount| ≥ ₹10,000 AND divisible by ₹1,000`
+  - **Income spike:** credit > 3.5× average monthly credit
+
+**Rendered elements:**
+1. Summary cards (circular count, bounce count, round count, spike count) — only cards with count > 0 shown
+2. Chart.js stacked bar chart (Transaction Timeline — Flagged vs Normal): green=normal credit, grey=normal debit, red=circular, purple=spike, orange=bounce. Uses `window.Chart` (loaded via CDN in index.html)
+3. Annotated transaction table: color-coded rows, flag badges per transaction
+4. Header shows "X flagged transactions" (red badge) OR "All clean" (green badge)
+
+**FRAUD_FLAGS checked for "Signals detected" badge:**
+```
+P2P_CIRCULAR_LOOP, ROUND_NUMBER_TRANSACTIONS, TURNOVER_INFLATION_SPIKE,
+BENFORD_ANOMALY, GST_BANK_MISMATCH, BALANCE_INFLATION_SPIKE,
+HIGH_CASH_DEPENDENCY, MIN_BALANCE_VIOLATIONS, LATE_UTILITY_PAYMENTS, NEW_SIM_RISK
+```
+
+### 8.4 Loan Offer / Alternative Path Section
+
+**For Grades A/B/C (eligible=true):**
+- Green gradient card showing: interest rate range, max loan amount (monthly_income × multiplier), tenure chips, recommended product name
+
+**For Grades D/E (eligible=false):**
+- "Declined → Alternative Path" header with "REFERRAL OPTIONS" badge
+- 4 product tiles: Microfinance (₹50K, 24–36%), Gold Loan (₹2L, 12–18%), BNPL (₹25K, 0–24%), SHG Loan (₹20K, 18–24%)
+
+---
+
+## 9. INFERENCE PIPELINE (FULL FLOW)
+
+```
+POST /score (or GET /demo/{id})
+  → feature_engine.py: compute_features(transactions, profile, gst_data)
+       ★ monthly_income = sum(CREDIT amounts) / months_span  ← from TRANSACTIONS, not form
+       → returns ~50 feature dict
+  → pre_layer.py: apply_pre_layer(features)
+       → if rule fires: return (grade, outcome, reason) — model skipped
+       → else: return None
+  → routing: is_ntc? → ntc_model else msme_model
+  → scorer._to_row(): fill missing features with 0, add MSME engineered cols
+  → model.predict_proba() → pd_score
+  → shap.TreeExplainer().shap_values() → top 5 reasons
+  → fraud hard-override (p2p_circular_loop → ≥0.85, identity_mismatch → ≥0.75)
+  → _grade(pd_score) → grade, outcome
+  → _loan_offer(grade, features) → loan offer or alternative products
+  → return full result dict
+```
+
+---
+
+## 10. MIDDLEMAN DATA PATH
+
+For cash-only MSMEs with no bank account. Same model, different feature sourcing.
+
+| Middleman | Features Provided |
+|-----------|------------------|
+| Supplier/Wholesaler | vendor_payment_discipline, avg_invoice_payment_delay, cashflow_volatility, benford_score |
+| GST Portal | gst_filing_consistency_score, gst_to_bank_variance, revenue_seasonality_index, business_vintage_months |
+| Telecom | telecom_number_vintage_days, telecom_recharge_drop_ratio, identity_device_mismatch |
+| Utility | utility_payment_consistency, avg_utility_dpd, min_balance_violation_count |
+| BC Agent | emergency_buffer_months, cash_withdrawal_dependency, bounced_transaction_count |
+
+Confidence-adjusted thresholds:
+- HIGH (5/5): APPROVE < 0.35
+- MEDIUM (3-4): APPROVE < 0.20
+- LOW (2): APPROVE < 0.15
+
+---
+
+## 11. KNOWN ISSUES & TECH DEBT
 
 | Priority | Issue | Details |
 |----------|-------|---------|
-| 🔴 HIGH | MSME model AUC = 0.59 | Near random, needs full retraining |
-| 🔴 HIGH | `node_modules/` in git | Someone pushed 130K lines of vendor code; need `.gitignore` update |
-| 🟡 MED | `eda_validate.py` has Linux paths | Uses `/mnt/user-data/outputs/...` — won't run on Windows |
-| 🟡 MED | Root `scorer.py` loads old models | Lines 34-35 load `pdr_ntc_model.pkl` and `pdr_msme_model.pkl` (root-level, possibly outdated) |
-| 🟡 MED | Middleman endpoints not yet in `main.py` | `POST /score/middleman` etc. defined but not added to FastAPI app |
-| 🟢 LOW | `demo_pipeline_test.py` profile 2 | `stressed_gig_ntc` gets REJECT (73%) but expected MANUAL_REVIEW — debatable with demographics factored in |
+| 🟡 MED | Form income ≠ model income | Annual Income field on form only affects DTI display — scoring always uses transaction-derived monthly_income |
+| 🟡 MED | MSME_003 has 0 transactions | TransactionForensics correctly returns null for this profile |
+| 🟡 MED | Middleman endpoints not yet in `main.py` | `POST /score/middleman` defined but not added to FastAPI app |
+| 🟢 LOW | NTC model is CalibratedClassifierCV | SHAP must use `.calibrated_classifiers_[0].estimator` to get raw booster — already handled in scorer.py |
 
 ---
 
-## 10. DEPENDENCIES
-
-```
-Python 3.13+
-numpy, pandas, scikit-learn, xgboost, shap, joblib
-fastapi, uvicorn, pydantic
-python-dateutil
-requests (for Setu AA)
-matplotlib, seaborn (for reports)
-```
-
----
-
-## 11. HOW TO RUN
+## 12. HOW TO RUN
 
 ### Backend
 ```bash
 cd alternative_credit_scoring
-pip install fastapi uvicorn pandas numpy scikit-learn xgboost shap joblib python-dateutil
-python main.py
-# API runs at http://localhost:8000
-```
-
-### NTC Model Training
-```bash
-cd ntc_model
-python main.py
-# Generates training data → trains XGBoost → evaluates → saves to models/
-```
-
-### Middleman Path Test
-```bash
-cd ntc_model
-python middleman/simulators/supplier_simulator.py
-python middleman/simulators/gst_simulator.py
-python middleman/simulators/telecom_simulator.py
-python middleman/simulators/utility_simulator.py
-python middleman/simulators/bc_agent_simulator.py
-python middleman/test_middleman_path.py
-# Expected: 4/4 profiles correct, pipeline READY
+py -3 -m uvicorn main:app --port 8000 --reload
 ```
 
 ### Frontend
 ```bash
 cd pdr-frontend
-npm install
 npm run dev
 # Opens at http://localhost:5173
+# Kill old instances first: npx kill-port 5173 5174 5175
 ```
-
----
-
-## 12. KEY DESIGN DECISIONS
-
-1. **70/30 behavioral-demographic split:** TARGET = 0.70 × behavioral_score + 0.30 × demographic_risk. Adjustable.
-
-2. **Single model for both paths:** The AA path and Middleman path use the SAME XGBoost model. Middleman merely provides a different way to populate the same 44-feature vector.
-
-3. **Confidence-adjusted thresholds:** Middleman path with fewer data sources uses tighter APPROVE bars. Less data = less certainty = more human review.
-
-4. **Population defaults for missing features:** When a middleman isn't available, its features get neutral population-average values (not zeros, which would bias the model).
-
-5. **Pre-layer overrides ML:** Hard fraud signals bypass the model entirely. The rule engine fires BEFORE the model.
-
-6. **No coin flip in training:** The old data generation used `rng.random() < noise` to assign defaults, causing good borrowers to be randomly flagged. Now uses a deterministic demographic risk score.
 
 ---
 
@@ -461,158 +463,102 @@ npm run dev
 ### Phase 1: Core Pipeline (Mar 19)
 - Built 5-file inference pipeline: `feature_engine.py` → `pre_layer.py` → `scorer.py` → `main.py` → `verify.py`
 - Implemented 44-feature extractor for bank statement analysis
-- Created 3-tier pre-layer rule engine (hard reject, edge case, review triggers)
-- Built FastAPI backend with `/score`, `/health`, `/demo/{user_id}` endpoints
-- All pipeline verification tests passing
+- Created 3-tier pre-layer rule engine
+- Built FastAPI backend
 
 ### Phase 2: Frontend (Mar 19)
-- Built React + Vite single-page application
-- 3 screens: Landing page → User selection → Results dashboard
-- Connected to backend at `localhost:8000`
+- React + Vite SPA: Landing → User selection → Results dashboard
 
 ### Phase 3: Account Aggregator Integration (Mar 20)
-- Added 6 AA simulation routes (`/aa/health`, `/aa/users`, `/aa/score`, etc.)
-- Added real Setu AA sandbox integration (`/setu/consent`, `/setu/score`)
-- Helper functions for demo user loading
+- Added 6 AA simulation routes + real Setu AA sandbox integration
 
 ### Phase 4: Model Training Fixes (Mar 20-21)
-- Fixed data leakage: utility payments weren't consistently generated for all user types
-- Fixed NTC model: flawed data split was causing poor generalization
-- Updated data generation (`generate_realistic_training_data.py`) with overlapping distributions
+- Fixed data leakage, deterministic TARGET formula (70/30 behavioral-demographic)
 - Archetype-based train/test split to prevent memorization
-- Added income stability and seasonality features
-- Fixed category mapping and rule order in pre-layer
-- Handled edge cases (NRI, Auto Parts Manufacturer, etc.)
-- Ran memorization test: PASSED (model NOT memorized)
 - Final NTC metrics: AUC=0.9378, Gini=0.8756, KS=0.7262
 
 ### Phase 5: Middleman Data Path (Mar 23)
-- Built complete Middleman scoring system for cash-only MSMEs
-- Created 5 simulators (supplier, GST, telecom, utility, BC agent)
-- Created 5 extractors (one per middleman → credit features)
-- Built `middleman_feature_engine.py` orchestrator (5 sources → 44 features)
-- 4 demo profiles all passing:
-  - full_data_good_kirana → APPROVE (P=0.023)
-  - partial_data_growing_msme → MANUAL_REVIEW (P=0.273)
-  - minimal_data_stressed → REJECT (P=0.873)
-  - new_business_clean → MANUAL_REVIEW (P=0.250)
-- Confidence-adjusted thresholds (HIGH/MEDIUM/LOW)
+- 5 simulators + 5 extractors + orchestrator
+- 4 demo profiles all passing (APPROVE/MANUAL_REVIEW/REJECT/MANUAL_REVIEW)
 
 ### Phase 6: Git & Collaboration (Mar 19-21)
-- Pushed all code to GitHub (`lubdhak123/pdr_2`)
-- Added collaborator (Rayirth556)
+- Pushed all code to `lubdhak123/pdr_2`, added collaborator Rayirth556
+
+### Phase 7: MSME Model Integration (Mar 24-25)
+- Loaded `xgb_msme_raw.pkl` (raw XGBoost) instead of CalibratedClassifierCV to avoid pickle error
+- Fixed SHAP extraction for NTC CalibratedClassifierCV
+- Added MSME-specific features to `_to_row()`: stress_composite, gst_risk_score, wc_pressure, liquidity_fragility, one-hot business_type columns
+- Added MSME feature grid to Results.jsx (separate from NTC feature grid)
+- Both models routing correctly based on `business_vintage_months` and `business_type`
+
+### Phase 8: Pre-Layer Hardening & Circularity Fix (Mar 25-26)
+- 20 new pre-layer rules added for MSME (vendor DPD, GST variance combos, cash dependency escalation)
+- Circularity detection v3 in feature_engine.py: uses narration-based entity extraction (strips UPI/NEFT/IMPS prefixes)
+- Fraud dataset analysis (250K UPI dataset)
+- New `PDR_UNIVERSAL_PROMPT.md` audit document
+
+### Phase 9: Full System Audit (Mar 26)
+- 22 flaws documented in `PDR_CLAUDE_PROMPT.md` (now superseded by this file)
+- AssessmentForm.jsx built — full multi-step NTC + MSME form with live DTI calculation
+- DemoProfiles page, ThemeContext (dark mode), XaiTransparencySection, PdfReportGenerator added to frontend
+- Results.jsx: radar chart (PDR Risk Radar), monthly cashflow chart, SHAP waterfall bars, NTC/MSME feature grids
+
+### Phase 10: Loan Offer + Declined Alternative Path (Mar 27)
+- `scorer.py`: Added `LOAN_POLICY`, `ALTERNATIVE_PRODUCTS`, `_loan_offer()` function
+- All `score_user()` return paths now include `loan_offer` dict
+- `main.py`: Added `POST /score/declined` B2B endpoint with `DeclinedRequest` model
+- `Results.jsx`: Green loan offer card (A/B/C grades) and 4-tile alternative path section (D/E grades)
+
+### Phase 12: Manual Entry Profile — NTC_004 (Mar 28) ← CURRENT
+- Added `NTC_004 (Arjun Sharma)` to `demo_users.json` with `dynamic_income: true` and empty transactions
+- Added `generateTransactions(annualIncome, bouncedCount)` helper in `AssessmentForm.jsx` — generates 12 months of salary credits + fixed rent/utility debits
+- `handleNtcSubmit` detects `dynamic_income` flag and routes to generated transactions instead of stored ones
+- STEP 6 bank upload section shows a blue informational box for dynamic profiles
+- `DemoProfiles.jsx`: NTC profile count is now computed dynamically from the data (no more hardcoded "3")
+- **Design decision:** Fixed absolute expenses (₹8K rent, ₹1.5K utility) so income ratios genuinely change when Annual Income changes — judge can break it and it still works
+
+### Phase 11: Transaction Forensics (Mar 28)
+- Created `TransactionForensics.jsx` — new React component
+- **Bug fixed:** useEffect was after conditional return (React hooks violation in StrictMode) — moved all hooks before early return
+- Client-side fraud annotation: circular loop, bounce, round-number, income spike
+- Chart.js stacked bar chart (window.Chart from CDN) showing flagged vs normal transactions over time
+- Toggle button in Results.jsx ("View Transaction Forensics") with "Signals detected" badge for fraud profiles
+- Works for all 6 profiles (clean profiles show "All clean" green badge)
 
 ---
 
-## 14. NEW DATASETS AVAILABLE (JUST DISCOVERED)
+## 14. KEY DESIGN DECISIONS
 
-We have **3 new datasets** at `C:\Users\kanis\OneDrive\Desktop\ecirricula\datasets\new dataset\` that can improve our model:
-
-### 14.1 `MyTransaction.csv` — Real Personal Bank Statement
-```
-Columns: Date, Category, RefNo, Date, Withdrawal, Deposit, Balance
-Rows: 1,471
-Period: January–May 2023
-```
-- **Single real person's bank statement** (not synthetic!)
-- Categories: Food, Misc, Rent, Salary, Shopping
-- Salary: ₹34,800/month (credited on 25th)
-- Rent: ₹3,950 → ₹6,490 (increasing)
-- Balance frequently drops near ₹0 before salary, then spikes to ₹20K-35K
-- Heavy food spending (₹20-300 per transaction), periodic large Misc transfers
-
-**Use case:** Real-world pipeline test — run this through our feature engine to validate it works on actual bank data, not just synthetic data. Expected result: MANUAL_REVIEW (lower income, tight cashflow, but responsible rent payer).
-
-### 14.2 `transactions.csv` — UPI P2P Transfers
-```
-Columns: Transaction ID, Timestamp, Sender Name, Sender UPI ID, Receiver Name, Receiver UPI ID, Amount (INR), Status
-Rows: 1,001
-Period: June 4 – July 3, 2024
-```
-- Indian names with UPI IDs (@okaxis, @okybl, @okicici, @okhdfcbank, @oksbi)
-- Amount range: ₹28.52 – ₹9,979.32
-- ~50% SUCCESS, ~50% FAILED (unusually high failure rate — possibly synthetic/sandbox data)
-
-**Use case:** Can detect P2P circular loops (A→B and B→A), compute customer concentration ratios, and count bounced/failed transactions per user.
-
-### 14.3 `upi_transactions_2024.csv` — ★ THE BIG ONE (250K Indian UPI Transactions with Fraud Labels)
-```
-Columns: transaction_id, timestamp, transaction_type, merchant_category, amount (INR),
-         transaction_status, sender_age_group, receiver_age_group, sender_state,
-         sender_bank, receiver_bank, device_type, network_type, fraud_flag,
-         hour_of_day, day_of_week, is_weekend
-Rows: 250,001
-Period: Jan–Dec 2024
-```
-
-**Key details:**
-- **Transaction types:** P2P, P2M, Bill Payment, Recharge
-- **Categories:** Food, Grocery, Shopping, Utilities, Transport, Fuel, Healthcare, Entertainment, Education, Other
-- **Amount range:** ₹16 – ₹20,396
-- **Demographics:** Age groups (18-25, 26-35, 36-45, 46-55, 56+)
-- **Geography:** 11 Indian states (Maharashtra, Delhi, Karnataka, Gujarat, UP, Tamil Nadu, Rajasthan, West Bengal, Telangana, Andhra Pradesh, Kerala)
-- **Banks:** SBI, HDFC, ICICI, Axis, Kotak, PNB, IndusInd, Yes Bank
-- **Devices:** Android, iOS, Web
-- **Network:** 3G, 4G, 5G, WiFi
-- **🚨 fraud_flag:** Column with values 0/1 — this is **labeled fraud data**
-- **Temporal:** hour_of_day, day_of_week, is_weekend pre-computed
-
-**Why this is gold:**
-1. **250K real Indian UPI transactions** vs our 15K synthetic Home Credit rows
-2. **Fraud labels** — real ground truth instead of synthetic TARGET formula
-3. **Indian demographic context** — actual Indian states, banks, age groups
-4. Features we can derive that we DON'T currently have:
-   - `night_transaction_ratio` (hour_of_day analysis)
-   - `weekend_spending_ratio` (is_weekend)
-   - `device_consistency_score` (device_type stability)
-   - `payment_diversity_score` (mix of P2P/P2M/Bill/Recharge)
-   - `bank_stability_flag` (same bank always)
-   - `network_quality_proxy` (3G-only = underserved area)
-   - `geographic_risk_score` (state-level risk from sender_state)
-
-**Caveats:**
-- No user IDs — would need to group by sender characteristics as proxy
-- fraud_flag appears very sparse (~0.1-0.5% positive rate based on sample)
-- No demographic features like employment, property ownership (still need Home Credit for those)
+1. **70/30 behavioral-demographic split:** TARGET = 0.70 × behavioral_score + 0.30 × demographic_risk.
+2. **Single model for both paths:** AA and Middleman paths use the SAME XGBoost model.
+3. **Confidence-adjusted thresholds:** Fewer middleman sources → tighter APPROVE bars.
+4. **Pre-layer overrides ML:** Hard fraud signals bypass the model entirely.
+5. **monthly_income from transactions:** Income is always derived from bank credits, never self-reported form fields — prevents gaming.
+6. **Farouk is a permanent fraud demo:** MSME_002 always scores E. His transaction pattern (₹1L circular loops with Shyam Enterprises) is hardcoded in demo_users.json to demonstrate the fraud detection pipeline.
+7. **TransactionForensics is universal:** The component uses client-side detection (no extra API call) and auto-detects fraud signals in any profile's transactions. Shown via toggle button so it doesn't clutter clean profiles.
 
 ---
 
-## 15. RECOMMENDED CHANGES WITH NEW DATA
+## 15. HACKATHON CONTEXT
 
-### Priority 1 (Quick Wins — do before hackathon demo):
-1. **Pipeline test with MyTransaction.csv** — Parse the real bank statement through feature_engine.py → pre_layer.py → model → verify output makes sense. If the real data breaks the feature engine, fix it now.
-2. **Analyze fraud_flag distribution in UPI dataset** — Count how many fraud=1 rows exist, compute fraud rate, check if it's useful.
-
-### Priority 2 (Model Improvement):
-3. **Calibrate synthetic distributions** — Use UPI dataset statistics (category splits, amount distributions, failure rates) to make `build_ntc_training_v2.py` generate more realistic data.
-4. **Add 3-5 new behavioral features** — night_transaction_ratio, weekend_spending_ratio, payment_diversity_score can be derived from UPI data and added to the 44-feature set (making it 47-49 features).
-5. **Build user profiles from UPI data** — Group 250K transactions by sender characteristics to create 2-5K supplementary training profiles with real Indian spending patterns.
-
-### Priority 3 (Advanced):  
-6. **Fraud detection sub-model** — Use fraud_flag labels to train a dedicated fraud classifier that feeds into the pre-layer rule engine.
-7. **Region risk calibration** — Map sender_state data to our region_risk_tier feature using actual transaction patterns per state.
+- **Event:** Hackathon (deadline ~Mar 30, 2026)
+- **Team:** lubdhak123 + Rayirth556
+- **Pitch:** "30 million cash-only MSMEs can now access credit. No bank account needed. Same model. Same pipeline. Scored using middleman data only."
+- **Demo flow:**
+  1. Show NTC_001 (Priya) → Grade A, loan offer ₹X at 11–14%
+  2. Show MSME_002 (Farouk) → Grade E, Transaction Forensics showing circular loops visually
+  3. Show Declined Alternative Path — 4 microfinance products
+  4. Mention B2B `/score/declined` endpoint for partner banks
 
 ---
 
-## 16. HACKATHON CONTEXT
+## 16. WHAT TO ASK CLAUDE IN NEW SESSIONS
 
-- **Event:** Hackathon (8 days remaining as of 2026-03-23)
-- **Team:** lubdhak123 + collaborator (Rayirth556)
-- **Pitch:** "30 million cash-only MSMEs can now access credit. No bank account needed. No UPI history needed. No AA data needed. Scored using middleman data only. Same model. Same pipeline. Same decision quality."
-- **Judging criteria likely:** Innovation, technical depth, real-world impact, demo quality
-- **Our edge:** Two scoring paths (AA + Middleman), real pre-layer rule engine, 44-feature model with AUC=0.94, now backed by 250K real Indian UPI transaction data
+Paste this file at the start of any new session. Suggested asks:
 
----
-
-## 17. WHAT TO ASK CLAUDE
-
-You now have full context on the PDR project. Suggested things to ask:
-
-1. "Help me parse MyTransaction.csv through the feature engine and run an end-to-end pipeline test"
-2. "Write a script to analyze the UPI dataset fraud_flag distribution and derive new features"  
-3. "Add the middleman endpoints to main.py"
-4. "Fix the MSME model (AUC=0.59)"
-5. "Calibrate build_ntc_training_v2.py using UPI dataset distributions"
-6. "Add night_transaction_ratio and weekend_spending_ratio to the 44-feature set"
-7. "Help me prepare the hackathon presentation/demo flow"
-8. "Write a comprehensive evaluation comparing our synthetic training data distributions vs real UPI data"
+1. "Add the middleman endpoints to main.py"
+2. "Help me prepare the hackathon presentation/demo flow"
+3. "Fix MSME_003 — add transactions to demo_users.json"
+4. "Add Benford's Law visualization to Transaction Forensics"
+5. "Write a comprehensive README for the GitHub repo"
+6. "Add PDF export for the Transaction Forensics panel"
