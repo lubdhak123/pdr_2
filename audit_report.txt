@@ -1,0 +1,437 @@
+================================================================================
+NTC MODEL FEATURE USAGE AUDIT
+================================================================================
+
+[CONFIG]
+  Datasets path: C:\Users\kanis\OneDrive\Desktop\ecirricula\datasets
+  Repo path: C:\Users\kanis\OneDrive\Documents\alternative_credit_scoring
+
+================================================================================
+STEP 1: LOAD SOURCE DATASETS
+================================================================================
+
+[1.1] cs-training.csv (Kaggle 'Give Me Some Credit')
+      Path: C:\Users\kanis\OneDrive\Desktop\ecirricula\datasets\new dataset\archive (1)\cs-training.csv
+      Exists: True
+      Shape: (150000, 12)
+      Columns (12):
+         1. Unnamed: 0                                    | int64    | nulls:      0 (  0.0%) | unique: 150000
+         2. SeriousDlqin2yrs                              | int64    | nulls:      0 (  0.0%) | unique:      2
+         3. RevolvingUtilizationOfUnsecuredLines          | float64  | nulls:      0 (  0.0%) | unique: 125728
+         4. age                                           | int64    | nulls:      0 (  0.0%) | unique:     86
+         5. NumberOfTime30-59DaysPastDueNotWorse          | int64    | nulls:      0 (  0.0%) | unique:     16
+         6. DebtRatio                                     | float64  | nulls:      0 (  0.0%) | unique: 114194
+         7. MonthlyIncome                                 | float64  | nulls:  29731 ( 19.8%) | unique:  13594
+         8. NumberOfOpenCreditLinesAndLoans               | int64    | nulls:      0 (  0.0%) | unique:     58
+         9. NumberOfTimes90DaysLate                       | int64    | nulls:      0 (  0.0%) | unique:     19
+        10. NumberRealEstateLoansOrLines                  | int64    | nulls:      0 (  0.0%) | unique:     28
+        11. NumberOfTime60-89DaysPastDueNotWorse          | int64    | nulls:      0 (  0.0%) | unique:     13
+        12. NumberOfDependents                            | float64  | nulls:   3924 (  2.6%) | unique:     13
+
+      TARGET ('SeriousDlqin2yrs') distribution:
+        0 (non-default): 139974 (93.3%)
+        1 (default):      10026 (6.7%)
+
+[1.2] application_train.csv (Home Credit demographics)
+      Path: C:\Users\kanis\OneDrive\Documents\alternative_credit_scoring\application_train.csv
+      Exists: True
+      Columns: 122
+      Sample rows loaded: 5000
+      Key demographic columns:
+        SK_ID_CURR                               | OK | sample: 100002
+        TARGET                                   | OK | sample: 1
+        DAYS_BIRTH                               | OK | sample: -9461
+        DAYS_EMPLOYED                            | OK | sample: -637
+        AMT_INCOME_TOTAL                         | OK | sample: 202500.0
+        NAME_EDUCATION_TYPE                      | OK | sample: Secondary / secondary special
+        FLAG_OWN_CAR                             | OK | sample: N
+        FLAG_OWN_REALTY                          | OK | sample: Y
+        CNT_CHILDREN                             | OK | sample: 0
+        REGION_RATING_CLIENT                     | OK | sample: 2
+        DAYS_REGISTRATION                        | OK | sample: -3648.0
+        DAYS_ID_PUBLISH                          | OK | sample: -2120
+
+[1.3] loan_dataset_20000.csv
+      Path: C:\Users\kanis\OneDrive\Desktop\ecirricula\datasets\new dataset\archive (1)\loan_dataset_20000.csv
+      Exists: True
+      Columns: ['age', 'gender', 'marital_status', 'education_level', 'annual_income', 'monthly_income', 'employment_status', 'debt_to_income_ratio', 'credit_score', 'loan_amount', 'loan_purpose', 'interest_rate', 'loan_term', 'installment', 'grade_subgrade', 'num_of_open_accounts', 'total_credit_limit', 'current_balance', 'delinquency_history', 'public_records', 'num_of_delinquencies', 'loan_paid_back']
+
+================================================================================
+STEP 2: NTC TRAINING DATA (GENERATED)
+================================================================================
+
+[2.1] ntc_credit_training_v2.csv
+      Path: C:\Users\kanis\OneDrive\Documents\alternative_credit_scoring\ntc_model\datasets\ntc_credit_training_v2.csv
+      Exists: True
+      Shape: (25000, 50)
+      Columns (50):
+         1. utility_payment_consistency              | float64  | nulls:   0 | [    0.0000,     1.0000] | mean:  0.9658 | std:  0.0879
+         2. avg_utility_dpd                          | int64    | nulls:   0 | [    0.0000,    90.0000] | mean:  5.4396 | std: 13.7895
+         3. rent_wallet_share                        | float64  | nulls:   0 | [    0.0000,     1.0000] | mean:  0.3468 | std:  0.2647
+         4. subscription_commitment_ratio            | float64  | nulls:   0 | [    0.0000,     0.3000] | mean:  0.1040 | std:  0.0794
+         5. emergency_buffer_months                  | float64  | nulls:   0 | [    0.0000,     6.0000] | mean:  3.9192 | std:  1.5882
+         6. eod_balance_volatility                   | float64  | nulls:   0 | [    0.0000,     1.0000] | mean:  0.3777 | std:  0.3674
+         7. essential_vs_lifestyle_ratio             | float64  | nulls:   0 | [    0.2000,     0.8000] | mean:  0.6468 | std:  0.1514
+         8. cash_withdrawal_dependency               | float64  | nulls:   0 | [    0.0000,     1.0000] | mean:  0.2678 | std:  0.2643
+         9. bounced_transaction_count                | int64    | nulls:   0 | [    0.0000,    10.0000] | mean:  0.3886 | std:  1.0130
+        10. telecom_recharge_drop_ratio              | float64  | nulls:   0 | [    0.0000,     1.0000] | mean:  0.0135 | std:  0.0664
+        11. min_balance_violation_count              | int64    | nulls:   0 | [    0.0000,     8.0000] | mean:  0.1798 | std:  0.7469
+        12. income_stability_score                   | float64  | nulls:   0 | [    0.0000,     1.0000] | mean:  0.9553 | std:  0.1086
+        13. income_seasonality_flag                  | int64    | nulls:   0 | [    0.0000,     1.0000] | mean:  0.0409 | std:  0.1981
+        14. p2p_circular_loop_flag                   | int64    | nulls:   0 | [    0.0000,     1.0000] | mean:  0.0374 | std:  0.1897
+        15. gst_to_bank_variance                     | float64  | nulls:   0 | [    0.0000,     3.0000] | mean:  0.3012 | std:  0.3133
+        16. customer_concentration_ratio             | float64  | nulls:   0 | [    0.0000,     1.0000] | mean:  0.5691 | std:  0.2413
+        17. turnover_inflation_spike                 | int64    | nulls:   0 | [    0.0000,     1.0000] | mean:  0.0096 | std:  0.0973
+        18. identity_device_mismatch                 | int64    | nulls:   0 | [    0.0000,     1.0000] | mean:  0.0264 | std:  0.1603
+        19. business_vintage_months                  | int64    | nulls:   0 | [    0.0000,   300.0000] | mean: 70.0914 | std: 42.0706
+        20. gst_filing_consistency_score             | int64    | nulls:   0 | [    0.0000,    12.0000] | mean: 11.4292 | std:  1.3162
+        21. revenue_seasonality_index                | float64  | nulls:   0 | [    0.0000,     1.0000] | mean:  0.0342 | std:  0.0879
+        22. revenue_growth_trend                     | float64  | nulls:   0 | [   -1.0000,     0.1000] | mean:  0.0892 | std:  0.0639
+        23. cashflow_volatility                      | float64  | nulls:   0 | [    0.0000,     1.0000] | mean:  0.3052 | std:  0.2998
+        24. night_transaction_ratio                  | float64  | nulls:   0 | [    0.0465,     0.1265] | mean:  0.0501 | std:  0.0087
+        25. weekend_spending_ratio                   | float64  | nulls:   0 | [    0.2853,     0.3453] | mean:  0.2880 | std:  0.0065
+        26. payment_diversity_score                  | float64  | nulls:   0 | [    0.5874,     0.8374] | mean:  0.8262 | std:  0.0271
+        27. device_consistency_score                 | float64  | nulls:   0 | [    0.6000,     0.8500] | mean:  0.8388 | std:  0.0271
+        28. geographic_risk_score                    | int64    | nulls:   0 | [    1.0000,     3.0000] | mean:  1.8041 | std:  0.6190
+        29. applicant_age_years                      | int64    | nulls:   0 | [   21.0000,    70.0000] | mean: 49.9566 | std: 13.0661
+        30. employment_vintage_days                  | int64    | nulls:   0 | [    0.0000, 17531.0000] | mean:1960.0199 | std:2315.2692
+        31. academic_background_tier                 | int64    | nulls:   0 | [    1.0000,     5.0000] | mean:  2.5023 | std:  0.8708
+        32. owns_property                            | int64    | nulls:   0 | [    0.0000,     1.0000] | mean:  0.6311 | std:  0.4825
+        33. owns_car                                 | int64    | nulls:   0 | [    0.0000,     1.0000] | mean:  0.3358 | std:  0.4723
+        34. region_risk_tier                         | int64    | nulls:   0 | [    1.0000,     3.0000] | mean:  2.0422 | std:  0.5097
+        35. address_stability_years                  | float64  | nulls:   0 | [    0.5000,    30.0000] | mean: 15.1833 | std:  4.7610
+        36. id_document_age_years                    | float64  | nulls:   0 | [    1.0000,    50.0000] | mean: 31.6572 | std: 12.9563
+        37. family_burden_ratio                      | float64  | nulls:   0 | [    0.0000,     1.0000] | mean:  0.1771 | std:  0.2299
+        38. income_type_risk_score                   | int64    | nulls:   0 | [    1.0000,     5.0000] | mean:  1.7495 | std:  0.4351
+        39. family_status_stability_score            | int64    | nulls:   0 | [    1.0000,     3.0000] | mean:  1.4800 | std:  0.8224
+        40. contactability_score                     | int64    | nulls:   0 | [    0.0000,     4.0000] | mean:  1.7202 | std:  1.0108
+        41. purpose_of_loan_encoded                  | int64    | nulls:   0 | [    1.0000,     3.0000] | mean:  1.5016 | std:  0.6739
+        42. car_age_years                            | int64    | nulls:   0 | [    0.0000,    99.0000] | mean: 65.7598 | std: 46.7542
+        43. region_city_risk_score                   | int64    | nulls:   0 | [    1.0000,     3.0000] | mean:  2.0211 | std:  0.5021
+        44. address_work_mismatch                    | int64    | nulls:   0 | [    0.0000,     1.0000] | mean:  0.2254 | std:  0.4178
+        45. has_email_flag                           | int64    | nulls:   0 | [    0.0000,     1.0000] | mean:  0.0576 | std:  0.2329
+        46. telecom_number_vintage_days              | int64    | nulls:   0 | [    0.0000,  3650.0000] | mean:963.0951 | std:822.6466
+        47. neighbourhood_default_rate_30            | float64  | nulls:   0 | [    0.0000,     1.0000] | mean:  0.0658 | std:  0.2150
+        48. neighbourhood_default_rate_60            | float64  | nulls:   0 | [    0.0000,     1.0000] | mean:  0.0493 | std:  0.1901
+        49. employment_to_age_ratio                  | float64  | nulls:   0 | [    0.0000,     1.0000] | mean:  0.2002 | std:  0.2477
+        50. TARGET                                   | int64    | nulls:   0 | [    0.0000,     1.0000] | mean:  0.2000 | std:  0.4000
+
+      TARGET distribution:
+        0 (non-default):  20000 (80.0%)
+        1 (default):       5000 (20.0%)
+
+================================================================================
+STEP 3: TRAINED MODEL INSPECTION
+================================================================================
+
+[3.1] NTC v3 Model
+      Path: C:\Users\kanis\OneDrive\Documents\alternative_credit_scoring\ntc_model\models\ntc_credit_model.pkl
+      Exists: True
+      Type: CalibratedClassifierCV
+      Cannot extract feature names
+
+[3.2] Preprocessor
+      Path: C:\Users\kanis\OneDrive\Documents\alternative_credit_scoring\ntc_model\models\ntc_preprocessor.pkl
+      Exists: True
+      Type: ColumnTransformer
+      n_features_in_: 49
+      feature_names_in_ (49):
+         1. utility_payment_consistency
+         2. avg_utility_dpd
+         3. rent_wallet_share
+         4. subscription_commitment_ratio
+         5. emergency_buffer_months
+         6. eod_balance_volatility
+         7. essential_vs_lifestyle_ratio
+         8. cash_withdrawal_dependency
+         9. bounced_transaction_count
+        10. telecom_recharge_drop_ratio
+        11. min_balance_violation_count
+        12. income_stability_score
+        13. income_seasonality_flag
+        14. p2p_circular_loop_flag
+        15. gst_to_bank_variance
+        16. customer_concentration_ratio
+        17. turnover_inflation_spike
+        18. identity_device_mismatch
+        19. business_vintage_months
+        20. gst_filing_consistency_score
+        21. revenue_seasonality_index
+        22. revenue_growth_trend
+        23. cashflow_volatility
+        24. night_transaction_ratio
+        25. weekend_spending_ratio
+        26. payment_diversity_score
+        27. device_consistency_score
+        28. geographic_risk_score
+        29. applicant_age_years
+        30. employment_vintage_days
+        31. academic_background_tier
+        32. owns_property
+        33. owns_car
+        34. region_risk_tier
+        35. address_stability_years
+        36. id_document_age_years
+        37. family_burden_ratio
+        38. income_type_risk_score
+        39. family_status_stability_score
+        40. contactability_score
+        41. purpose_of_loan_encoded
+        42. car_age_years
+        43. region_city_risk_score
+        44. address_work_mismatch
+        45. has_email_flag
+        46. telecom_number_vintage_days
+        47. neighbourhood_default_rate_30
+        48. neighbourhood_default_rate_60
+        49. employment_to_age_ratio
+
+[3.3] Production Models (what scorer.py loads)
+
+      pdr_ntc_model.pkl
+      Path: C:\Users\kanis\OneDrive\Documents\alternative_credit_scoring\pdr_ntc_model.pkl
+      Exists: True
+      Type: XGBClassifier
+      Features: 30
+
+      pdr_msme_model.pkl
+      Path: C:\Users\kanis\OneDrive\Documents\alternative_credit_scoring\pdr_msme_model.pkl
+      Exists: True
+      Type: XGBClassifier
+      Features: 30
+
+================================================================================
+STEP 4: FEATURE MAPPING (SOURCE → TRAINING → MODEL)
+================================================================================
+
+Feature                                       Source          InTraining   InModel      Status
+----------------------------------------------------------------------------------------------------
+  utility_payment_consistency                 cs-training     YES          NO           WARN: in training but not model
+  avg_utility_dpd                             cs-training     YES          NO           WARN: in training but not model
+  rent_wallet_share                           cs-training     YES          NO           WARN: in training but not model
+  subscription_commitment_ratio               cs-training     YES          NO           WARN: in training but not model
+  emergency_buffer_months                     cs-training     YES          NO           WARN: in training but not model
+  eod_balance_volatility                      cs-training     YES          NO           WARN: in training but not model
+  essential_vs_lifestyle_ratio                cs-training     YES          NO           WARN: in training but not model
+  cash_withdrawal_dependency                  cs-training     YES          NO           WARN: in training but not model
+  bounced_transaction_count                   cs-training     YES          NO           WARN: in training but not model
+  min_balance_violation_count                 cs-training     YES          NO           WARN: in training but not model
+  telecom_number_vintage_days                 cs-training     YES          NO           WARN: in training but not model
+  telecom_recharge_drop_ratio                 cs-training     YES          NO           WARN: in training but not model
+  gst_filing_consistency_score                cs-training     YES          NO           WARN: in training but not model
+  gst_to_bank_variance                        cs-training     YES          NO           WARN: in training but not model
+  p2p_circular_loop_flag                      cs-training     YES          NO           WARN: in training but not model
+  turnover_inflation_spike                    cs-training     YES          NO           WARN: in training but not model
+  identity_device_mismatch                    cs-training     YES          NO           WARN: in training but not model
+  income_stability_score                      cs-training     YES          NO           WARN: in training but not model
+  income_seasonality_flag                     cs-training     YES          NO           WARN: in training but not model
+  business_vintage_months                     cs-training     YES          NO           WARN: in training but not model
+  revenue_seasonality_index                   cs-training     YES          NO           WARN: in training but not model
+  revenue_growth_trend                        cs-training     YES          NO           WARN: in training but not model
+  cashflow_volatility                         cs-training     YES          NO           WARN: in training but not model
+  night_transaction_ratio                     cs-training     YES          NO           WARN: in training but not model
+  weekend_spending_ratio                      cs-training     YES          NO           WARN: in training but not model
+  payment_diversity_score                     cs-training     YES          NO           WARN: in training but not model
+  device_consistency_score                    cs-training     YES          NO           WARN: in training but not model
+  applicant_age_years                         Home Credit     YES          NO           WARN: in training but not model
+  employment_vintage_days                     Home Credit     YES          NO           WARN: in training but not model
+  academic_background_tier                    Home Credit     YES          NO           WARN: in training but not model
+  owns_property                               Home Credit     YES          NO           WARN: in training but not model
+  owns_car                                    Home Credit     YES          NO           WARN: in training but not model
+  region_risk_tier                            Home Credit     YES          NO           WARN: in training but not model
+  address_stability_years                     Home Credit     YES          NO           WARN: in training but not model
+  id_document_age_years                       Home Credit     YES          NO           WARN: in training but not model
+  family_burden_ratio                         cs-training + Home Credit YES          NO           WARN: in training but not model
+  income_type_risk_score                      Home Credit     YES          NO           WARN: in training but not model
+  family_status_stability_score               Home Credit     YES          NO           WARN: in training but not model
+  contactability_score                        Home Credit     YES          NO           WARN: in training but not model
+  purpose_of_loan_encoded                     Home Credit     YES          NO           WARN: in training but not model
+  car_age_years                               Home Credit     YES          NO           WARN: in training but not model
+  region_city_risk_score                      Home Credit     YES          NO           WARN: in training but not model
+  address_work_mismatch                       Home Credit     YES          NO           WARN: in training but not model
+  has_email_flag                              Home Credit     YES          NO           WARN: in training but not model
+  neighbourhood_default_rate_30               Home Credit     YES          NO           WARN: in training but not model
+  neighbourhood_default_rate_60               Home Credit     YES          NO           WARN: in training but not model
+  employment_to_age_ratio                     derived         YES          NO           WARN: in training but not model
+  geographic_risk_score                       Home Credit     YES          NO           WARN: in training but not model
+
+  Total features mapped: 48
+  OK: 0
+  Issues: 48
+
+  ISSUES:
+  utility_payment_consistency: in training data but NOT in model features
+  avg_utility_dpd: in training data but NOT in model features
+  rent_wallet_share: in training data but NOT in model features
+  subscription_commitment_ratio: in training data but NOT in model features
+  emergency_buffer_months: in training data but NOT in model features
+  eod_balance_volatility: in training data but NOT in model features
+  essential_vs_lifestyle_ratio: in training data but NOT in model features
+  cash_withdrawal_dependency: in training data but NOT in model features
+  bounced_transaction_count: in training data but NOT in model features
+  min_balance_violation_count: in training data but NOT in model features
+  telecom_number_vintage_days: in training data but NOT in model features
+  telecom_recharge_drop_ratio: in training data but NOT in model features
+  gst_filing_consistency_score: in training data but NOT in model features
+  gst_to_bank_variance: in training data but NOT in model features
+  p2p_circular_loop_flag: in training data but NOT in model features
+  turnover_inflation_spike: in training data but NOT in model features
+  identity_device_mismatch: in training data but NOT in model features
+  income_stability_score: in training data but NOT in model features
+  income_seasonality_flag: in training data but NOT in model features
+  business_vintage_months: in training data but NOT in model features
+  revenue_seasonality_index: in training data but NOT in model features
+  revenue_growth_trend: in training data but NOT in model features
+  cashflow_volatility: in training data but NOT in model features
+  night_transaction_ratio: in training data but NOT in model features
+  weekend_spending_ratio: in training data but NOT in model features
+  payment_diversity_score: in training data but NOT in model features
+  device_consistency_score: in training data but NOT in model features
+  applicant_age_years: in training data but NOT in model features
+  employment_vintage_days: in training data but NOT in model features
+  academic_background_tier: in training data but NOT in model features
+  owns_property: in training data but NOT in model features
+  owns_car: in training data but NOT in model features
+  region_risk_tier: in training data but NOT in model features
+  address_stability_years: in training data but NOT in model features
+  id_document_age_years: in training data but NOT in model features
+  family_burden_ratio: in training data but NOT in model features
+  income_type_risk_score: in training data but NOT in model features
+  family_status_stability_score: in training data but NOT in model features
+  contactability_score: in training data but NOT in model features
+  purpose_of_loan_encoded: in training data but NOT in model features
+  car_age_years: in training data but NOT in model features
+  region_city_risk_score: in training data but NOT in model features
+  address_work_mismatch: in training data but NOT in model features
+  has_email_flag: in training data but NOT in model features
+  neighbourhood_default_rate_30: in training data but NOT in model features
+  neighbourhood_default_rate_60: in training data but NOT in model features
+  employment_to_age_ratio: in training data but NOT in model features
+  geographic_risk_score: in training data but NOT in model features
+
+================================================================================
+STEP 5: FEATURE RANGE VALIDATION
+================================================================================
+
+Feature                                             Expected               Actual       Mean Status
+---------------------------------------------------------------------------------------------------------
+  utility_payment_consistency               [   0.0,   1.0] [  0.0000,  1.0000]    0.9658  OK
+  avg_utility_dpd                           [   0.0, 120.0] [  0.0000, 90.0000]    5.4396  OK
+  rent_wallet_share                         [   0.0,   1.0] [  0.0000,  1.0000]    0.3468  OK
+  subscription_commitment_ratio             [   0.0,   0.3] [  0.0000,  0.3000]    0.1040  OK
+  emergency_buffer_months                   [   0.0,  50.0] [  0.0000,  6.0000]    3.9192  OK
+  eod_balance_volatility                    [   0.0,   1.0] [  0.0000,  1.0000]    0.3777  OK
+  essential_vs_lifestyle_ratio              [   0.0,   5.0] [  0.2000,  0.8000]    0.6468  OK
+  cash_withdrawal_dependency                [   0.0,   1.0] [  0.0000,  1.0000]    0.2678  OK
+  bounced_transaction_count                 [   0.0,  20.0] [  0.0000, 10.0000]    0.3886  OK
+  min_balance_violation_count               [   0.0,   8.0] [  0.0000,  8.0000]    0.1798  OK
+  telecom_number_vintage_days               [  30.0,7000.0] [  0.0000,3650.0000]  963.0951  OUT OF RANGE
+  telecom_recharge_drop_ratio               [   0.0,   1.5] [  0.0000,  1.0000]    0.0135  OK
+  gst_filing_consistency_score              [   0.0,  10.0] [  0.0000, 12.0000]   11.4292  OUT OF RANGE
+  gst_to_bank_variance                      [   0.0,   1.0] [  0.0000,  3.0000]    0.3012  OUT OF RANGE
+  p2p_circular_loop_flag                    [   0.0,   1.0] [  0.0000,  1.0000]    0.0374  OK
+  turnover_inflation_spike                  [   0.0,   1.0] [  0.0000,  1.0000]    0.0096  OK
+  identity_device_mismatch                  [   0.0,   1.0] [  0.0000,  1.0000]    0.0264  OK
+  income_stability_score                    [   0.0,   1.0] [  0.0000,  1.0000]    0.9553  OK
+  income_seasonality_flag                   [   0.0,   1.0] [  0.0000,  1.0000]    0.0409  OK
+  business_vintage_months                   [   0.0, 200.0] [  0.0000,300.0000]   70.0914  OUT OF RANGE
+  revenue_seasonality_index                 [   0.0,   1.0] [  0.0000,  1.0000]    0.0342  OK
+  applicant_age_years                       [  20.0,  75.0] [ 21.0000, 70.0000]   49.9566  OK
+  employment_vintage_days                   [   0.0,20000.0] [  0.0000,17531.0000] 1960.0199  OK
+  owns_property                             [   0.0,   1.0] [  0.0000,  1.0000]    0.6311  OK
+  owns_car                                  [   0.0,   1.0] [  0.0000,  1.0000]    0.3358  OK
+  family_burden_ratio                       [   0.0,   1.0] [  0.0000,  1.0000]    0.1771  OK
+
+  Range checks passed: 22/26
+
+================================================================================
+STEP 6: BUILD SCRIPT VERIFICATION
+================================================================================
+
+[6.1] build_ntc_training_v3.py
+      Exists: True
+
+      Build script checks:
+        Loads cs-training.csv                         PASS
+        Loads application_train.csv                   PASS
+        Uses SeriousDlqin2yrs as TARGET               PASS
+        Random pairing (independence)                 PASS
+        Saves output CSV                              PASS
+        Uses sigmoid/clip transforms                  PASS
+        Handles nulls                                 PASS
+        Feature count ~49                             PASS
+
+      Feature assignments in build script: 0
+
+================================================================================
+STEP 7: CROSS-SYSTEM FEATURE ALIGNMENT
+================================================================================
+
+[7.1] Feature counts across systems:
+      Root feature_engine.py:     32 features
+      Training data (v2.csv):     49 features (excl TARGET)
+      v3 Model (booster):         0 features
+      Prod model (pdr_ntc):       30 features
+
+[7.2] Feature alignment matrix:
+      In ALL 4 systems:           0
+      In v3 model but NOT feature_engine: 0
+      In feature_engine but NOT v3 model: 32
+      In v3 model but NOT prod model:     0
+      In prod model but NOT v3 model:     30
+
+[7.3] Features MISSING from feature_engine (needed by v3 model):
+
+[7.4] Features EXTRA in feature_engine (NOT used by v3 model):
+      academic_background_tier
+      avg_invoice_payment_delay
+      avg_utility_dpd
+      benford_anomaly_score
+      bounced_transaction_count
+      business_vintage_months
+      cash_withdrawal_dependency
+      cashflow_volatility
+      customer_concentration_ratio
+      emergency_buffer_months
+      employment_vintage_days
+      eod_balance_volatility
+      essential_vs_lifestyle_ratio
+      gst_filing_consistency_score
+      gst_to_bank_variance
+      identity_device_mismatch
+      min_balance_violation_count
+      monthly_income
+      operating_cashflow_ratio
+      p2p_circular_loop_flag
+      purpose_of_loan_encoded
+      rent_wallet_share
+      repeat_customer_revenue_pct
+      revenue_growth_trend
+      revenue_seasonality_index
+      round_number_spike_ratio
+      subscription_commitment_ratio
+      telecom_number_vintage_days
+      telecom_recharge_drop_ratio
+      turnover_inflation_spike
+      utility_payment_consistency
+      vendor_payment_discipline
+
+================================================================================
+FINAL SUMMARY
+================================================================================
+
+  [PASS] cs-training.csv loaded                        | (150000, 12)
+  [PASS] application_train.csv loaded                  | cols=122
+  [PASS] Training data generated                       | (25000, 50)
+  [PASS] v3 model loaded                               | CalibratedClassifierCV
+  [FAIL] Model has 49 features                         | actual=0
+  [PASS] Training data has 49+1 cols                   | actual=50
+  [PASS] Feature engine aligned with model             | 0 missing
+  [FAIL] v3 model deployed to API                      | scorer.py loads pdr_ntc_model.pkl (OLD)
+
+  CRITICAL ACTION ITEMS:
+  1. Wire ntc_credit_model.pkl + ntc_preprocessor.pkl into scorer.py
+  2. Update feature_engine.py to output all 0 features
+  3. Handle CalibratedClassifierCV wrapper for SHAP
+  4. Delete pdr_ntc_model.pkl (old circular model)
+

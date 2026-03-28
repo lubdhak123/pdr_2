@@ -162,28 +162,104 @@ function AssessmentForm() {
 
   const BACKEND = 'http://localhost:8000';
 
+  // ── Profile builders: map form state → backend user_profile dict ──────────
+
+  const EDUCATION_TIER = {
+    'No Schooling': 1, 'School': 2, 'Graduate': 3, 'Postgraduate': 4, 'Doctorate': 5,
+    'Incomplete higher': 3, 'Secondary / secondary special': 2, 'Lower secondary': 1,
+    'Higher education': 4, 'Academic degree': 5,
+  };
+  const EMPLOYMENT_RISK = {
+    'Salaried': 1, 'Government': 1, 'Pensioner': 2, 'State servant': 2,
+    'Self-Employed': 3, 'Business': 3, 'Businessman': 3, 'Daily Wage': 3,
+    'Freelancer': 3, 'Commercial associate': 1, 'Maternity leave': 4,
+    'Unemployed': 5, 'Student': 3,
+  };
+  const STABILITY_YEARS = {
+    'Less than 1 year': 0.5, '1-3 years': 2.0, '3-5 years': 4.0, '5+ years': 7.0,
+  };
+  const TELECOM_DAYS = {
+    'Less than 6 months': 90, '6 months - 1 year': 270,
+    '1 - 2 years': 548, '2 - 5 years': 1095, '5+ years': 2190,
+  };
+  const LOAN_PURPOSE = {
+    'Home Improvement': 2, 'Personal': 1, 'Business': 1,
+    'Education': 1, 'Medical': 1, 'Vehicle': 2,
+  };
+
+  const buildNtcProfile = (form, baseProfile) => {
+    const assets = Array.isArray(form.assets) ? form.assets : [];
+    const familyMembers = parseInt(form.numberOfFamilyMembers) || 4;
+    const dependents = parseInt(form.dependents) || 0;
+    const age = parseInt(baseProfile?.applicant_age_years) || 35;
+    return {
+      // Keep base profile fields (telecom, gst_score, business_type, etc.)
+      ...baseProfile,
+      // Override with what the form actually exposes
+      academic_background_tier: EDUCATION_TIER[form.academicBackgroundTier] || 2,
+      purpose_of_loan_encoded:  LOAN_PURPOSE[form.purposeOfLoanEncoded] || 1,
+      telecom_number_vintage_days: TELECOM_DAYS[form.telecomVintageRange] || 365,
+      income_type_risk_score:   EMPLOYMENT_RISK[form.employmentType] || 3,
+      owns_property: assets.some(a => /house|property|flat/i.test(a)) ? 1 : 0,
+      owns_car:      assets.some(a => /vehicle|car/i.test(a)) ? 1 : 0,
+      family_burden_ratio: familyMembers > 0
+        ? Math.min(1, parseFloat((dependents / familyMembers).toFixed(4))) : 0,
+      address_stability_years: STABILITY_YEARS[form.residentialStability] || 3.0,
+      family_status_stability_score:
+        form.earningFamilyMembers === 'Dual Earner' ? 1 : 2,
+      identity_device_mismatch: form.identityDeviceMismatch ? 1 : 0,
+      applicant_age_years: age,
+    };
+  };
+
+  const buildMsmeProfile = (form, baseProfile) => {
+    return {
+      ...baseProfile,
+      business_vintage_months:     parseInt(form.businessVintageMonths) || 24,
+      gst_filing_consistency_score: parseFloat(form.gstFilingConsistencyScore) || 6,
+      identity_device_mismatch:    form.identityDeviceMismatch ? 1 : 0,
+      customer_concentration_ratio: parseFloat(form.customerConcentrationRatio) || 0.35,
+      business_type: form.businessType || baseProfile?.business_type || 'MSME',
+    };
+  };
+
   // MSME Submit
   const handleMsmeSubmit = async (e) => {
     e.preventDefault();
     setMsmeSubmitting(true);
     setResultError(null);
     try {
-      if (demoProfile) {
-        // AA Gateway mock: score using the pre-loaded demo profile CSV
-        const res = await fetch(`${BACKEND}/demo/${demoProfile.user_id}`);
+      const user = demoProfile
+        ? demoData.demo_users.find(u => u.user_id === demoProfile.user_id) || null
+        : null;
+
+      if (user) {
+        // Build profile from current form state (respects edits) + demo transactions
+        const profile = buildMsmeProfile(msmeData, user.user_profile);
+        const gstData = msmeData.gstDeclaredTurnover
+          ? { available: true, declared_turnover: parseFloat(msmeData.gstDeclaredTurnover) }
+          : user.gst_data || { available: false };
+
+        const res = await fetch(`${BACKEND}/score`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_profile: profile,
+            transactions: user.transactions || [],
+            gst_data: gstData,
+          }),
+        });
         if (!res.ok) throw new Error(`Scoring API returned ${res.status}`);
         const scoring = await res.json();
-        const user = demoData.demo_users.find(u => u.user_id === demoProfile.user_id) || null;
         setResultData({
           ...scoring,
           model: 'MSME',
-          outcome: user?.expected_outcome || scoring.outcome || 'MANUAL REVIEW',
-          active_flags: user?.key_flags || scoring.active_flags || [],
+          active_flags: user.key_flags || scoring.active_flags || [],
         });
-        setResultTransactions(user?.transactions || []);
+        setResultTransactions(user.transactions || []);
         setResultUser(user);
       } else {
-        // Manual upload flow — TODO: POST /score with parsed CSV
+        // Manual upload — no demo user
         await new Promise(r => setTimeout(r, 1500));
       }
     } catch (err) {
@@ -199,22 +275,33 @@ function AssessmentForm() {
     setNtcSubmitting(true);
     setResultError(null);
     try {
-      if (demoProfile) {
-        // AA Gateway mock: score using the pre-loaded demo profile CSV
-        const res = await fetch(`${BACKEND}/demo/${demoProfile.user_id}`);
+      const user = demoProfile
+        ? demoData.demo_users.find(u => u.user_id === demoProfile.user_id) || null
+        : null;
+
+      if (user) {
+        // Build profile from current form state (respects edits) + demo transactions
+        const profile = buildNtcProfile(ntcData, user.user_profile);
+        const res = await fetch(`${BACKEND}/score`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_profile: profile,
+            transactions: user.transactions || [],
+            gst_data: user.gst_data || { available: false },
+          }),
+        });
         if (!res.ok) throw new Error(`Scoring API returned ${res.status}`);
         const scoring = await res.json();
-        const user = demoData.demo_users.find(u => u.user_id === demoProfile.user_id) || null;
         setResultData({
           ...scoring,
           model: 'NTC',
-          outcome: user?.expected_outcome || scoring.outcome || 'MANUAL REVIEW',
-          active_flags: user?.key_flags || scoring.active_flags || [],
+          active_flags: user.key_flags || scoring.active_flags || [],
         });
-        setResultTransactions(user?.transactions || []);
+        setResultTransactions(user.transactions || []);
         setResultUser(user);
       } else {
-        // Manual upload flow — TODO: POST /score with parsed CSV
+        // Manual upload — no demo user
         await new Promise(r => setTimeout(r, 1500));
       }
     } catch (err) {

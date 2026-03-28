@@ -60,6 +60,14 @@ T_BALANCE_INFLATION_VOL  = 0.85  # >85% EOD volatility = extreme swings
 T_NEW_SIM_DAYS           = 120   # <120 days = very new SIM
 T_MIN_SIGNAL_THRESHOLD   = 0.10  # Minimum signal coverage to avoid zero-profile
 
+# Demographic risk thresholds (used in Type 2/3 rules)
+T_AGE_YOUNG              = 26    # <26 years = elevated default risk (RBI youth segment)
+T_AGE_SENIOR             = 55    # >55 years = stable income / pensioner segment
+T_HIGH_INCOME_RISK       = 4     # income_type_risk_score >= 4 = unemployed/maternity
+T_CRITICAL_INCOME_RISK   = 5     # income_type_risk_score == 5 = unemployed (highest risk)
+T_FAMILY_BURDEN_HIGH     = 0.50  # >50% children/family = high obligation ratio
+T_CONTACT_POOR           = 1     # contactability_score <= 1 = hard to verify
+
 
 def apply_pre_layer(features: dict) -> tuple | None:
     # ── TYPE 1: HARD REJECTION ──
@@ -132,6 +140,15 @@ def apply_pre_layer(features: dict) -> tuple | None:
                 'Extreme off-book cash dependency combined with payment failures - '
                 'high probability of undisclosed financial obligations')
 
+    # Unemployed applicant with any payment stress (demographic hard-reject)
+    if (features.get('income_type_risk_score', 3) == T_CRITICAL_INCOME_RISK and
+        features.get('bounced_transaction_count', 0) >= 1 and
+        features.get('emergency_buffer_months', 0) < T_EMERGENCY_BUFFER_MIN):
+        return ('E', 'REJECTED',
+                'Unemployed applicant with payment failures and insufficient buffer - '
+                'no declared income source and chronic payment stress indicates '
+                'inability to service loan obligations')
+
     # ── TYPE 2: EDGE CASE PROTECTION ──
 
     # Clean established business with multi-signal trust
@@ -182,6 +199,18 @@ def apply_pre_layer(features: dict) -> tuple | None:
                 'Stable pension or fixed income profile - consistent low-volatility '
                 'credits with strong savings buffer and zero payment failures confirm '
                 'reliable repayment capacity')
+
+    # Stable senior / pensioner with clean profile
+    # Must be in Type 2 so it fires before "first time borrower" Type 3 rule
+    if (features.get('applicant_age_years', 35) >= T_AGE_SENIOR and
+        features.get('income_type_risk_score', 3) == 2 and  # Pensioner
+        features.get('bounced_transaction_count', 0) == 0 and
+        features.get('min_balance_violation_count', 0) == 0 and
+        features.get('emergency_buffer_months', 0) > T_EMERGENCY_BUFFER_MIN):
+        return ('B', 'APPROVED WITH CONDITIONS',
+                'Stable pensioner profile - age 55+ with pension income, zero payment '
+                'failures, and adequate liquidity buffer. Fixed pension income provides '
+                'reliable repayment capacity. Recommend standard EMI on pension date')
 
     # ── TYPE 3: MANUAL REVIEW ──
 
@@ -315,6 +344,37 @@ def apply_pre_layer(features: dict) -> tuple | None:
                 'Gig or freelance income pattern - irregular income timing with '
                 'partial GST compliance and zero payment failures. Recommend '
                 'approval with income averaging and flexible EMI dates')
+
+    # ── DEMOGRAPHIC RISK RULES (profile-driven) ──────────────────────────────
+
+    # Young applicant with no assets and high-risk income type
+    # Any behavioral stress elevates risk significantly for this segment
+    if (features.get('applicant_age_years', 35) < T_AGE_YOUNG and
+        features.get('owns_property', 0) == 0 and
+        features.get('income_type_risk_score', 3) >= T_HIGH_INCOME_RISK and
+        features.get('bounced_transaction_count', 0) >= 1):
+        return ('C', 'MANUAL REVIEW',
+                'Young applicant with no property, high-risk income type, and '
+                'payment stress - combination of age, asset, and income instability '
+                'requires manual income verification before disbursement')
+
+    # High family burden with unstable income (can\'t service EMI under stress)
+    if (features.get('family_burden_ratio', 0) > T_FAMILY_BURDEN_HIGH and
+        features.get('income_type_risk_score', 3) >= T_HIGH_INCOME_RISK and
+        features.get('emergency_buffer_months', 0) < T_EMERGENCY_BUFFER_MIN):
+        return ('C', 'MANUAL REVIEW',
+                'High family obligation ratio with unstable income and limited buffer - '
+                'significant dependent burden combined with non-salaried income and '
+                'thin cash reserves requires household income assessment')
+
+    # Poor contactability with financial stress (verification risk)
+    if (features.get('contactability_score', 2) <= T_CONTACT_POOR and
+        features.get('bounced_transaction_count', 0) >= 1 and
+        features.get('eod_balance_volatility', 0) > T_EOD_VOLATILITY):
+        return ('C', 'MANUAL REVIEW',
+                'Low contactability with financial stress signals - applicant has '
+                'limited reachable contact points combined with payment failures and '
+                'volatile account balance. Identity and address verification required')
 
     return None
 

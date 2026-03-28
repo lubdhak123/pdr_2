@@ -401,38 +401,193 @@ def compute_features(
     except Exception:
         result['monthly_income'] = 0.0
 
+    # ── DEMOGRAPHIC features (from profile) ──────────────────────────
+    result['applicant_age_years'] = float(profile.get('applicant_age_years', 35.0))
+    result['owns_property'] = float(profile.get('owns_property', 0))
+    result['owns_car'] = float(profile.get('owns_car', 0))
+    result['region_risk_tier'] = float(profile.get('region_risk_tier', 2))
+    result['address_stability_years'] = float(profile.get('address_stability_years', 3.0))
+    result['id_document_age_years'] = float(profile.get('id_document_age_years', 5.0))
+    result['family_burden_ratio'] = float(profile.get('family_burden_ratio', 0.2))
+    result['has_email_flag'] = float(profile.get('has_email_flag', 1))
+    result['family_status_stability_score'] = float(profile.get('family_status_stability_score', 2))
+    result['contactability_score'] = float(profile.get('contactability_score', 2))
+    result['car_age_years'] = float(profile.get('car_age_years', 99))
+    result['region_city_risk_score'] = float(profile.get('region_city_risk_score', 2))
+    result['address_work_mismatch'] = float(profile.get('address_work_mismatch', 0))
+    result['neighbourhood_default_rate_30'] = float(profile.get('neighbourhood_default_rate_30', 0.05))
+    result['neighbourhood_default_rate_60'] = float(profile.get('neighbourhood_default_rate_60', 0.05))
+
+    # income_type_risk_score — from profile or detect from transactions
+    try:
+        irs = profile.get('income_type_risk_score')
+        if irs is not None:
+            result['income_type_risk_score'] = float(irs)
+        else:
+            narr_all = ' '.join(df['narration'].tolist()) if not df.empty else ''
+            if 'SALARY' in narr_all or 'PAYROLL' in narr_all:
+                result['income_type_risk_score'] = 1.0
+            elif 'PENSION' in narr_all:
+                result['income_type_risk_score'] = 2.0
+            else:
+                result['income_type_risk_score'] = 3.0
+    except Exception:
+        result['income_type_risk_score'] = 3.0
+
+    # employment_to_age_ratio
+    try:
+        age = result.get('applicant_age_years', 35.0)
+        emp_days = result.get('employment_vintage_days', 0.0)
+        denom = max(1.0, (age - 18) * 365)
+        result['employment_to_age_ratio'] = float(min(1.0, emp_days / denom))
+    except Exception:
+        result['employment_to_age_ratio'] = 0.0
+
+    # income_stability_score — 1 - CV of monthly credits
+    try:
+        if 'date' in df.columns and not df.empty:
+            cr_df = df[df['type'] == 'CREDIT'][['date', 'amount']].copy()
+            cr_df = cr_df[cr_df['date'].notna()]
+            if not cr_df.empty:
+                mo_c = cr_df.groupby(cr_df['date'].dt.to_period('M'))['amount'].sum()
+                vals = list(mo_c.values)
+                if len(vals) >= 2:
+                    mu = sum(vals) / len(vals)
+                    if mu > 0:
+                        std = (sum((v - mu) ** 2 for v in vals) / len(vals)) ** 0.5
+                        result['income_stability_score'] = float(max(0.0, min(1.0, 1.0 - std / mu)))
+                    else:
+                        result['income_stability_score'] = 0.0
+                else:
+                    result['income_stability_score'] = 0.5
+            else:
+                result['income_stability_score'] = 0.5
+        else:
+            result['income_stability_score'] = 0.5
+    except Exception:
+        result['income_stability_score'] = 0.5
+
+    # income_seasonality_flag — 1 if top 2 months > 75% of income
+    try:
+        if 'date' in df.columns and not df.empty:
+            cr_df = df[df['type'] == 'CREDIT'][['date', 'amount']].copy()
+            cr_df = cr_df[cr_df['date'].notna()]
+            if not cr_df.empty:
+                mo_c = cr_df.groupby(cr_df['date'].dt.to_period('M'))['amount'].sum()
+                vals = sorted(mo_c.values, reverse=True)
+                if len(vals) >= 3 and sum(vals) > 0:
+                    top2 = sum(vals[:2]) / sum(vals)
+                    result['income_seasonality_flag'] = 1.0 if top2 > 0.75 else 0.0
+                else:
+                    result['income_seasonality_flag'] = 0.0
+            else:
+                result['income_seasonality_flag'] = 0.0
+        else:
+            result['income_seasonality_flag'] = 0.0
+    except Exception:
+        result['income_seasonality_flag'] = 0.0
+
+    # weekend_spending_ratio — % of debit spend on Sat/Sun
+    try:
+        if 'date' in df.columns and not df.empty:
+            deb_df = df[df['type'] == 'DEBIT'][['date', 'amount']].copy()
+            deb_df = deb_df[deb_df['date'].notna()]
+            if not deb_df.empty:
+                total_spend = deb_df['amount'].abs().sum()
+                wknd_spend = deb_df[deb_df['date'].dt.weekday >= 5]['amount'].abs().sum()
+                result['weekend_spending_ratio'] = float(wknd_spend / total_spend) if total_spend > 0 else 0.2853
+            else:
+                result['weekend_spending_ratio'] = 0.2853
+        else:
+            result['weekend_spending_ratio'] = 0.2853
+    except Exception:
+        result['weekend_spending_ratio'] = 0.2853
+
+    # payment_diversity_score — Shannon entropy of spending categories
+    try:
+        if not df.empty:
+            kw_cats = {
+                'INCOME':   ['SALARY', 'CREDIT'],
+                'UTILITY':  ['ELECTRICITY', 'WATER', 'BROADBAND', 'BILL', 'GAS'],
+                'FOOD':     ['ZOMATO', 'SWIGGY', 'RESTAURANT', 'FOOD'],
+                'GROCERY':  ['GROCERY', 'BIGBASKET', 'KIRANA'],
+                'RENT':     ['RENT', 'EMI'],
+                'TELECOM':  ['AIRTEL', 'JIO', 'RECHARGE'],
+                'SHOPPING': ['AMAZON', 'FLIPKART', 'MYNTRA'],
+                'ATM':      ['ATM', 'CASH'],
+            }
+            cat_counts: dict = {}
+            for narr in df['narration']:
+                assigned = 'OTHER'
+                for cat, kws in kw_cats.items():
+                    if any(k in narr for k in kws):
+                        assigned = cat
+                        break
+                cat_counts[assigned] = cat_counts.get(assigned, 0) + 1
+            total = sum(cat_counts.values())
+            if total > 0 and len(cat_counts) > 1:
+                entropy = -sum((c / total) * math.log2(c / total) for c in cat_counts.values() if c > 0)
+                max_ent = math.log2(len(cat_counts))
+                result['payment_diversity_score'] = float(entropy / max_ent) if max_ent > 0 else 0.5
+            else:
+                result['payment_diversity_score'] = 0.5
+        else:
+            result['payment_diversity_score'] = 0.5
+    except Exception:
+        result['payment_diversity_score'] = 0.5
+
+    # night_transaction_ratio — use profile default (no time data in raw transactions)
+    result['night_transaction_ratio'] = float(profile.get('night_transaction_ratio', 0.0465))
+
+    # device_consistency_score — from profile
+    result['device_consistency_score'] = float(profile.get('device_consistency_score', 0.8))
+
+    # geographic_risk_score — from profile or city name lookup
+    try:
+        geo = profile.get('geographic_risk_score')
+        if geo is not None:
+            result['geographic_risk_score'] = float(geo)
+        else:
+            _state_risk = {
+                'Karnataka': 3, 'Bangalore': 3, 'Bengaluru': 3,
+                'Rajasthan': 2, 'Jaipur': 2, 'Gujarat': 2, 'Ahmedabad': 2,
+                'Delhi': 2, 'Maharashtra': 2, 'Mumbai': 2, 'Pune': 2,
+                'West Bengal': 2, 'Kolkata': 2, 'Andhra Pradesh': 2,
+                'Hyderabad': 2, 'Telangana': 2, 'Uttar Pradesh': 2, 'Lucknow': 2,
+                'Tamil Nadu': 1, 'Chennai': 1, 'Kerala': 1, 'Kochi': 1,
+            }
+            city = str(profile.get('city', profile.get('state', ''))).strip().title()
+            result['geographic_risk_score'] = float(_state_risk.get(city, 2))
+    except Exception:
+        result['geographic_risk_score'] = 2.0
+
     keys_in_order = [
-        'utility_payment_consistency',
-        'avg_utility_dpd',
-        'rent_wallet_share',
-        'subscription_commitment_ratio',
-        'emergency_buffer_months',
-        'min_balance_violation_count',
-        'eod_balance_volatility',
-        'essential_vs_lifestyle_ratio',
-        'cash_withdrawal_dependency',
-        'bounced_transaction_count',
-        'telecom_number_vintage_days',
-        'telecom_recharge_drop_ratio',
-        'academic_background_tier',
-        'purpose_of_loan_encoded',
-        'business_vintage_months',
-        'revenue_growth_trend',
-        'revenue_seasonality_index',
-        'operating_cashflow_ratio',
+        # Behavioral (13)
+        'utility_payment_consistency', 'avg_utility_dpd', 'rent_wallet_share',
+        'subscription_commitment_ratio', 'emergency_buffer_months', 'eod_balance_volatility',
+        'essential_vs_lifestyle_ratio', 'cash_withdrawal_dependency', 'bounced_transaction_count',
+        'telecom_recharge_drop_ratio', 'min_balance_violation_count',
+        'income_stability_score', 'income_seasonality_flag',
+        # Alternative (3)
+        'telecom_number_vintage_days', 'academic_background_tier', 'purpose_of_loan_encoded',
+        # Demographic (18)
+        'employment_vintage_days', 'applicant_age_years', 'owns_property', 'owns_car',
+        'region_risk_tier', 'address_stability_years', 'id_document_age_years',
+        'family_burden_ratio', 'has_email_flag', 'income_type_risk_score',
+        'family_status_stability_score', 'contactability_score', 'car_age_years',
+        'region_city_risk_score', 'address_work_mismatch', 'employment_to_age_ratio',
+        'neighbourhood_default_rate_30', 'neighbourhood_default_rate_60',
+        # Forensic / MSME (10)
+        'p2p_circular_loop_flag', 'gst_to_bank_variance', 'customer_concentration_ratio',
+        'turnover_inflation_spike', 'identity_device_mismatch', 'business_vintage_months',
+        'gst_filing_consistency_score', 'revenue_seasonality_index', 'revenue_growth_trend',
         'cashflow_volatility',
-        'avg_invoice_payment_delay',
-        'customer_concentration_ratio',
-        'repeat_customer_revenue_pct',
-        'vendor_payment_discipline',
-        'gst_filing_consistency_score',
-        'gst_to_bank_variance',
-        'p2p_circular_loop_flag',
-        'benford_anomaly_score',
-        'round_number_spike_ratio',
-        'turnover_inflation_spike',
-        'identity_device_mismatch',
-        'employment_vintage_days',
+        # New UPI-calibrated (5)
+        'night_transaction_ratio', 'weekend_spending_ratio', 'payment_diversity_score',
+        'device_consistency_score', 'geographic_risk_score',
+        # Extra legacy features kept for display
+        'operating_cashflow_ratio', 'avg_invoice_payment_delay', 'repeat_customer_revenue_pct',
+        'vendor_payment_discipline', 'benford_anomaly_score', 'round_number_spike_ratio',
         'monthly_income',
     ]
 
@@ -441,5 +596,5 @@ def compute_features(
 
 if __name__ == "__main__":
     result = compute_features([], {}, {})
-    assert len(result) == 32, f"Expected 32 features, got {len(result)}"
-    print("[OK] feature_engine.py")
+    assert len(result) == 56, f"Expected 56 features, got {len(result)}"
+    print("[OK] feature_engine.py — 49 model features + 7 legacy extras")

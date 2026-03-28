@@ -31,20 +31,29 @@ def _load(filename):
         print(f"[ERROR] Failed to load {filename}: {e}")
         return None
 
-ntc_model  = _load('pdr_ntc_model.pkl')
-msme_model = _load('pdr_msme_model.pkl')
+ntc_model  = _load('ntc_model/models/ntc_credit_model.pkl')
+msme_model = _load('msme_model/models/xgb_msme_raw.pkl')  # raw XGB — avoids PlattCalibratedModel pickle error
 
 # ─────────────────────────────────────────────
 # FEATURE LISTS — derived from trained model (never hardcoded)
 # ─────────────────────────────────────────────
 
 if ntc_model is not None:
-    NTC_FEATURES = ntc_model.get_booster().feature_names
+    try:
+        NTC_FEATURES = list(ntc_model.feature_names_in_)
+    except AttributeError:
+        try:
+            NTC_FEATURES = ntc_model.get_booster().feature_names
+        except Exception:
+            NTC_FEATURES = []
 else:
     NTC_FEATURES = []
 
 if msme_model is not None:
-    MSME_FEATURES = msme_model.get_booster().feature_names
+    try:
+        MSME_FEATURES = list(msme_model.feature_names_in_)
+    except AttributeError:
+        MSME_FEATURES = [str(f) for f in msme_model.get_booster().feature_names]
 else:
     MSME_FEATURES = []
 
@@ -52,7 +61,14 @@ else:
 # BUILD SHAP EXPLAINERS — expensive, do once at load time
 # ─────────────────────────────────────────────
 
-ntc_explainer  = shap.TreeExplainer(ntc_model)  if ntc_model  else None
+if ntc_model is not None:
+    try:
+        _ntc_base = ntc_model.calibrated_classifiers_[0].estimator
+        ntc_explainer = shap.TreeExplainer(_ntc_base)
+    except Exception:
+        ntc_explainer = shap.TreeExplainer(ntc_model)
+else:
+    ntc_explainer = None
 msme_explainer = shap.TreeExplainer(msme_model) if msme_model else None
 
 # ─────────────────────────────────────────────
@@ -107,8 +123,30 @@ GRADE_THRESHOLDS = [
 # ─────────────────────────────────────────────
 
 def _to_row(features: dict, feature_list: list) -> pd.DataFrame:
-    """Single-row DataFrame for model input, filling missing cols with 0."""
-    row = pd.DataFrame([{f: features.get(f, 0.0) for f in feature_list}])
+    """Single-row DataFrame for model input, filling missing cols with 0.
+    Adds MSME engineered features and one-hot business_type columns if needed.
+    """
+    enriched = dict(features)
+
+    # MSME engineered features (computed from base features if missing)
+    ocr  = float(enriched.get('operating_cashflow_ratio', 1.0))
+    cv   = float(enriched.get('cashflow_volatility', 0.0))
+    gtbv = float(enriched.get('gst_to_bank_variance', 0.0))
+    gfcs = float(enriched.get('gst_filing_consistency_score', 6.0))
+    aipd = float(enriched.get('avg_invoice_payment_delay', 30.0))
+    vpd  = float(enriched.get('vendor_payment_discipline', 10.0))
+
+    enriched.setdefault('stress_composite',   max(0.0, 1.0 - ocr) * 0.5 + cv * 0.5)
+    enriched.setdefault('gst_risk_score',     max(0.0, gtbv * 0.6 + max(0.0, 1.0 - gfcs / 12) * 0.4))
+    enriched.setdefault('wc_pressure',        max(0.0, min(1.0, aipd / 90.0)))
+    enriched.setdefault('liquidity_fragility',max(0.0, min(1.0, (vpd / 90.0) * 0.5 + cv * 0.5)))
+
+    # One-hot business_type columns
+    biz_type = str(enriched.get('business_type', '')).lower().replace(' ', '_').replace('/', '_')
+    for bt in ('agri_seasonal', 'manufacturer', 'retailer_kirana', 'service_provider'):
+        enriched.setdefault(f'business_type_{bt}', 1.0 if bt in biz_type else 0.0)
+
+    row = pd.DataFrame([{f: enriched.get(f, 0.0) for f in feature_list}])
     row = row.fillna(0)  # no NaN reaches the model
     return row
 

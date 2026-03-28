@@ -5,6 +5,12 @@ import os
 
 import sys
 
+# ── LENDING CLUB PATH — set this to your LC dataset ──────────────────────────
+# Source: accepted_2007_to_2018Q4.csv (Lending Club public dataset)
+# Used to ground behav_risk in real payment-behavior distributions.
+# If file not found, falls back to beta(2.5, 2.5) with a warning.
+LC_DATA_PATH = r"C:\Users\kanis\OneDrive\Desktop\ecirricula\datasets\accepted_2007_to_2018Q4.csv"
+
 logging.basicConfig(
     level=logging.INFO, 
     format="%(asctime)s | %(levelname)s | %(message)s",
@@ -191,6 +197,54 @@ def build_training_data():
     rng = np.random.default_rng(RANDOM_SEED)
     n = N_SAMPLES
 
+    # ── LOAD LENDING CLUB BEHAVIORAL RISK DISTRIBUTION ──────────────────────
+    # Instead of rng.beta(2.5, 2.5), derive behav_risk from real LC payment data.
+    # Features used: delinq_2yrs, dti, revol_util, pct_tl_nvr_dlq, pub_rec
+    # These are cross-domain proxies (US credit cards → Indian utility payments)
+    # but they capture REAL defaulter vs non-defaulter distributions.
+    def _load_lc_behav_risk(path: str, n_samples: int, seed: int) -> np.ndarray | None:
+        lc_cols = ['loan_status', 'delinq_2yrs', 'dti', 'revol_util',
+                   'pct_tl_nvr_dlq', 'pub_rec', 'fico_range_low', 'fico_range_high']
+        try:
+            lc = pd.read_csv(path, usecols=lc_cols, low_memory=False)
+            # Keep only fully settled loans (avoid in-progress)
+            lc = lc[lc['loan_status'].isin(['Fully Paid', 'Charged Off', 'Default'])].copy()
+            lc = lc.dropna(subset=['delinq_2yrs', 'dti', 'revol_util']).copy()
+
+            # Normalize each component to [0, 1] where 1 = more risky
+            d2y  = np.clip(lc['delinq_2yrs'].fillna(0) / 5.0, 0, 1)
+            dti  = np.clip(lc['dti'].fillna(20) / 50.0, 0, 1)
+            rutil = np.clip(lc['revol_util'].fillna(50) / 100.0, 0, 1)
+            never_dlq = np.clip(lc['pct_tl_nvr_dlq'].fillna(80) / 100.0, 0, 1)
+            pub  = (lc['pub_rec'].fillna(0) > 0).astype(float)
+            fico_mid = ((lc['fico_range_low'].fillna(650) + lc['fico_range_high'].fillna(660)) / 2)
+            fico_risk = np.clip(1 - (fico_mid - 580) / 270, 0, 1)  # 580→high risk, 850→low risk
+
+            lc_behav = (
+                0.25 * d2y.values +
+                0.20 * dti.values +
+                0.20 * rutil.values +
+                0.20 * (1 - never_dlq.values) +
+                0.10 * pub.values +
+                0.05 * fico_risk.values
+            )
+            lc_behav = np.clip(lc_behav, 0.02, 0.98)
+
+            rng_lc = np.random.default_rng(seed + 1)
+            sampled = rng_lc.choice(lc_behav, size=n_samples, replace=True)
+            logger.info(
+                f"[LC] Loaded {len(lc):,} rows. behav_risk from LC: "
+                f"mean={sampled.mean():.3f}, std={sampled.std():.3f}, "
+                f"range=[{sampled.min():.3f}, {sampled.max():.3f}]"
+            )
+            return sampled
+        except FileNotFoundError:
+            logger.warning(f"[LC] {path} not found — falling back to beta(2.5,2.5)")
+            return None
+        except Exception as e:
+            logger.warning(f"[LC] Failed to load Lending Club data: {e} — falling back to beta(2.5,2.5)")
+            return None
+
     # ── DEMOGRAPHIC RISK SCORE ──────────────────────────────────
     # Instead of a random coin flip, compute risk from real demographics.
     # A stable pensioner with property → low risk → good behavioral means.
@@ -233,9 +287,14 @@ def build_training_data():
     #         finances, but it's not deterministic).
     #         80% is INDEPENDENT → the model must learn TWO distinct signals.
 
-    # Independent behavioral risk: sampled from beta distribution
-    # (beta gives a nice [0,1] spread with most people in the middle)
-    behav_risk = rng.beta(2.5, 2.5, n)  # mean=0.5, spread across [0,1]
+    # Independent behavioral risk: grounded in real Lending Club payment data
+    # (delinq_2yrs, dti, revol_util, pct_tl_nvr_dlq, pub_rec, fico)
+    # Falls back to beta(2.5, 2.5) if LC file unavailable.
+    _lc_behav = _load_lc_behav_risk(LC_DATA_PATH, n, RANDOM_SEED)
+    if _lc_behav is not None:
+        behav_risk = _lc_behav
+    else:
+        behav_risk = rng.beta(2.5, 2.5, n)  # mean=0.5, spread across [0,1]
 
     # Mix: 80% independent + 20% demographic correlation
     # This creates a REALISTIC weak correlation (r ≈ 0.15-0.25)
