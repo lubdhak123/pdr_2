@@ -5,6 +5,7 @@ import BankStatementUpload from '../components/BankStatementUpload';
 import Results from '../components/Results';
 import demoData from '../../../demo_users.json';
 import ThemeToggle from '../components/ThemeToggle';
+import StarField from '../components/StarField';
 
 // Maps demo_users.json form_fields (snake_case) → React NTC state keys (camelCase)
 const NTC_FIELD_MAP = {
@@ -393,6 +394,7 @@ function AssessmentForm() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="bg-slate-50 dark:bg-slate-950 font-body text-on-surface dark:text-slate-200 antialiased min-h-screen"
         >
+      <StarField />
       {/* TopAppBar Shell Component */}
       <nav className="bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-lg shadow-slate-400/40 dark:shadow-none font-headline antialiased tracking-tight">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center w-full">

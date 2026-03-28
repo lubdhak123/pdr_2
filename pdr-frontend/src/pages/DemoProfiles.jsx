@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import demoData from '../../../demo_users.json';
 import ThemeToggle from '../components/ThemeToggle';
+import StarField from '../components/StarField';
 
 const gradeColors = {
   A: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
@@ -86,6 +87,7 @@ function DemoProfiles() {
 
   return (
     <div className="bg-surface dark:bg-slate-950 text-on-surface dark:text-slate-200 min-h-screen font-body antialiased">
+      <StarField />
       {/* Nav */}
       <nav className="bg-[#f7f9fb]/80 dark:bg-slate-950/80 backdrop-blur-xl top-0 sticky z-50 shadow-sm shadow-slate-200/50 dark:shadow-none font-['Manrope'] antialiased tracking-tight">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
