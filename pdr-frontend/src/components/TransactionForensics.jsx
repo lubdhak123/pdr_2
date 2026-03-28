@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 
 // ── Detect suspicious transactions ───────────────────────────
 function annotate(transactions) {
@@ -70,20 +70,17 @@ const rowBg = (flags) => {
   return 'transparent';
 };
 
-const FRAUD_FLAGS = ['P2P_CIRCULAR_LOOP', 'ROUND_NUMBER_TRANSACTIONS',
+export const FRAUD_FLAGS = ['P2P_CIRCULAR_LOOP', 'ROUND_NUMBER_TRANSACTIONS',
   'TURNOVER_INFLATION_SPIKE', 'BENFORD_ANOMALY', 'GST_BANK_MISMATCH',
   'BALANCE_INFLATION_SPIKE', 'HIGH_CASH_DEPENDENCY', 'MIN_BALANCE_VIOLATIONS',
   'LATE_UTILITY_PAYMENTS', 'NEW_SIM_RISK'];
 
 // ── Main component ────────────────────────────────────────────
-export default function TransactionForensics({ transactions, activeFlags }) {
+export default function TransactionForensics({ transactions }) {
   const chartRef = useRef(null);
 
-  // Compute derived data unconditionally (safe with empty inputs)
-  const hasFraud = activeFlags?.some(f => FRAUD_FLAGS.includes(f)) ?? false;
-  const annotated = annotate(transactions || []);
+  const annotated = useMemo(() => annotate(transactions || []), [transactions]);
 
-  // useEffect MUST be before any early return (Rules of Hooks)
   useEffect(() => {
     if (!annotated.length || !chartRef.current || !window.Chart) return;
     if (chartRef.current.chartInstance) chartRef.current.chartInstance.destroy();
@@ -133,7 +130,7 @@ export default function TransactionForensics({ transactions, activeFlags }) {
         },
       },
     });
-  }, [transactions, hasFraud]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [annotated]);
 
   // Early return AFTER all hooks
   if (!transactions?.length) return null;

@@ -175,7 +175,6 @@ function AssessmentForm() {
     }
   }, []);
 
-  // Derived: is the currently loaded demo profile a dynamic-income (manual entry) profile?
   const isDynamicProfile = demoProfile
     ? (demoData.demo_users.find(u => u.user_id === demoProfile.user_id)?.user_profile?.dynamic_income === true)
     : false;

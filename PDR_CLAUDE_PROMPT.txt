@@ -562,3 +562,229 @@ Paste this file at the start of any new session. Suggested asks:
 4. "Add Benford's Law visualization to Transaction Forensics"
 5. "Write a comprehensive README for the GitHub repo"
 6. "Add PDF export for the Transaction Forensics panel"
+7. "Build Step 5 of the chatbot — wire Ollama + input loop into credit_analyst_chatbot.py"
+8. "Build build_applicant_cards.py to populate the SQLite DB from the live FastAPI backend"
+9. "Test the full chatbot pipeline end-to-end with demo users"
+
+---
+
+## 17. SURPRISE ELEMENT — AI CREDIT ANALYST CHATBOT (Phase 7)
+
+> **Status as of 2026-03-28:** Steps 1–4 complete. Step 5 (Ollama wire-up + input loop) remaining.
+
+### 17.1 What It Is
+
+A chatbot that lets a **loan officer** query, interrogate, compare, and generate decision letters
+for applicants in plain English. Powered by a **local LLM via Ollama** (Mistral 7B or Llama3 8B).
+No web framework — runs in a notebook `input()` loop.
+
+Barclays requirement: Use locally hosted LLMs. Claude API is optional via `USE_CLAUDE=true` env var.
+
+### 17.2 Architecture
+
+```
+Loan Officer (plain English)
+        ↓
+chatbot_router.py      → classify query type + extract applicant IDs
+        ↓
+context_layer.py       → fetch pre-computed applicant card from SQLite
+        ↓
+chatbot_context.py     → enrich card + build grounded LLM prompt pair
+        ↓
+Ollama API             → local LLM generates response
+        ↓
+credit_analyst_chatbot.py → input() loop + display
+```
+
+### 17.3 Files Built (all in project root)
+
+#### `context_layer.py` — SQLite Database Layer
+- **4 tables:**
+  - `applicant_cards` — core card (grade, PD, decision, primary reason, soft-delete)
+  - `applicant_features` — normalized 44 features (one row per feature, upsertable)
+  - `applicant_shap_explanations` — top-5 SHAP factors with rank/direction/impact
+  - `applicant_loan_offers` — rate range, max loan, tenures, recommended product
+- **Indexes on:** grade, outcome, score_date, is_deleted
+- **Public API:**
+  ```python
+  init_database(db_path)
+  save_applicant_card(db, result, applicant_id, name, city, business_type) → int
+  fetch_applicant_card(db, applicant_id) → dict
+  search_applicants(db, filters) → list[dict]
+  delete_applicant_card(db, applicant_id) → bool  # soft delete
+  bulk_save_applicant_cards(db, records) → list[int]
+  get_grade_distribution(db) → dict
+  ```
+- **Input:** full `score_user()` result dict
+- **Output of fetch:** `{applicant_id, name, grade, decision, default_probability, primary_reason, top_shap_factors, all_features, loan_offer, alternative_products}`
+
+#### `chatbot_router.py` — Query Classifier
+- **7 query types** (enum: `QueryType`):
+  - `LOOKUP` — "Pull up applicant ntc_001"
+  - `EXPLANATION` — "Why was msme_003 rejected?"
+  - `COMPARISON` — "Compare ntc_001 and ntc_002"
+  - `SCENARIO` — "What if ntc_001 had 20% more income?"
+  - `DECISION_LETTER` — "Generate a rejection letter for msme_003"
+  - `RISK_ASSESSMENT` — "What's the biggest risk for ntc_001?"
+  - `AGGREGATE` — "How many applicants were rejected?"
+- **Returns `RoutedQuery(query_type, applicant_ids, parameters, raw_message, confidence)`**
+- Applicant ID patterns: `ntc_001`, `msme_003`, `app_12345`, `#4532`
+- Parameter extraction per type:
+  - SCENARIO → `magnitude_pct`, `change_direction`, `target_feature`
+  - DECISION_LETTER → `letter_type` (rejection/approval/review/auto)
+  - AGGREGATE → `decision`, `grade`, `risk_band`, `limit`, `order`
+  - EXPLANATION → `focus` (rejection_reason/approval_reason/risk_factors/general)
+
+#### `chatbot_context.py` — Context Fetcher + Prompt Builder (Steps 3 & 4)
+
+**Step 3: `fetch_applicant_context(db_path, applicant_id)` → enriched dict**
+- Adds to raw DB card:
+  - `enriched_shap` — each factor gets human label (e.g. "Reliance on cash withdrawals"), raw feature value, threshold note ("below 50% is preferred"), and `⚠ RISK`/`✓ STRENGTH` tag
+  - `red_flags` — auto-detects: 3+ bounces, P2P circular loop, GST variance >150%, cash >80%, turnover spike, device mismatch
+  - `key_features_plain` — priority features formatted as "82%", "1.3 years", "3/12 months"
+  - `loan_offer_text` — "Eligible — up to ₹500,000 at 11–14% p.a. over [12,24,36] months"
+  - `risk_band` — derived: LOW <20%, MEDIUM 20–45%, HIGH >45%
+
+**Step 4: `build_prompt(routed, db_path)` → `(system_prompt, user_prompt)`**
+- 7 templates, one per query type:
+
+| Template | LLM task instruction |
+|---|---|
+| LOOKUP | 3–4 sentence profile summary |
+| EXPLANATION | Cite top 2–3 SHAP drivers with actual values |
+| COMPARISON | Side-by-side of two full card blocks |
+| SCENARIO | Directional reasoning from SHAP + threshold math |
+| DECISION_LETTER | Formal letter (forbidden words: SHAP, XGBoost, model, algorithm, feature) |
+| RISK_ASSESSMENT | Primary risk + 2 others + 1 protective factor |
+| AGGREGATE | Portfolio SQL results with grade distribution injected |
+
+- Shared system prompt enforces: only use provided data, cite actual values, max 250 words, no model internals revealed
+
+**Feature label dictionary** — all 44 features mapped to plain English (e.g. `bounced_transaction_count` → "Number of bounced/failed transactions")
+
+**Decision threshold reminder** injected in SCENARIO prompts:
+```
+APPROVE if P(default) < 35% | MANUAL_REVIEW if 35–55% | REJECT if > 55%
+```
+
+### 17.4 Example Interactions
+
+```
+Loan Officer > Pull up applicant ntc_001
+Analyst > Ravi Kumar (NTC, Bengaluru) — APPROVED Grade A, PD=8.2%.
+          Top strengths: 95% on-time utility bills, stable salary income, 4yr SIM age.
+          Eligible for up to ₹500,000 at 11–14% p.a.
+
+Loan Officer > Why was msme_003 rejected?
+Analyst > Priya Singh (Kirana, Mumbai) was REJECTED (Grade E, PD=72%).
+          1. ⚠ Cash withdrawal dependency: 82% (threshold: below 50%)
+          2. ⚠ 3 bounced transactions (threshold: 0–1 acceptable)
+          3. ⚠ Income regularity: only 41% (threshold: above 70%)
+
+Loan Officer > Compare ntc_001 and ntc_002
+Analyst > Both salaried NTC borrowers, but profiles diverge...
+
+Loan Officer > Generate a rejection letter for msme_003
+Analyst > [Formal letter with date, ref PDR-MSME_003-20260328,
+           CREDIT APPLICATION — DECLINED heading, 3 paragraphs,
+           signed PDR Credit Assessment Team]
+
+Loan Officer > How many applicants were rejected?
+Analyst > 7 of 20 rejected (35%). Grade breakdown: A+(2) A(4) B(3) C(4) D(3) E(2) F(2).
+```
+
+### 17.5 Files Still To Build
+
+| File | Status | What it does |
+|------|--------|--------------|
+| `build_applicant_cards.py` | ❌ Not built | Hits GET /aa/users + GET /demo/{id}, saves all to SQLite |
+| `credit_analyst_chatbot.py` | ❌ Not built | Main input() loop + Ollama call + fallback to Claude API |
+| `chatbot_demo.ipynb` | ❌ Not built | Jupyter notebook demo for hackathon |
+
+### 17.6 Ollama Setup (for the person picking this up)
+
+```bash
+# Install Ollama from https://ollama.com
+ollama pull mistral        # 7B, ~4GB, works on 8GB RAM
+# OR
+ollama pull llama3         # 8B, ~5GB
+
+# Start backend first
+python main.py             # port 8000
+
+# Build DB
+python build_applicant_cards.py
+
+# Run chatbot
+python credit_analyst_chatbot.py
+
+# Optional: use Claude instead of Ollama
+set USE_CLAUDE=true
+set ANTHROPIC_API_KEY=sk-ant-...
+python credit_analyst_chatbot.py
+```
+
+### 17.7 Ollama API Call (for Step 5)
+
+```python
+import requests, os
+
+OLLAMA_URL   = "http://localhost:11434/api/generate"
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "mistral")
+
+def call_ollama(system_prompt: str, user_prompt: str) -> str:
+    full_prompt = f"[SYSTEM]\n{system_prompt}\n\n[USER]\n{user_prompt}"
+    resp = requests.post(OLLAMA_URL, json={
+        "model": OLLAMA_MODEL, "prompt": full_prompt, "stream": False
+    }, timeout=120)
+    resp.raise_for_status()
+    return resp.json()["response"]
+
+def call_llm(system_prompt: str, user_prompt: str) -> str:
+    if os.environ.get("USE_CLAUDE","").lower() == "true":
+        import anthropic
+        client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+        msg = client.messages.create(
+            model="claude-sonnet-4-5", max_tokens=1024,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_prompt}]
+        )
+        return msg.content[0].text
+    return call_ollama(system_prompt, user_prompt)
+```
+
+### 17.8 Main Chat Loop Template (Step 5)
+
+```python
+from chatbot_router import route_query
+from chatbot_context import build_prompt
+
+DB = "applicant_cards.db"
+
+def main():
+    print("=" * 60)
+    print("  PDR Credit Analyst Chatbot — Ollama (Mistral)")
+    print("  Type 'exit' to quit")
+    print("=" * 60)
+    while True:
+        query = input("\nLoan Officer > ").strip()
+        if not query: continue
+        if query.lower() in ("exit", "quit"): break
+        try:
+            routed = route_query(query)
+            sys_p, usr_p = build_prompt(routed, DB)
+            response = call_llm(sys_p, usr_p)
+            print(f"\nAnalyst > {response}")
+            print("-" * 60)
+        except FileNotFoundError:
+            print("ERROR: applicant_cards.db not found. Run build_applicant_cards.py first.")
+        except requests.exceptions.ConnectionError:
+            print("ERROR: Ollama not running. Start with: ollama serve")
+        except Exception as e:
+            print(f"ERROR: {e}")
+
+if __name__ == "__main__":
+    main()
+```
+
+---

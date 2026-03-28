@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import './Results.css';
 import XaiTransparencySection from './XaiTransparencySection';
-import TransactionForensics from './TransactionForensics';
+import TransactionForensics, { FRAUD_FLAGS } from './TransactionForensics';
 import { generateCreditDecisionPDF } from './PdfReportGenerator';
 import { useTheme } from './ThemeContext';
 
@@ -618,11 +618,7 @@ export default function Results({ result, error, onBack, transactions, selectedU
                 {showForensics ? 'visibility_off' : 'manage_search'}
               </span>
               {showForensics ? 'Hide Transaction Forensics' : 'View Transaction Forensics'}
-              {result.active_flags?.some(f =>
-                ['P2P_CIRCULAR_LOOP','ROUND_NUMBER_TRANSACTIONS','TURNOVER_INFLATION_SPIKE',
-                 'BENFORD_ANOMALY','GST_BANK_MISMATCH','BALANCE_INFLATION_SPIKE',
-                 'HIGH_CASH_DEPENDENCY','MIN_BALANCE_VIOLATIONS','LATE_UTILITY_PAYMENTS','NEW_SIM_RISK']
-                .includes(f)) && (
+              {result.active_flags?.some(f => FRAUD_FLAGS.includes(f)) && (
                 <span style={{
                   background: '#fef2f2', color: '#991b1b',
                   border: '1px solid #fecaca',
@@ -636,11 +632,7 @@ export default function Results({ result, error, onBack, transactions, selectedU
         )}
 
         {showForensics && (
-          <TransactionForensics
-            transactions={transactions}
-            activeFlags={result.active_flags}
-            features={features}
-          />
+          <TransactionForensics transactions={transactions} />
         )}
 
         <XaiTransparencySection
