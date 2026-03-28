@@ -11,7 +11,7 @@ _TOKENS_BY_TYPE: dict[str, int] = {
     "LOOKUP":          80,
     "EXPLANATION":    380,
     "COMPARISON":     420,
-    "SCENARIO":       120,
+    "SCENARIO":       380,
     "DECISION_LETTER": 500,
     "RISK_ASSESSMENT": 100,
     "AGGREGATE":       120,
@@ -84,7 +84,7 @@ def call_ollama(system_prompt: str, user_prompt: str, query_type: str = "LOOKUP"
         response_text = _generate(retry_system, user_prompt, num_predict=tokens)
 
     # Multi-paragraph query types: return raw text (formatter handles layout)
-    if query_type in ("EXPLANATION", "COMPARISON", "DECISION_LETTER"):
+    if query_type in ("EXPLANATION", "COMPARISON", "DECISION_LETTER", "SCENARIO"):
         return response_text.strip()
 
     return _compact_response(response_text)
