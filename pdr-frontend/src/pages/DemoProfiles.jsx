@@ -39,6 +39,7 @@ function DemoProfiles() {
   const [doneCount, setDoneCount] = useState(0);
   const [readyVisible, setReadyVisible] = useState(false);
   const [cardsVisible, setCardsVisible] = useState(false);
+  const [selectedType, setSelectedType] = useState(null);
   const fetchingRef = useRef(false);
 
   const progressPct = AA_STEPS.length > 0
@@ -58,13 +59,19 @@ function DemoProfiles() {
 
     setReadyVisible(true);
     await sleep(500);
+    setPhase('select_type');
+  }, []);
+
+  const handleTypeSelect = (type) => {
+    setSelectedType(type);
+    setCardsVisible(false);
     setPhase('loaded');
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         setCardsVisible(true);
       });
     });
-  }, []);
+  };
 
   const handleSelect = (user) => {
     localStorage.setItem('pdr_demo_user', JSON.stringify({
@@ -174,31 +181,104 @@ function DemoProfiles() {
           </div>
         )}
 
-        {/* ── STATE 3: LOADED ── */}
+        {/* ── STATE 3: SELECT TYPE ── */}
+        {phase === 'select_type' && (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-[fadeIn_0.4s_ease-out]">
+            <div className="inline-block px-4 py-1.5 mb-6 rounded-full bg-tertiary-container text-on-tertiary-container text-xs font-bold tracking-widest uppercase font-label">
+              AA Gateway · Profiles Ready
+            </div>
+            <h1 className="text-4xl md:text-5xl font-headline font-extrabold text-slate-900 dark:text-slate-50 tracking-tighter mb-4">
+              Select Applicant Type
+            </h1>
+            <p className="text-lg text-on-surface-variant dark:text-slate-400 max-w-xl mx-auto leading-relaxed mb-12">
+              Choose the category you want to assess. PDR runs a dedicated scoring pipeline for each type.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl text-left">
+              {/* NTC Card */}
+              <button
+                onClick={() => handleTypeSelect('NTC')}
+                className="group bg-surface-container-lowest dark:bg-slate-900 border-2 border-outline-variant/20 dark:border-slate-800 hover:border-violet-400 dark:hover:border-violet-500 rounded-2xl p-8 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-500/10 active:scale-[0.98]"
+              >
+                <div className="w-12 h-12 rounded-xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center mb-5">
+                  <span className="material-symbols-outlined text-violet-600 dark:text-violet-400 text-2xl">person</span>
+                </div>
+                <div className="inline-flex items-center px-3 py-1 rounded-full bg-violet-50 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-700 mb-4">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-violet-700 dark:text-violet-300">NTC</span>
+                </div>
+                <h2 className="text-xl font-headline font-bold text-slate-900 dark:text-slate-50 mb-2">New-to-Credit Individuals</h2>
+                <p className="text-sm text-on-surface-variant dark:text-slate-400 leading-relaxed mb-6">
+                  Salaried professionals, informal workers, and gig workers without a formal credit bureau history. Scored using behavioral and alternative data signals.
+                </p>
+                <div className="flex items-center gap-2 text-violet-600 dark:text-violet-400 font-bold text-sm">
+                  <span>View 3 NTC profiles</span>
+                  <span className="material-symbols-outlined text-base group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </div>
+              </button>
+
+              {/* MSME Card */}
+              <button
+                onClick={() => handleTypeSelect('MSME')}
+                className="group bg-surface-container-lowest dark:bg-slate-900 border-2 border-outline-variant/20 dark:border-slate-800 hover:border-sky-400 dark:hover:border-sky-500 rounded-2xl p-8 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/10 active:scale-[0.98]"
+              >
+                <div className="w-12 h-12 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center mb-5">
+                  <span className="material-symbols-outlined text-sky-600 dark:text-sky-400 text-2xl">storefront</span>
+                </div>
+                <div className="inline-flex items-center px-3 py-1 rounded-full bg-sky-50 dark:bg-sky-900/30 border border-sky-200 dark:border-sky-700 mb-4">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-sky-700 dark:text-sky-300">MSME</span>
+                </div>
+                <h2 className="text-xl font-headline font-bold text-slate-900 dark:text-slate-50 mb-2">Micro & Small Enterprises</h2>
+                <p className="text-sm text-on-surface-variant dark:text-slate-400 leading-relaxed mb-6">
+                  Kirana stores, seasonal agri businesses, traders, and manufacturers. Scored using GST compliance, cash flow patterns, and business health signals.
+                </p>
+                <div className="flex items-center gap-2 text-sky-600 dark:text-sky-400 font-bold text-sm">
+                  <span>View 3 MSME profiles</span>
+                  <span className="material-symbols-outlined text-base group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </div>
+              </button>
+            </div>
+
+            <div className="mt-12">
+              <Link to="/" className="text-sm text-slate-400 hover:text-slate-600 dark:text-slate-300 transition-colors">
+                &larr; Back to Home
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* ── STATE 4: LOADED ── */}
         {phase === 'loaded' && (
           <>
             {/* Header */}
             <div className={`text-center mb-10 transition-all duration-500 ${cardsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <div className="inline-block px-4 py-1.5 mb-6 rounded-full bg-tertiary-container text-on-tertiary-container text-xs font-bold tracking-widest uppercase font-label">
-                AA Gateway
+                AA Gateway · {selectedType === 'MSME' ? 'MSME Profiles' : 'NTC Profiles'}
               </div>
               <h1 className="text-4xl md:text-5xl font-headline font-extrabold text-slate-900 dark:text-slate-50 tracking-tighter mb-4">
-                Explore Demo Profiles
+                {selectedType === 'MSME' ? 'Micro & Small Enterprise Profiles' : 'New-to-Credit Individual Profiles'}
               </h1>
               <p className="text-lg text-on-surface-variant dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                See how PDR scores different borrower archetypes — from salaried professionals to seasonal farmers to fraud cases.
+                {selectedType === 'MSME'
+                  ? 'See how PDR scores small businesses — seasonal agri, trading entities, and fraud cases.'
+                  : 'See how PDR scores individuals — salaried professionals, informal workers, and fraud cases.'}
               </p>
             </div>
 
-            {/* Loaded count badge + instruction */}
-            <div className={`flex flex-col items-center gap-2 mb-8 transition-all duration-500 delay-100 ${cardsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-
+            {/* Back + instruction */}
+            <div className={`flex items-center justify-between mb-8 transition-all duration-500 delay-100 ${cardsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+              <button
+                onClick={() => setPhase('select_type')}
+                className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors bg-transparent border-none cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-base">arrow_back</span>
+                Change type
+              </button>
               <p className="text-xs text-slate-400">Select an applicant to begin credit assessment</p>
             </div>
 
             {/* Cards Grid */}
             <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-700 delay-150 ${cardsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}>
-              {users.map((user) => {
+              {users.filter(u => selectedType === 'MSME' ? u.model.startsWith('MSME') : u.model === 'NTC').map((user) => {
                 // eslint-disable-next-line no-unused-vars
                 const grade = gradeColors[user.expected_grade] || gradeColors.C;
                 const type = typeBadge[user.model] || typeBadge.NTC;
@@ -245,7 +325,7 @@ function DemoProfiles() {
               })}
             </div>
 
-            {/* Back link */}
+            {/* Bottom back to home */}
             <div className={`text-center mt-12 transition-all duration-500 delay-200 ${cardsVisible ? 'opacity-100' : 'opacity-0'}`}>
               <Link to="/" className="text-sm text-slate-400 hover:text-slate-600 dark:text-slate-300 transition-colors">
                 &larr; Back to Home
