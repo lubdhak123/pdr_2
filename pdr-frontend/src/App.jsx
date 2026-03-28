@@ -9,6 +9,7 @@ import AssessmentForm from './pages/AssessmentForm'
 import DemoProfiles from './pages/DemoProfiles'
 import UserSelect from './components/UserSelect'
 import Results from './components/Results'
+import GlobalChatButton from './components/GlobalChatButton'
 import demoData from '../../demo_users.json'
 
 // Animated page wrapper for cinematic transitions
@@ -174,6 +175,8 @@ function App() {
           <Route path="/docs" element={<PageTransition variant="blur"><DocsPage /></PageTransition>} />
         </Routes>
       </AnimatePresence>
+      {/* Global floating analyst — available on every page */}
+      <GlobalChatButton />
     </div>
   )
 }

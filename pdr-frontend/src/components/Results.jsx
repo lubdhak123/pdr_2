@@ -4,6 +4,7 @@ import XaiTransparencySection from './XaiTransparencySection';
 import TransactionForensics, { FRAUD_FLAGS } from './TransactionForensics';
 import { generateCreditDecisionPDF } from './PdfReportGenerator';
 import { useTheme } from './ThemeContext';
+import ChatPanel from './ChatPanel';
 
 // ... (PROFILE_DETAILS unchanged)
 const PROFILE_DETAILS = {
@@ -737,6 +738,13 @@ export default function Results({ result, error, onBack, transactions, selectedU
             </div>
           )
         )}
+
+        {/* ── AI Credit Analyst Chat Panel ── */}
+        <ChatPanel
+          applicantId={(result?.user_id || '').toLowerCase()}
+          applicantName={profile?.name || result?.user_id || 'Applicant'}
+          decision={result?.outcome || ''}
+        />
 
         <div style={{ height: 100 }} />
       </div>

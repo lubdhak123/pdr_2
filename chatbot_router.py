@@ -110,6 +110,19 @@ def _extract_applicant_ids(text: str) -> list[str]:
     return normalised
 
 
+_LOOKUP_VERB_PATTERN = re.compile(
+    r"\b(pull.up|fetch|show|get|display|lookup|find|open|give.me|tell.me.about|"
+    r"details.for|profile.of|information.on|score.for|summarise)\b",
+    re.IGNORECASE,
+)
+
+_LOOKUP_FIELD_PATTERN = re.compile(
+    r"\b(score|risk.?band|grade|decision|pd|default probability|profile|details|"
+    r"top.?factors|top.?contributing.?factors|contributing.?factors)\b",
+    re.IGNORECASE,
+)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # KEYWORD SIGNAL TABLES
 # Each entry: (regex_pattern, QueryType, parameters_to_set, priority)
@@ -325,6 +338,7 @@ def route_query(user_message: str) -> RoutedQuery:
         )
 
     text = user_message.strip()
+    lower = text.lower()
 
     # ── Step 1: Extract all applicant IDs from message ───────────────────────
     applicant_ids = _extract_applicant_ids(text)
@@ -358,9 +372,26 @@ def route_query(user_message: str) -> RoutedQuery:
     fired.sort(key=lambda x: x[0], reverse=True)
     priority, query_type, parameters = fired[0]
 
+    explicit_lookup_request = (
+        bool(applicant_ids)
+        and _LOOKUP_VERB_PATTERN.search(text)
+        and _LOOKUP_FIELD_PATTERN.search(text)
+        and not re.search(r"\b(why|reason|explain|because)\b", lower)
+    )
+    if explicit_lookup_request:
+        query_type = QueryType.LOOKUP
+        parameters = {}
+        priority = max(priority, 7)
+
     # ── Step 4: Type-specific parameter extraction ────────────────────────────
     if query_type == QueryType.SCENARIO:
         parameters.update(_detect_scenario_params(text))
+        # Detect "what to change to qualify" — no specific feature target identified
+        if re.search(
+            r"\b(qualify|approve|eligible|what.*(need|change|improve|fix|do))\b",
+            lower,
+        ) and not parameters.get("target_feature"):
+            parameters["focus"] = "improvement_path"
 
     elif query_type == QueryType.DECISION_LETTER:
         parameters["letter_type"] = _detect_letter_type(text)
@@ -383,6 +414,25 @@ def route_query(user_message: str) -> RoutedQuery:
             parameters["focus"] = "approval_reason"
         else:
             parameters["focus"] = "general"
+
+    # ── Step 4b: Extract requested fields for LOOKUP queries ─────────────────
+    if query_type == QueryType.LOOKUP and _LOOKUP_FIELD_PATTERN.search(text):
+        fields = []
+        lower_text = text.lower()
+        if "score" in lower_text:
+            fields.append("score")
+        if "risk" in lower_text:
+            fields.append("risk_band")
+        if "grade" in lower_text:
+            fields.append("grade")
+        if "decision" in lower_text:
+            fields.append("decision")
+        if re.search(r"\bfactor", lower_text):
+            fields.append("top_factors")
+        if "pd" in lower_text or "default probability" in lower_text or "probability" in lower_text:
+            fields.append("pd")
+        if fields:
+            parameters["fields"] = fields
 
     # ── Step 5: Confidence calculation ───────────────────────────────────────
     # Higher if: strong keyword matched + IDs found

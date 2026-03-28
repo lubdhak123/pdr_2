@@ -1,10 +1,127 @@
 # PDR Alternative Credit Scoring System — Complete Context Prompt for Claude
 
-> **Last updated:** 2026-03-28 (Phase 12)
+> **Last updated:** 2026-03-28 (Phase 13 — Chatbot fully integrated: backend API + React frontend)
 > **Repo:** `github.com/lubdhak123/pdr_2`
 > **Branch:** `main`
 > **Local path:** `C:\Users\kanis\OneDrive\Documents\alternative_credit_scoring\`
 > **Hackathon:** 2 days remaining
+
+---
+
+## 17.9 CHATBOT HANDOFF — FULLY COMPLETE (Phase 13)
+
+All chatbot files are now built and integrated. This section is the authoritative truth.
+
+### Complete file inventory
+
+| File | Status | Role |
+|------|--------|------|
+| `context_layer.py` | ✅ Built | SQLite schema + save/fetch/search API |
+| `chatbot_router.py` | ✅ Built | Query classifier (8 types) |
+| `chatbot_context.py` | ✅ Built | Context fetcher + prompt builder (multi-style) |
+| `llm_client.py` | ✅ Built | Ollama client with per-type token limits |
+| `credit_analyst_chatbot.py` | ✅ Built | Main input loop + format_response integration |
+| `response_formatter.py` | ✅ Built | Rich structured display blocks per query type |
+| `build_applicant_cards.py` | ✅ Built | Seeds all 7 demo users into SQLite DB |
+| `chatbot_demo.ipynb` | ✅ Built | Jupyter notebook demo (setup → seed → 6 query types → interactive loop) |
+
+### Backend API endpoints (added to `main.py`)
+
+Three new FastAPI endpoints added:
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `POST /chatbot/ask` | `{"query": "..."}` → `{"message": "..."}` | Main chatbot entry point |
+| `GET /chatbot/search` | `?limit=20` → list of applicant cards | Used by Compare dropdown in frontend |
+| `GET /chatbot/stats` | Grade distribution + portfolio stats | Portfolio overview |
+
+`POST /score` also auto-saves every scored applicant to `applicant_cards.db` via `save_applicant_card()`.
+
+### Full pipeline (current)
+
+```text
+Loan Officer query (React frontend OR terminal)
+  ->
+POST /chatbot/ask  (main.py)
+  ->
+chatbot_router.py
+  classify into QueryType + extract applicant_ids
+  ->
+chatbot_context.py
+  fetch applicant card from SQLite
+  build (system_prompt, user_prompt) — different prompt style per type:
+    _SYSTEM_BASE  : one-line answers (LOOKUP, AGGREGATE, SCENARIO, RISK)
+    _SYSTEM_EXPLAIN: paragraph style (EXPLANATION)
+    _SYSTEM_COMPARE: side-by-side (COMPARISON)
+    _SYSTEM_LETTER : formal letter (DECISION_LETTER)
+  ->
+llm_client.py
+  call Ollama /api/generate  (native system + prompt fields)
+  per-type token budget: LOOKUP=80, EXPLANATION=380, COMPARISON=420,
+                         SCENARIO=120, DECISION_LETTER=500, RISK=100, AGGREGATE=120
+  retry once if model hallucinates "I need database access"
+  ->
+credit_analyst_chatbot.py  OR  /chatbot/ask handler
+  call format_response(query_type, llm_out, ctx, ctx_b)
+  ->
+response_formatter.py
+  LOOKUP:       decision header + applicant block + one-liner
+  EXPLANATION:  [REJECTED]/[APPROVED] header + WHY section + KEY FACTORS (SHAP) + RED FLAGS + LOAN OFFER
+  COMPARISON:   side-by-side table + analyst recommendation
+  DECISION_LETTER: clean formal letter layout
+  SCENARIO/RISK: structured blocks with context
+  ->
+React frontend (ChatPanel or GlobalChatButton)  OR  terminal print
+```
+
+### IMPROVEMENT_PATH (new SCENARIO subtype)
+
+When user asks "What would [applicant] need to change to qualify?" the router detects no
+`target_feature` in the SCENARIO params and sets the `focus` to `improvement_path`.
+`chatbot_context.py` then calls `_build_improvement_path_prompt()` which injects the
+applicant's red flags and the grade thresholds so the LLM can produce concrete guidance.
+
+### Frontend integration (React)
+
+Two chat UI components created:
+
+#### `ChatPanel.jsx` (contextual — shown on Results page)
+- Props: `applicantId`, `applicantName`, `decision`
+- 4 dynamic quick-action buttons (Why rejected/approved? Biggest risk, What to change?, Decision letter)
+- Smart ID injection: only prepends `"ntc_001 — "` if user's query contains no applicant ID
+  - Detection: `/\b(ntc|msme|app|user)[_-]?\d/i.test(text)`
+- Compare dropdown: fetches all applicants from `GET /chatbot/search`, shows side-by-side comparison instantly
+- Added to `Results.jsx` at the bottom of the results container
+
+#### `GlobalChatButton.jsx` (portfolio mode — shown on ALL pages)
+- Fixed-position floating 🤖 button (bottom-right, z-index 1000)
+- Opens a modal overlay with a full chat window (480px wide, 75vh tall)
+- No auto-inject — free-text for cross-applicant portfolio queries
+- Example queries shown when message history is empty
+- Backdrop click + Escape key close the modal
+- Added to `App.jsx` outside the Routes block so it persists on every page
+
+### DB note — pre-seeded vs live-scored applicants
+
+`build_applicant_cards.py` calls `GET /demo/{userId}` for all 7 demo user IDs and saves them
+to `applicant_cards.db` on startup. This means Compare dropdown works even for applicants
+that have never been scored in the current browser session.
+
+`POST /score` also auto-saves, so manually-entered applicants (NTC_004 Arjun Sharma) appear
+in the Compare dropdown after their first score.
+
+**IMPORTANT:** Changes to `demo_users.json` (e.g. editing Arjun Sharma's transactions or
+expected grade) do NOT automatically propagate to `applicant_cards.db`. Re-run
+`build_applicant_cards.py` (or delete the DB and restart the backend) to refresh the chatbot
+context store after editing demo profiles.
+
+### What Claude should preserve going forward
+
+1. `response_formatter.py` — do not collapse EXPLANATION/COMPARISON back to single lines.
+2. Per-type token limits in `llm_client.py` — `_TOKENS_BY_TYPE` dict controls budget.
+3. Smart ID injection regex in `ChatPanel.jsx` — prevents double-inject on compare queries.
+4. `build_applicant_cards.py` must be re-run whenever demo_users.json changes.
+5. `GlobalChatButton` is mounted outside Routes in App.jsx — keep it there so it survives page navigation.
 
 ---
 
@@ -32,14 +149,25 @@ PDR (Proxy Data Rating) is an **alternative credit scoring system** for **Indian
 ```
 alternative_credit_scoring/
 │
-├── main.py                          # FastAPI app (POST /score, /aa/*, /setu/*, /score/declined)
+├── main.py                          # FastAPI app (POST /score, /aa/*, /setu/*, /score/declined, /chatbot/*)
 ├── scorer.py                        # Scoring orchestrator (loads models, runs pipeline)
 ├── feature_engine.py                # Root-level feature extractor (legacy, 32 features)
 ├── pre_layer.py                     # Rule engine (3 tiers: hard reject, edge case, review)
-├── demo_users.json                  # 6 demo personas for API/frontend testing
+├── demo_users.json                  # 7 demo personas for API/frontend testing
 ├── setu_handler.py                  # Real Setu AA integration (sandbox)
 ├── verify.py                        # Pipeline verification script
 ├── audit_model_features.py          # Feature audit tool
+│
+├── ── CHATBOT FILES ──
+├── context_layer.py                 # SQLite schema + CRUD for applicant_cards.db
+├── chatbot_router.py                # Query classifier (LOOKUP/EXPLANATION/COMPARISON/etc.)
+├── chatbot_context.py               # Context fetcher + multi-style prompt builder
+├── llm_client.py                    # Ollama HTTP client with per-type token limits
+├── credit_analyst_chatbot.py        # Terminal chat loop + format_response integration
+├── response_formatter.py            # Rich structured display blocks per query type
+├── build_applicant_cards.py         # Seeds all 7 demo users into applicant_cards.db
+├── chatbot_demo.ipynb               # Jupyter demo notebook (6 query types + interactive loop)
+├── applicant_cards.db               # SQLite chatbot context store (auto-created)
 ├── .gitignore
 │
 ├── ntc_model/                       # ★ MAIN NTC PIPELINE
@@ -70,9 +198,11 @@ alternative_credit_scoring/
 │       │   ├── LandingPage.jsx
 │       │   └── DemoProfiles.jsx
 │       └── components/
-│           ├── Results.jsx          # ★ Main results dashboard
+│           ├── Results.jsx          # ★ Main results dashboard (includes ChatPanel at bottom)
 │           ├── Results.css
-│           ├── TransactionForensics.jsx  # ★ NEW — per-transaction fraud annotation
+│           ├── TransactionForensics.jsx  # ★ Per-transaction fraud annotation
+│           ├── ChatPanel.jsx        # ★ NEW — contextual chatbot on Results page
+│           ├── GlobalChatButton.jsx # ★ NEW — floating 🤖 button on ALL pages
 │           ├── XaiTransparencySection.jsx
 │           ├── PdfReportGenerator.jsx
 │           ├── UserSelect.jsx
@@ -255,14 +385,17 @@ SHAP for NTC: uses `ntc_model.calibrated_classifiers_[0].estimator` to get the r
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| `POST /score` | Direct scoring (transactions + profile + GST) |
+| `POST /score` | Direct scoring (transactions + profile + GST) — also auto-saves to chatbot DB |
 | `GET /health` | Health check |
 | `GET /demo/{user_id}` | Score a demo user by ID |
 | `GET /aa/users` | List all demo users |
 | `POST /aa/score` | Full AA-style scoring |
 | `POST /setu/consent` | Real Setu AA consent (sandbox) |
 | `POST /setu/score` | Real Setu FI data fetch + score |
-| `POST /score/declined` | **NEW** B2B endpoint — runs PDR on bank-rejected applicants |
+| `POST /score/declined` | B2B endpoint — runs PDR on bank-rejected applicants |
+| `POST /chatbot/ask` | **NEW** Main chatbot entry: `{"query":"..."}` → `{"message":"..."}` |
+| `GET /chatbot/search` | **NEW** `?limit=20` → list of all scored applicants (for Compare dropdown) |
+| `GET /chatbot/stats` | **NEW** Portfolio grade distribution and aggregate stats |
 
 ### POST /score/declined (B2B Bank Referral Endpoint)
 
@@ -345,6 +478,29 @@ Sections displayed (in order):
 6. **Transaction Forensics button** → toggles forensics panel (see §8.3)
 7. XAI Transparency Section
 8. **Loan Offer / Alternative Path section** (see §8.4)
+9. **ChatPanel** — AI Credit Analyst chatbot (see §8.5)
+
+### 8.5 Chatbot Integration
+
+**`ChatPanel.jsx`** — rendered at the bottom of every Results page.
+- Props: `applicantId` (lowercase e.g. `ntc_001`), `applicantName`, `decision`
+- 4 quick-action buttons:
+  - "Why rejected?" / "Why approved?" (dynamic based on decision)
+  - "Biggest risk"
+  - "What to change?"
+  - "Decision letter"
+- Smart ID injection: `applicantId` only prepended if user query contains no ID pattern
+  - Regex: `/\b(ntc|msme|app|user)[_-]?\d/i.test(text)`
+- Compare dropdown: pulls all applicants from `GET /chatbot/search?limit=20`
+  - Shows name + grade badge for each; click fires `"Compare ntc_001 and msme_002"` query
+- Messages thread: user bubbles (dark, right-aligned) + analyst bubbles (mono font, left-aligned)
+
+**`GlobalChatButton.jsx`** — always visible floating button, mounted in `App.jsx`.
+- Fixed position bottom-right, z-index 1000, rotates 15° when open
+- Modal overlay: 480px wide, 75vh, example queries shown when empty
+- No auto-inject — suitable for cross-applicant/portfolio queries
+- Backdrop click + Escape closes the modal
+- Calls same `POST /chatbot/ask` endpoint as ChatPanel
 
 ### 8.3 Transaction Forensics (`TransactionForensics.jsx`)
 
@@ -525,6 +681,20 @@ npm run dev
 - Toggle button in Results.jsx ("View Transaction Forensics") with "Signals detected" badge for fraud profiles
 - Works for all 6 profiles (clean profiles show "All clean" green badge)
 
+### Phase 13: Full Chatbot Integration — Backend API + React Frontend (Mar 28) ← CURRENT
+- **`response_formatter.py`** created: wraps raw LLM output in structured multi-section display blocks per query type (EXPLANATION gets [REJECTED]/[OK] header + WHY + KEY FACTORS + RED FLAGS + LOAN OFFER; COMPARISON gets side-by-side table)
+- **`chatbot_context.py`** updated: added `_SYSTEM_EXPLAIN` (paragraph style) and `_SYSTEM_COMPARE` (side-by-side) alongside `_SYSTEM_BASE` (one-line); added `_build_improvement_path_prompt` for "what to change to qualify" queries
+- **`llm_client.py`** updated: added `_TOKENS_BY_TYPE` dict per query type (LOOKUP=80, EXPLANATION=380, COMPARISON=420, SCENARIO=120, DECISION_LETTER=500, RISK=100, AGGREGATE=120); `call_ollama` now accepts `query_type` param
+- **`chatbot_router.py`** updated: SCENARIO branch now detects "what to change / improve / qualify" and sets `focus=improvement_path` when no `target_feature` found
+- **`credit_analyst_chatbot.py`** updated: fetches `ctx`/`ctx_b` after LLM call, passes to `format_response()`
+- **`build_applicant_cards.py`** created: hits `GET /demo/{userId}` for all 7 demo IDs, saves all to `applicant_cards.db`; fixes Windows UnicodeEncodeError (replaced ₹/→ with ASCII)
+- **`chatbot_demo.ipynb`** created: full Jupyter notebook (setup, seed DB, verify, check Ollama, 6 demo query types, interactive loop, architecture diagram)
+- **`main.py`** updated: added `CHATBOT_DB` path, `ChatbotRequest` Pydantic model; `POST /score` auto-saves to chatbot DB; added `POST /chatbot/ask`, `GET /chatbot/search`, `GET /chatbot/stats`
+- **`ChatPanel.jsx`** created: contextual chatbot panel at bottom of Results page; smart ID injection; compare dropdown; quick-action buttons
+- **`GlobalChatButton.jsx`** created: floating 🤖 button with modal overlay for portfolio-mode queries
+- **`Results.jsx`** updated: imports and renders `<ChatPanel>` at bottom
+- **`App.jsx`** updated: imports and renders `<GlobalChatButton>` outside Routes (persists on every page)
+
 ---
 
 ## 14. KEY DESIGN DECISIONS
@@ -556,15 +726,18 @@ npm run dev
 
 Paste this file at the start of any new session. Suggested asks:
 
-1. "Add the middleman endpoints to main.py"
-2. "Help me prepare the hackathon presentation/demo flow"
-3. "Fix MSME_003 — add transactions to demo_users.json"
-4. "Add Benford's Law visualization to Transaction Forensics"
-5. "Write a comprehensive README for the GitHub repo"
+1. "Help me prepare the hackathon presentation/demo flow"
+2. "Write a comprehensive README for the GitHub repo"
+3. "Add Benford's Law visualization to Transaction Forensics"
+4. "Add the middleman endpoints to main.py"
+5. "Fix MSME_003 — add transactions to demo_users.json"
 6. "Add PDF export for the Transaction Forensics panel"
-7. "Build Step 5 of the chatbot — wire Ollama + input loop into credit_analyst_chatbot.py"
-8. "Build build_applicant_cards.py to populate the SQLite DB from the live FastAPI backend"
-9. "Test the full chatbot pipeline end-to-end with demo users"
+7. "Test the full chatbot pipeline — run build_applicant_cards.py then try all 6 query types"
+8. "Style ChatPanel.jsx / GlobalChatButton.jsx to match the app's Tailwind theme"
+9. "Add markdown rendering to analyst responses in ChatPanel (bold headers, bullet lists)"
+
+**DB refresh reminder:** After editing `demo_users.json`, re-run `build_applicant_cards.py` or
+delete `applicant_cards.db` and restart the backend to refresh chatbot context.
 
 ---
 
@@ -693,13 +866,16 @@ Loan Officer > How many applicants were rejected?
 Analyst > 7 of 20 rejected (35%). Grade breakdown: A+(2) A(4) B(3) C(4) D(3) E(2) F(2).
 ```
 
-### 17.5 Files Still To Build
+### 17.5 Files Status — ALL COMPLETE
 
 | File | Status | What it does |
 |------|--------|--------------|
-| `build_applicant_cards.py` | ❌ Not built | Hits GET /aa/users + GET /demo/{id}, saves all to SQLite |
-| `credit_analyst_chatbot.py` | ❌ Not built | Main input() loop + Ollama call + fallback to Claude API |
-| `chatbot_demo.ipynb` | ❌ Not built | Jupyter notebook demo for hackathon |
+| `build_applicant_cards.py` | ✅ Built | Hits GET /demo/{id} for all 7 IDs, saves all to SQLite |
+| `credit_analyst_chatbot.py` | ✅ Built | Input loop + call_ollama + format_response |
+| `chatbot_demo.ipynb` | ✅ Built | Jupyter notebook demo (6 query types + interactive loop) |
+| `response_formatter.py` | ✅ Built | Structured display blocks per query type |
+| `ChatPanel.jsx` | ✅ Built | Contextual chat on Results page |
+| `GlobalChatButton.jsx` | ✅ Built | Floating portfolio chat on all pages |
 
 ### 17.6 Ollama Setup (for the person picking this up)
 

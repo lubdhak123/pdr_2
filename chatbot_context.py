@@ -224,17 +224,38 @@ def _infer_risk_band(pd: float) -> str:
 
 # ── Shared system prompt header ───────────────────────────────────────────────
 
-_SYSTEM_BASE = """You are a senior credit analyst at PDR Bank, using the PDR Alternative Credit Scoring System.
-You are assisting a loan officer who is reviewing applicant files.
+_SYSTEM_BASE = """You are a senior credit analyst.
 
-STRICT RULES — follow these at all times:
-1. Only use data explicitly provided in the CONTEXT block below. Never invent numbers.
-2. If the information needed is not available, say so clearly.
-3. Be specific — cite actual values (e.g. "0.72 cash dependency" not "high cash usage").
-4. Keep responses professional and concise (max 250 words, unless generating a formal letter).
-5. Focus on what matters for a credit decision: risk drivers, protective factors, and actionable insights.
-6. SHAP values indicate feature impact — positive means increases default risk, negative means reduces it.
-7. Never reveal model internals (XGBoost, training data, feature engineering details).
+STRICT OUTPUT RULES:
+- Output must be ONE line only. No line breaks.
+- Do NOT add extra explanation or suggestions.
+- Do NOT restate the question.
+- End immediately after the answer.
+
+ANTI-HALLUCINATION RULES (highest priority):
+- Answer STRICTLY from the CONTEXT block. Do not invent or assume any values.
+- If the applicant is not found, respond ONLY with: Applicant not found.
+- If a specific field is missing from CONTEXT, say: Insufficient data for that field.
+"""
+
+_SYSTEM_EXPLAIN = """You are a senior credit analyst explaining a lending decision.
+
+STRICT RULES:
+- Use ONLY data from the CONTEXT block. Do NOT invent or assume any values.
+- Write in plain English. No technical jargon (no SHAP, XGBoost, model, algorithm, feature).
+- Use specific numbers from the data (e.g., "78% cash withdrawals", "5 bounced transactions").
+- Do NOT restate the question.
+- If data is missing for a point, skip it.
+"""
+
+_SYSTEM_COMPARE = """You are a senior credit analyst comparing two loan applicants.
+
+STRICT RULES:
+- Use ONLY data from the CONTEXT block. Do NOT invent or assume any values.
+- Write in plain English with specific numbers.
+- Highlight key differences in risk, income stability, and payment history.
+- End with a clear recommendation: who to prioritize and why.
+- No jargon (no SHAP, XGBoost, model).
 """
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -258,6 +279,8 @@ def _format_card_block(ctx: dict, label: str = "APPLICANT") -> str:
         f"  • {label_}: {val_}"
         for label_, val_ in list(ctx.get("key_features_plain", {}).items())[:8]
     ]
+    shap_block = "".join(f"{line}\n" for line in shap_lines) or "  (not available)"
+    key_features_block = "".join(f"{line}\n" for line in kf_lines) or "  (not available)"
 
     flags = ctx.get("red_flags", [])
     flags_block = "\n".join(f"  {f}" for f in flags) if flags else "  (none)"
@@ -284,9 +307,9 @@ DECISION
 {rule_line}
 
 TOP SHAP FACTORS (what drove this decision):
-{"".join(f'{l}\n' for l in shap_lines) or "  (not available)"}
+{shap_block}
 KEY FEATURES:
-{"".join(f'{l}\n' for l in kf_lines) or "  (not available)"}
+{key_features_block}
 RED FLAGS:
 {flags_block}
 
@@ -299,17 +322,37 @@ LOAN OFFER:
 # TEMPLATE 1: LOOKUP
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _build_lookup_prompt(ctx: dict, raw_message: str) -> tuple[str, str]:
-    system = _SYSTEM_BASE + (
-        "\nYour task: Give a clear, plain-English 3–4 sentence summary of this applicant's "
-        "credit profile. State the decision, the probability, the top 2 reasons, and the loan offer."
-    )
+def _build_lookup_prompt(ctx: dict, raw_message: str, parameters: dict | None = None) -> tuple[str, str]:
+    fields = (parameters or {}).get("fields", [])
+
+    if fields:
+        field_labels = {
+            "score":       "Default Probability (PD)",
+            "risk_band":   "Risk Band",
+            "grade":       "Grade",
+            "decision":    "Decision",
+            "top_factors": "Top 2 contributing factors (feature name + value)",
+            "pd":          "Default Probability (PD)",
+        }
+        requested = ", ".join(field_labels.get(f, f) for f in fields)
+        task = (
+            f"Return ONLY these fields: {requested}. "
+            f"Format: Name — <requested fields in one line>. "
+            f"Use Insufficient data for any field not present in CONTEXT."
+        )
+    else:
+        task = (
+            "Return: Name, Grade, Risk Band, Decision, PD, and top 1-2 reasons in ONE line. "
+            "Use Insufficient data for any requested field not present in CONTEXT."
+        )
+
+    system = _SYSTEM_BASE + f"\nYour task: {task}"
     user = f"""CONTEXT:
 {_format_card_block(ctx)}
 
 LOAN OFFICER QUERY: {raw_message}
 
-Summarise this applicant's credit profile for the loan officer."""
+Answer in ONE line using only the data in CONTEXT above."""
     return system, user
 
 
@@ -319,19 +362,38 @@ Summarise this applicant's credit profile for the loan officer."""
 
 def _build_explanation_prompt(ctx: dict, raw_message: str, focus: str) -> tuple[str, str]:
     focus_instruction = {
-        "rejection_reason":  "Explain clearly why this applicant was REJECTED. Cite the top 2–3 risk drivers with their actual values.",
-        "approval_reason":   "Explain clearly why this applicant was APPROVED. Highlight the 2–3 strongest positive factors.",
-        "risk_factors":      "Identify the 2–3 biggest risk factors for this applicant and explain what they mean in plain English.",
-        "general":           "Explain the key factors that drove this credit decision, both positive and negative.",
-    }.get(focus, "Explain the credit decision clearly.")
+        "rejection_reason": (
+            "Explain in 2-3 short paragraphs why this applicant was REJECTED. "
+            "Start with the #1 risk factor and its actual value. Then cover 1-2 supporting factors "
+            "with their values. End with 1-2 concrete things the applicant can do to improve."
+        ),
+        "approval_reason": (
+            "Explain in 2-3 short paragraphs why this applicant was APPROVED. "
+            "Start with the strongest positive factor and its actual value. "
+            "Then cover supporting strengths. End with any conditions attached to the approval."
+        ),
+        "risk_factors": (
+            "In 2 paragraphs, describe the key risk factors. "
+            "Start with the most critical risk and its actual value. "
+            "Then cover 2-3 supporting risk factors."
+        ),
+        "general": (
+            "Explain in 2-3 short paragraphs the credit decision for this applicant. "
+            "Start with the primary reason (with actual value). Cover supporting factors. "
+            "End with what the applicant should do next."
+        ),
+    }.get(focus, (
+        "Explain in 2-3 short paragraphs the credit decision. "
+        "Use specific numbers. End with next steps."
+    ))
 
-    system = _SYSTEM_BASE + f"\nYour task: {focus_instruction}"
+    system = _SYSTEM_EXPLAIN + f"\nYour task: {focus_instruction}"
     user = f"""CONTEXT:
 {_format_card_block(ctx)}
 
 LOAN OFFICER QUERY: {raw_message}
 
-Explain the credit decision in 3–4 sentences. Use plain English. Cite actual values."""
+Write your explanation now (2-3 paragraphs, plain English, specific numbers):"""
     return system, user
 
 
@@ -340,10 +402,10 @@ Explain the credit decision in 3–4 sentences. Use plain English. Cite actual v
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _build_comparison_prompt(ctx_a: dict, ctx_b: dict, raw_message: str) -> tuple[str, str]:
-    system = _SYSTEM_BASE + (
-        "\nYour task: Compare the two applicants side-by-side. Highlight the most important "
-        "differences in risk profile, key features, and decisions. Recommend which (if either) "
-        "is preferable from a credit risk perspective. Keep it under 200 words."
+    system = _SYSTEM_COMPARE + (
+        "\nYour task: In 2-3 short paragraphs, compare the two applicants. "
+        "Focus on income stability, payment reliability, and risk profile. "
+        "End with a clear recommendation: who to prioritize and why."
     )
     user = f"""CONTEXT:
 {_format_card_block(ctx_a, label='APPLICANT A')}
@@ -351,13 +413,56 @@ def _build_comparison_prompt(ctx_a: dict, ctx_b: dict, raw_message: str) -> tupl
 
 LOAN OFFICER QUERY: {raw_message}
 
-Compare these two applicants. What are the key differences? Who is the better credit risk and why?"""
+Write your comparison now (2-3 paragraphs, plain English, specific numbers):"""
     return system, user
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TEMPLATE 4: SCENARIO
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _build_improvement_path_prompt(ctx: dict, raw_message: str) -> tuple[str, str]:
+    """
+    'What would this applicant need to change to qualify?'
+    Analyses top risk SHAP factors and suggests specific improvements.
+    """
+    pd    = ctx.get("default_probability", 1.0)
+    grade = ctx.get("grade", "?")
+
+    risk_factors = [
+        f for f in ctx.get("enriched_shap", [])
+        if (f.get("direction") or "").lower() == "risk"
+    ][:3]
+
+    risk_lines = "\n".join(
+        f"  {f['rank']}. {f['label']}: current value = {f.get('raw_value', 'N/A')} "
+        f"(SHAP contribution: {f.get('shap_value', 0):+.4f})"
+        for f in risk_factors
+    ) or "  (risk factors not available)"
+
+    system = _SYSTEM_EXPLAIN + (
+        "\nYour task: In 2-3 short paragraphs, explain what this applicant specifically "
+        "needs to change to improve their credit standing enough to qualify. "
+        "For each of the top 2-3 risk factors, name the problem, give the current value, "
+        "and state what value or behaviour would be needed to reduce the risk. "
+        "Be realistic about what is achievable short-term vs long-term."
+    )
+
+    user = f"""CONTEXT:
+{_format_card_block(ctx)}
+
+DECISION THRESHOLDS:
+  APPROVE if PD < 35% | MANUAL REVIEW if 35-55% | REJECT if > 55%
+  Current Default Probability: {pd:.1%} (Grade {grade})
+
+TOP RISK FACTORS TO ADDRESS:
+{risk_lines}
+
+LOAN OFFICER QUERY: {raw_message}
+
+Explain what the applicant needs to change to qualify (2-3 paragraphs, specific targets):"""
+    return system, user
+
 
 def _build_scenario_prompt(ctx: dict, raw_message: str, params: dict) -> tuple[str, str]:
     target_feat = params.get("target_feature", "unknown feature")
@@ -389,11 +494,10 @@ def _build_scenario_prompt(ctx: dict, raw_message: str, params: dict) -> tuple[s
     )
 
     system = _SYSTEM_BASE + (
-        f"\nYour task: Analyse how the proposed change would likely affect this applicant's "
-        f"credit decision. Use the SHAP values to reason directionally — you do NOT have the "
-        f"exact new model score, so reason from feature importance. State whether the change "
-        f"is likely to shift the outcome, and what threshold would need to be crossed. "
-        f"Be honest about uncertainty. {threshold_reminder}"
+        f"\nYour task: State in ONE sentence whether the proposed change is likely to improve "
+        f"the credit outcome, whether it is likely to change the decision, and what threshold "
+        f"would need to be crossed if relevant. Be brief and honest about uncertainty. "
+        f"{threshold_reminder}"
     )
     user = f"""CONTEXT:
 {_format_card_block(ctx)}
@@ -403,8 +507,7 @@ SCENARIO:
 
 LOAN OFFICER QUERY: {raw_message}
 
-Reason step-by-step: would this change materially improve the credit outcome? 
-What else would need to change for a different decision?"""
+State in ONE sentence whether this change would materially improve the credit outcome."""
     return system, user
 
 
@@ -437,7 +540,14 @@ def _build_letter_prompt(ctx: dict, raw_message: str, letter_type: str) -> tuple
         for i, s in enumerate(ctx.get("enriched_shap", [])[:3])
     )
 
-    system = _SYSTEM_BASE + f"""
+    system = f"""You are a senior credit analyst at PDR Bank.
+
+STRICT RULES:
+- Only use provided data.
+- Be specific with values when available.
+- Do NOT invent facts.
+- Do NOT reveal model internals.
+
 Your task: Write a formal, professional credit decision letter on behalf of PDR Bank.
 
 Letter format required:
@@ -482,17 +592,14 @@ Write the formal credit decision letter now."""
 
 def _build_risk_assessment_prompt(ctx: dict, raw_message: str) -> tuple[str, str]:
     system = _SYSTEM_BASE + (
-        "\nYour task: Identify the single biggest risk for this applicant. "
-        "Explain in 2–3 sentences: what the risk is, how severe it is based on "
-        "the actual value, and what it means in practice for the lender. "
-        "Then briefly list 2 other notable risks. Finally, name one protective factor."
+        "\nYour task: State the biggest risk in ONE sentence."
     )
     user = f"""CONTEXT:
 {_format_card_block(ctx)}
 
 LOAN OFFICER QUERY: {raw_message}
 
-What is the primary credit risk for this applicant? Be specific and cite actual values."""
+State the biggest risk in ONE sentence."""
     return system, user
 
 
@@ -553,9 +660,8 @@ def _build_aggregate_prompt(
         pd_str = "N/A"
 
     system = _SYSTEM_BASE + (
-        "\nYour task: Answer a portfolio-level question using the aggregate data provided. "
-        "Give a clear, structured answer with numbers. Highlight any notable patterns. "
-        "Keep it under 200 words."
+        "\nYour task: Answer the portfolio-level question in ONE sentence using the aggregate "
+        "data provided and include the key number(s)."
     )
     user = f"""PORTFOLIO DATA:
 
@@ -570,7 +676,7 @@ Matching Applicants (filter: {filters or 'none'}):
 
 LOAN OFFICER QUERY: {raw_message}
 
-Answer this portfolio question using the data above. Be specific with numbers."""
+Answer this portfolio question in ONE sentence using the data above."""
     return system, user
 
 
@@ -611,9 +717,8 @@ def build_prompt(
         system = _SYSTEM_BASE
         user = (
             f"The loan officer said: {msg!r}\n\n"
-            f"This query couldn't be classified. Politely ask them to rephrase "
-            f"and give 2–3 example queries they could try.\n"
-            f"Hint for suggestions: {hint}"
+            f"This query couldn't be classified. Ask them to rephrase in ONE sentence.\n"
+            f"Hint: {hint}"
         )
         return system, user
 
@@ -622,8 +727,7 @@ def build_prompt(
         system = _SYSTEM_BASE
         user = (
             f"The loan officer asked: {msg!r}\n\n"
-            f"No applicant ID was found in the query. "
-            f"Ask them to specify an applicant ID (e.g. 'ntc_001', 'msme_003')."
+            f"No applicant ID was found in the query. Ask for the applicant ID in ONE sentence."
         )
         return system, user
 
@@ -635,14 +739,16 @@ def build_prompt(
         system = _SYSTEM_BASE
         user = (
             f"The loan officer is looking for applicant '{primary_id}', but this ID "
-            f"was not found in the database. Ask them to check the ID and confirm that "
-            f"applicant cards have been built (run build_applicant_cards.py)."
+            f"was not found in the database. Ask them to check the applicant ID."
         )
         return system, user
 
+    # ── Debug: show routing result ────────────────────────────────────────────
+    print(f"[ROUTED] {routed}")
+
     # ── Route to specific template ─────────────────────────────────────────────
     if qt == QueryType.LOOKUP:
-        return _build_lookup_prompt(primary_ctx, msg)
+        return _build_lookup_prompt(primary_ctx, msg, prm)
 
     elif qt == QueryType.EXPLANATION:
         focus = prm.get("focus", "general")
@@ -660,12 +766,15 @@ def build_prompt(
             system = _SYSTEM_BASE
             user = (
                 f"Applicant '{secondary_id}' (the second comparison target) was not found. "
-                f"Tell the loan officer to check that ID."
+                f"State that in ONE sentence."
             )
             return system, user
         return _build_comparison_prompt(primary_ctx, secondary_ctx, msg)
 
     elif qt == QueryType.SCENARIO:
+        # If no specific feature/value change mentioned, treat as "what to change to qualify"
+        if prm.get("focus") == "improvement_path" or not prm.get("target_feature"):
+            return _build_improvement_path_prompt(primary_ctx, msg)
         return _build_scenario_prompt(primary_ctx, msg, prm)
 
     elif qt == QueryType.DECISION_LETTER:

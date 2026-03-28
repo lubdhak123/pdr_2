@@ -65,11 +65,29 @@ class MiddlemanScoreRequest(BaseModel):
     bcagentdata: Optional[Dict[str, Any]] = None
     applicantmetadata: Dict[str, Any]
 
+class ChatbotRequest(BaseModel):
+    query: str
+
 # ─────────────────────────────────────────────
 # APP + MIDDLEWARE
 # ─────────────────────────────────────────────
 
 app = FastAPI(title='PDR Credit Scoring API', version='2.0.0')
+CHATBOT_DB = str(pathlib.Path(__file__).parent / "applicant_cards.db")
+
+@app.on_event("startup")
+def seed_chatbot_db():
+    """Re-seed applicant_cards.db from demo_users.json on every startup.
+    This ensures any edits to demo profiles (e.g. Arjun Sharma) are reflected
+    automatically — no need to manually run build_applicant_cards.py.
+    """
+    try:
+        from build_applicant_cards import build_cards
+        build_cards(pathlib.Path(CHATBOT_DB))
+        print("[STARTUP] applicant_cards.db seeded from demo_users.json")
+    except Exception as e:
+        print(f"[STARTUP WARN] Could not seed chatbot DB: {e}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],
@@ -140,6 +158,30 @@ def score_endpoint(req: ScoreRequest):
     try:
         result = score_user(req.transactions, req.user_profile, req.gst_data)
         print(f"[SCORE] {req.user_profile.get('name','unknown')} -> {result['grade']}")
+
+        # Auto-save to chatbot DB so the loan officer can query it immediately
+        try:
+            import time
+            from context_layer import init_database, save_applicant_card
+            init_database(CHATBOT_DB)
+            applicant_id = (
+                req.user_profile.get("applicant_id")
+                or req.user_profile.get("user_id")
+                or f"app_{int(time.time())}"
+            )
+            save_applicant_card(
+                db_path=CHATBOT_DB,
+                scoring_result=result,
+                applicant_id=applicant_id,
+                name=req.user_profile.get("name", "Unknown"),
+                city=req.user_profile.get("city", ""),
+                business_type=req.user_profile.get("business_type", ""),
+            )
+            result["applicant_id"] = applicant_id
+            print(f"[CHATBOT-DB] Saved {applicant_id} to applicant_cards.db")
+        except Exception as db_err:
+            print(f"[WARN] Could not auto-save to chatbot DB: {db_err}")
+
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -495,6 +537,71 @@ def setu_consent_status(consent_id: str):
         return {"consent_id": consent_id, "status": status}
     except Exception as e:
         raise HTTPException(status_code=502, detail=str(e))
+
+
+# ═══════════════════════════════════════════════════
+# CHATBOT ENDPOINTS
+# ═══════════════════════════════════════════════════
+
+@app.post('/chatbot/ask')
+def chatbot_ask(req: ChatbotRequest):
+    """
+    Plain-English question from a loan officer.
+    Returns a structured, formatted response with LLM explanation.
+    """
+    try:
+        from chatbot_router import route_query
+        from chatbot_context import build_prompt, fetch_applicant_context
+        from llm_client import call_ollama
+        from response_formatter import format_response
+
+        routed = route_query(req.query)
+        system_prompt, user_prompt = build_prompt(routed, CHATBOT_DB)
+        response_text = call_ollama(system_prompt, user_prompt, query_type=routed.query_type.value)
+
+        ctx = None
+        ctx_b = None
+        if routed.applicant_ids:
+            ctx = fetch_applicant_context(CHATBOT_DB, routed.applicant_ids[0])
+        if len(routed.applicant_ids) > 1:
+            ctx_b = fetch_applicant_context(CHATBOT_DB, routed.applicant_ids[1])
+
+        formatted = format_response(routed.query_type, response_text, ctx, ctx_b)
+        return {
+            "status":      "success",
+            "query_type":  routed.query_type.value,
+            "applicant_ids": routed.applicant_ids,
+            "message":     formatted,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get('/chatbot/search')
+def chatbot_search(grade: str = None, decision: str = None, limit: int = 10):
+    """Search applicants by grade or decision. E.g. /chatbot/search?grade=E"""
+    try:
+        from context_layer import search_applicants
+        filters: dict = {}
+        if grade:
+            filters["grade"] = grade.upper()
+        if decision:
+            filters["decision"] = decision.upper()
+        results = search_applicants(CHATBOT_DB, filters)[:limit]
+        return {"status": "success", "count": len(results), "results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get('/chatbot/stats')
+def chatbot_stats():
+    """Portfolio-level statistics: grade distribution, averages, recent applicants."""
+    try:
+        from context_layer import get_statistics
+        stats = get_statistics(CHATBOT_DB)
+        return {"status": "success", "stats": stats}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == '__main__':

@@ -288,6 +288,7 @@ function AssessmentForm() {
         const scoring = await res.json();
         setResultData({
           ...scoring,
+          user_id: user.user_id,
           model: 'MSME',
           active_flags: user.key_flags || scoring.active_flags || [],
         });
@@ -339,6 +340,7 @@ function AssessmentForm() {
         const scoring = await res.json();
         setResultData({
           ...scoring,
+          user_id: user.user_id,
           model: 'NTC',
           active_flags: isDynamic
             ? (scoring.active_flags || [])
