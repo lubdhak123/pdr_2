@@ -13,7 +13,7 @@ import json
 import datetime
 import pathlib
 import os
-from scorer import score_user, ntc_model, msme_model
+from scorer import score_user, ntc_model, msme_model, ALTERNATIVE_PRODUCTS
 from setu_handler import SetuAAHandler
 
 # ─────────────────────────────────────────────
@@ -46,6 +46,16 @@ class SetuScoreRequest(BaseModel):
     business_vintage_months: int = 24
     gst_filing_consistency_score: int = 6
     telecom_number_vintage_days: int = 365
+
+class DeclinedRequest(BaseModel):
+    """Request from a partner bank for a previously declined applicant."""
+    applicant_name: str
+    bank_rejection_reason: str = 'Insufficient credit history'
+    monthly_income: Optional[float] = None
+    loan_amount_requested: Optional[float] = None
+    user_profile: Optional[Dict[str, Any]] = None
+    transactions: Optional[list] = None
+    gst_data: Optional[Dict[str, Any]] = None
 
 class MiddlemanScoreRequest(BaseModel):
     supplierdata: Optional[Dict[str, Any]] = None
@@ -133,6 +143,65 @@ def score_endpoint(req: ScoreRequest):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post('/score/declined')
+def declined_endpoint(req: DeclinedRequest):
+    """B2B endpoint: partner bank submits a declined applicant for alternative scoring.
+
+    If transactions + profile are provided, runs full PDR scoring and returns
+    the PDR grade alongside alternative product recommendations.
+    If no transaction data is available, returns generic alternative products only.
+    """
+    try:
+        if req.transactions and req.user_profile:
+            result = score_user(
+                req.transactions,
+                req.user_profile,
+                req.gst_data or {'available': False},
+            )
+            pdr_grade = result['grade']
+            loan_offer = result.get('loan_offer', {})
+            default_prob = result.get('default_probability')
+            decision_source = result.get('decision_source', 'model')
+        else:
+            # No data — return generic alternative products
+            pdr_grade = None
+            loan_offer = {}
+            default_prob = None
+            decision_source = 'no_data'
+
+        # Determine which alternative products to surface
+        if pdr_grade in ('A', 'B', 'C'):
+            # PDR approves where the bank declined — full loan offer
+            alternative_path = {
+                'pdr_outcome': 'PDR APPROVED',
+                'pdr_grade': pdr_grade,
+                'loan_offer': loan_offer,
+                'alternative_products': [],
+                'message': f'PDR scores this applicant as Grade {pdr_grade}. Standard lending may be available.',
+            }
+        else:
+            # Both PDR and bank decline — surface micro-products
+            alternative_path = {
+                'pdr_outcome': 'PDR DECLINED — Alternative Path',
+                'pdr_grade': pdr_grade,
+                'loan_offer': {},
+                'alternative_products': ALTERNATIVE_PRODUCTS,
+                'message': 'Conventional lending declined. The following alternative financial products may be suitable.',
+            }
+
+        print(f"[DECLINED] {req.applicant_name} bank_reason='{req.bank_rejection_reason}' pdr_grade={pdr_grade}")
+        return {
+            'applicant_name': req.applicant_name,
+            'bank_rejection_reason': req.bank_rejection_reason,
+            'default_probability': default_prob,
+            'decision_source': decision_source,
+            'alternative_path': alternative_path,
+            'scored_at': datetime.datetime.now().isoformat(),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get('/health')
 def health_endpoint():

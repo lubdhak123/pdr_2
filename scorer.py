@@ -119,6 +119,62 @@ GRADE_THRESHOLDS = [
 ]
 
 # ─────────────────────────────────────────────
+# LOAN POLICY TABLE  (interest rates are illustrative / RBI-compliant ranges)
+# ─────────────────────────────────────────────
+
+LOAN_POLICY = {
+    'A': {
+        'rate_min': 11.0, 'rate_max': 14.0,
+        'income_multiplier': 20,
+        'tenures': [12, 24, 36, 48, 60],
+        'product': 'Prime Personal / Business Loan',
+    },
+    'B': {
+        'rate_min': 14.0, 'rate_max': 20.0,
+        'income_multiplier': 12,
+        'tenures': [12, 24, 36, 48],
+        'product': 'Conditional Loan — Standard NBFC',
+    },
+    'C': {
+        'rate_min': 20.0, 'rate_max': 28.0,
+        'income_multiplier': 6,
+        'tenures': [12, 24, 36],
+        'product': 'High-Risk Loan — Manual Review Required',
+    },
+}
+
+ALTERNATIVE_PRODUCTS = [
+    {
+        'name': 'Microfinance Loan (NBFC-MFI)',
+        'max_amount': 50000,
+        'rate': '24–36% p.a.',
+        'detail': 'Small-ticket lending via licensed MFI partners (e.g., Arohan, CreditAccess)',
+        'icon': 'groups',
+    },
+    {
+        'name': 'Gold / Asset-Backed Loan',
+        'max_amount': 200000,
+        'rate': '12–18% p.a.',
+        'detail': 'Secured loan against gold jewellery or fixed deposit — lower risk premium',
+        'icon': 'toll',
+    },
+    {
+        'name': 'BNPL Credit Line',
+        'max_amount': 25000,
+        'rate': '0–24% p.a.',
+        'detail': 'Buy Now Pay Later via fintech partner network (e.g., LazyPay, Simpl)',
+        'icon': 'credit_card',
+    },
+    {
+        'name': 'Self-Help Group (SHG) Loan',
+        'max_amount': 20000,
+        'rate': '18–24% p.a.',
+        'detail': 'Community-backed lending through NABARD-linked SHG networks',
+        'icon': 'handshake',
+    },
+]
+
+# ─────────────────────────────────────────────
 # HELPERS
 # ─────────────────────────────────────────────
 
@@ -177,6 +233,39 @@ def _shap_reasons(shap_vals, feature_list: list, top_n: int = 5) -> list[dict]:
     return reasons
 
 
+def _loan_offer(grade: str, features: dict) -> dict:
+    """Compute grade-based loan offer or alternative products for rejected applicants."""
+    if grade in ('D', 'E'):
+        return {
+            'eligible': False,
+            'reason': 'Credit profile does not meet minimum lending criteria.',
+            'alternative_products': ALTERNATIVE_PRODUCTS,
+        }
+
+    policy = LOAN_POLICY[grade]
+    monthly_income = float(features.get('monthly_income', 0))
+
+    # MSME: estimate monthly surplus from cashflow ratio if no direct income
+    if monthly_income <= 0:
+        ocr = float(features.get('operating_cashflow_ratio', 1.0))
+        # Rough proxy — 0.1 above 1.0 OCR represents ≈₹10k monthly surplus headroom
+        # We cannot reliably compute max_loan without actual revenue, so leave as None
+        monthly_income = 0
+
+    max_loan = round(monthly_income * policy['income_multiplier']) if monthly_income > 0 else None
+
+    return {
+        'eligible': True,
+        'interest_rate_min': policy['rate_min'],
+        'interest_rate_max': policy['rate_max'],
+        'interest_rate_display': f"{policy['rate_min']}–{policy['rate_max']}% p.a.",
+        'max_loan_amount': max_loan,
+        'tenure_options_months': policy['tenures'],
+        'recommended_product': policy['product'],
+        'alternative_products': [],
+    }
+
+
 # ─────────────────────────────────────────────
 # MAIN ENTRY POINT
 # ─────────────────────────────────────────────
@@ -213,6 +302,7 @@ def score_user(
             'shap_reasons': [],
             'shap_breakdown': shap_breakdown,
             'features': features,
+            'loan_offer': _loan_offer(grade, features),
         }
 
     # ── 3. Routing — NTC vs MSME ──────────────────────────────────────────
@@ -281,4 +371,5 @@ def score_user(
         'shap_reasons': shap_reasons,
         'shap_breakdown': shap_normalized,
         'features': features,
+        'loan_offer': _loan_offer(grade, features),
     }

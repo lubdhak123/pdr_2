@@ -592,15 +592,108 @@ export default function Results({ result, error, onBack, transactions, selectedU
           </div>
         </div>
 
-        <XaiTransparencySection 
+        <XaiTransparencySection
           userProfile={{
             ...profile,
             features,
             isNTC,
             shap_reasons: result.shap_reasons,
             active_flags: result.active_flags
-          }} 
+          }}
         />
+
+        {/* ── Loan Offer / Alternative Path ──────────────────────────── */}
+        {result.loan_offer && (
+          result.loan_offer.eligible ? (
+            /* APPROVED — show loan parameters */
+            <div className="r-section">
+              <h2 className="r-section-title">
+                Indicative Loan Offer
+                <span className="r-section-badge" style={{ background: '#dcfce7', color: '#166534' }}>Grade {grade}</span>
+              </h2>
+              <div style={{
+                background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                border: '1px solid #86efac',
+                borderRadius: 16,
+                padding: '24px 28px',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: 20,
+              }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Interest Rate</div>
+                  <div style={{ fontSize: 26, fontWeight: 800, color: '#15803d' }}>{result.loan_offer.interest_rate_display}</div>
+                  <div style={{ fontSize: 12, color: '#4ade80', marginTop: 2 }}>Reducing balance</div>
+                </div>
+                {result.loan_offer.max_loan_amount && (
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Max Loan Amount</div>
+                    <div style={{ fontSize: 26, fontWeight: 800, color: '#15803d' }}>
+                      ₹{result.loan_offer.max_loan_amount >= 100000
+                        ? `${(result.loan_offer.max_loan_amount / 100000).toFixed(1)}L`
+                        : `${(result.loan_offer.max_loan_amount / 1000).toFixed(0)}K`}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#4ade80', marginTop: 2 }}>Based on income × multiplier</div>
+                  </div>
+                )}
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Tenure Options</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                    {result.loan_offer.tenure_options_months.map(t => (
+                      <span key={t} style={{ background: '#bbf7d0', color: '#166534', borderRadius: 20, padding: '3px 10px', fontSize: 12, fontWeight: 600 }}>{t}M</span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Product</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#166534', lineHeight: 1.4 }}>{result.loan_offer.recommended_product}</div>
+                </div>
+              </div>
+              <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 10 }}>
+                * Rates are indicative and subject to final underwriting. PDR provides alternative data intelligence — disbursement decisions rest with the lending institution.
+              </p>
+            </div>
+          ) : (
+            /* REJECTED — show alternative products */
+            <div className="r-section">
+              <h2 className="r-section-title">
+                Declined → Alternative Path
+                <span className="r-section-badge" style={{ background: '#fef3c7', color: '#92400e' }}>Referral Options</span>
+              </h2>
+              <p style={{ fontSize: 14, color: '#64748b', marginBottom: 20, lineHeight: 1.6 }}>
+                This applicant does not qualify for conventional lending. The following alternative financial products may be suitable based on the risk profile.
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+                {result.loan_offer.alternative_products.map((prod, i) => (
+                  <div key={i} style={{
+                    background: 'var(--surface-container-lowest, #fff)',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: 14,
+                    padding: '20px 18px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 8,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 22, color: '#f59e0b' }}>{prod.icon}</span>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{prod.name}</div>
+                    </div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: '#f59e0b' }}>{prod.rate}</div>
+                    <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>
+                      Up to ₹{prod.max_amount >= 100000
+                        ? `${(prod.max_amount / 100000).toFixed(1)}L`
+                        : `${(prod.max_amount / 1000).toFixed(0)}K`}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5 }}>{prod.detail}</div>
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 14 }}>
+                * Alternative products are indicative referrals. PDR earns a referral fee from partner institutions. The applicant is free to choose any product.
+              </p>
+            </div>
+          )
+        )}
 
         <div style={{ height: 100 }} />
       </div>
