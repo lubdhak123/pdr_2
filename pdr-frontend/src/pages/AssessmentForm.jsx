@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import BankStatementUpload from '../components/BankStatementUpload';
 import Results from '../components/Results';
 import demoData from '../../../demo_users.json';
@@ -357,25 +358,39 @@ function AssessmentForm() {
   };
 
   // Show results page after successful (or failed) scoring
-  if (resultData || resultError) {
-    return (
-      <Results
-        result={resultData}
-        error={resultError}
-        onBack={() => {
-          setResultData(null);
-          setResultError(null);
-          setResultTransactions([]);
-          setResultUser(null);
-        }}
-        transactions={resultTransactions}
-        selectedUser={resultUser}
-      />
-    );
-  }
-
   return (
-    <div className="bg-slate-50 dark:bg-slate-950 font-body text-on-surface dark:text-slate-200 antialiased min-h-screen">
+    <AnimatePresence mode="wait">
+      {resultData || resultError ? (
+        <motion.div
+          key="results-view"
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -50 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full"
+        >
+          <Results
+            result={resultData}
+            error={resultError}
+            onBack={() => {
+              setResultData(null);
+              setResultError(null);
+              setResultTransactions([]);
+              setResultUser(null);
+            }}
+            transactions={resultTransactions}
+            selectedUser={resultUser}
+          />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="form-view"
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 50 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="bg-slate-50 dark:bg-slate-950 font-body text-on-surface dark:text-slate-200 antialiased min-h-screen"
+        >
       {/* TopAppBar Shell Component */}
       <nav className="bg-slate-50/80 dark:bg-slate-950/80 backdrop-blur-xl fixed top-0 w-full z-50 shadow-lg shadow-slate-400/40 dark:shadow-none font-headline antialiased tracking-tight">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center w-full">
@@ -450,10 +465,19 @@ function AssessmentForm() {
 
         {/* Main Assessment Card */}
         <div className="w-full max-w-[1100px] space-y-8">
+          <AnimatePresence mode="wait">
 
           {/* ==================== MSME FORM ==================== */}
           {activeForm === 'msme' && (
-            <div className="w-full max-w-[1100px] bg-white dark:bg-slate-900 rounded-xl shadow-[0_20px_25px_-5px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-slate-800 overflow-hidden" key="msme" id="msme-content">
+            <motion.div 
+              key="msme"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.6 }}
+              className="w-full max-w-[1100px] bg-white dark:bg-slate-900 rounded-xl shadow-[0_20px_25px_-5px_rgba(0,0,0,0.4)] border border-gray-100 dark:border-slate-800 overflow-hidden" 
+              id="msme-content"
+            >
               <div className="p-10 text-center border-b border-gray-50 dark:border-slate-800">
                 <h1 className="text-3xl font-extrabold font-headline tracking-tight text-on-surface dark:text-white mb-3">MSME Credit Assessment</h1>
                 <p className="text-on-surface-variant dark:text-slate-400 max-w-lg mx-auto leading-relaxed text-sm">Precision underwriting for modern businesses. Complete the evaluation stages to generate your risk grade.</p>
@@ -724,12 +748,19 @@ function AssessmentForm() {
                   </div>
                 </section>
               </form>
-            </div>
+            </motion.div>
           )}
 
           {/* Action Area */}
           {activeForm === 'msme' && (
-            <div className="w-full max-w-[1100px] mt-10 space-y-8">
+            <motion.div 
+              key="msme-actions"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="w-full max-w-[1100px] mt-10 space-y-8"
+            >
               <div className="text-center">
                 <p className="text-xs text-on-surface-variant dark:text-slate-400 mb-6">Your data is processed according to global privacy and credit standards.</p>
                 <button
@@ -758,12 +789,20 @@ function AssessmentForm() {
                 <button className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400 hover:text-primary dark:text-white transition-colors underline underline-offset-4">Save Progress</button>
                 <button className="text-xs font-bold uppercase tracking-widest text-on-surface-variant dark:text-slate-400 hover:text-primary dark:text-white transition-colors underline underline-offset-4">Print Draft</button>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {/* ==================== NTC FORM ==================== */}
           {activeForm === 'ntc' && (
-            <div className="w-full max-w-[1100px] bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-gray-100 dark:border-slate-800 overflow-hidden" key="ntc" id="ntc-content">
+            <motion.div 
+              key="ntc"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.6 }}
+              className="w-full max-w-[1100px] bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-gray-100 dark:border-slate-800 overflow-hidden" 
+              id="ntc-content"
+            >
               <div className="p-10 text-center border-b border-gray-50 dark:border-slate-800">
                 <h1 className="text-3xl font-extrabold font-headline tracking-tight text-on-surface dark:text-white mb-3">New To Credit Assessment</h1>
                 <p className="text-on-surface-variant dark:text-slate-400 max-w-md mx-auto leading-relaxed">Credit scoring for individuals with limited financial history. Predictive analysis based on behavioral data.</p>
@@ -1079,7 +1118,7 @@ function AssessmentForm() {
                   )}
                 </section>
               </form>
-            </div>
+            </motion.div>
           )}
 
           {/* Action Area */}
@@ -1115,7 +1154,7 @@ function AssessmentForm() {
             </div>
           )}
 
-
+          </AnimatePresence>
         </div>
       </main>
 
@@ -1138,7 +1177,9 @@ function AssessmentForm() {
           <span className="text-[10px] mt-1">Profile</span>
         </div>
       </nav>
-    </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 

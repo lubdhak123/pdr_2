@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import demoData from '../../../demo_users.json';
 import ThemeToggle from '../components/ThemeToggle';
 
@@ -103,10 +104,18 @@ function DemoProfiles() {
 
       <main className="max-w-7xl mx-auto px-6 pt-16 pb-24">
 
+        <AnimatePresence mode="wait">
         {/* ── STATE 1: INITIAL ── */}
         {phase === 'initial' && (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-            {/* AA Shield Icon */}
+          <motion.div 
+            key="initial"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col items-center justify-center min-h-[60vh] text-center"
+          >
+            {/* ... rest unchanged but wrapped ... */}
             <div className="w-16 h-16 rounded-2xl bg-[#0F172A] flex items-center justify-center mb-8 shadow-lg">
               <span className="material-symbols-outlined text-white text-3xl">verified_user</span>
             </div>
@@ -129,12 +138,18 @@ function DemoProfiles() {
             <p className="mt-8 text-[13px] text-slate-800 tracking-wide">
               Simulated AA flow for demonstration purposes
             </p>
-          </div>
+          </motion.div>
         )}
 
         {/* ── STATE 2: FETCHING ── */}
         {phase === 'fetching' && (
-          <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <motion.div 
+            key="fetching"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="flex flex-col items-center justify-center min-h-[60vh]"
+          >
             <div className="w-full max-w-lg bg-white dark:bg-[#0F172A] rounded-2xl shadow-xl dark:shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
               {/* Progress bar */}
               <div className="h-1 w-full bg-slate-100 dark:bg-slate-800">
@@ -178,12 +193,18 @@ function DemoProfiles() {
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* ── STATE 3: SELECT TYPE ── */}
         {phase === 'select_type' && (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-[fadeIn_0.4s_ease-out]">
+          <motion.div 
+            key="select_type"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            className="flex flex-col items-center justify-center min-h-[60vh] text-center"
+          >
             <div className="inline-block px-4 py-1.5 mb-6 rounded-full bg-tertiary-container text-on-tertiary-container text-xs font-bold tracking-widest uppercase font-label">
               AA Gateway · Profiles Ready
             </div>
@@ -225,7 +246,7 @@ function DemoProfiles() {
                   <span className="material-symbols-outlined text-sky-600 dark:text-sky-400 text-2xl">storefront</span>
                 </div>
                 <div className="inline-flex items-center px-3 py-1 rounded-full bg-sky-50 dark:bg-sky-900/30 border border-sky-200 dark:border-sky-700 mb-4">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-sky-700 dark:text-sky-300">MSME</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-sky-700 dark:text-violet-300">MSME</span>
                 </div>
                 <h2 className="text-xl font-headline font-bold text-slate-900 dark:text-slate-50 mb-2">Micro & Small Enterprises</h2>
                 <p className="text-sm text-on-surface-variant dark:text-slate-400 leading-relaxed mb-6">
@@ -243,12 +264,17 @@ function DemoProfiles() {
                 &larr; Back to Home
               </Link>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* ── STATE 4: LOADED ── */}
         {phase === 'loaded' && (
-          <>
+          <motion.div 
+            key="loaded"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
             {/* Header */}
             <div className={`text-center mb-10 transition-all duration-500 ${cardsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <div className="inline-block px-4 py-1.5 mb-6 rounded-full bg-tertiary-container text-on-tertiary-container text-xs font-bold tracking-widest uppercase font-label">
@@ -331,8 +357,9 @@ function DemoProfiles() {
                 &larr; Back to Home
               </Link>
             </div>
-          </>
+          </motion.div>
         )}
+        </AnimatePresence>
       </main>
     </div>
   );

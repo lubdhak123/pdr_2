@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import axios from 'axios'
 import './App.css'
+import { pageVariants, slideInVariants, blurVariants } from './animations/animations'
 import LandingPage from './pages/LandingPage'
 import AssessmentForm from './pages/AssessmentForm'
 import DemoProfiles from './pages/DemoProfiles'
@@ -9,13 +11,19 @@ import UserSelect from './components/UserSelect'
 import Results from './components/Results'
 import demoData from '../../demo_users.json'
 
-// Animated page wrapper — re-triggers on route change via key
-function PageTransition({ children }) {
-  const location = useLocation()
+// Animated page wrapper for cinematic transitions
+function PageTransition({ children, variant = 'default' }) {
+  const variants = variant === 'slide' ? slideInVariants : variant === 'blur' ? blurVariants : pageVariants
+  
   return (
-    <div className="page-transition" key={location.pathname}>
+    <motion.div
+      variants={variants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
       {children}
-    </div>
+    </motion.div>
   )
 }
 
@@ -95,31 +103,47 @@ function DemoFlow() {
   }
 
   return (
-    <>
+    <AnimatePresence mode="wait">
       {screen === 'select' && (
-        <UserSelect
-          onScore={scoreUser}
-          loading={loading}
-          loadingText={flowStep}
-          error={error}
-          onBack={() => setScreen('select')}
-          hasFetched={hasFetchedUsers}
-          onFetched={() => setHasFetchedUsers(true)}
-          onNewAnalysis={() => {
-            setHasFetchedUsers(false)
-          }}
-        />
+        <motion.div
+          key="select"
+          variants={slideInVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+        >
+          <UserSelect
+            onScore={scoreUser}
+            loading={loading}
+            loadingText={flowStep}
+            error={error}
+            onBack={() => setScreen('select')}
+            hasFetched={hasFetchedUsers}
+            onFetched={() => setHasFetchedUsers(true)}
+            onNewAnalysis={() => {
+              setHasFetchedUsers(false)
+            }}
+          />
+        </motion.div>
       )}
       {screen === 'results' && (
-        <Results
-          result={result}
-          error={error}
-          onBack={handleBack}
-          transactions={selectedUser?.transactions || []}
-          selectedUser={selectedUser}
-        />
+        <motion.div
+          key="results"
+          variants={slideInVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+        >
+          <Results
+            result={result}
+            error={error}
+            onBack={handleBack}
+            transactions={selectedUser?.transactions || []}
+            selectedUser={selectedUser}
+          />
+        </motion.div>
       )}
-    </>
+    </AnimatePresence>
   )
 }
 
@@ -139,15 +163,17 @@ function App() {
   const location = useLocation()
 
   return (
-    <div className="page-transition" key={location.pathname}>
-      <Routes location={location}>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/solutions" element={<AssessmentForm />} />
-        <Route path="/demo" element={<DemoProfiles />} />
-        <Route path="/demo-scoring" element={<DemoFlow />} />
-        <Route path="/demo/result/:userId" element={<DemoFlow />} />
-        <Route path="/docs" element={<DocsPage />} />
-      </Routes>
+    <div className="bg-surface dark:bg-slate-950 min-h-screen">
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<PageTransition variant="blur"><LandingPage /></PageTransition>} />
+          <Route path="/solutions" element={<PageTransition variant="slide"><AssessmentForm /></PageTransition>} />
+          <Route path="/demo" element={<PageTransition variant="default"><DemoProfiles /></PageTransition>} />
+          <Route path="/demo-scoring" element={<PageTransition variant="slide"><DemoFlow /></PageTransition>} />
+          <Route path="/demo/result/:userId" element={<PageTransition variant="default"><DemoFlow /></PageTransition>} />
+          <Route path="/docs" element={<PageTransition variant="blur"><DocsPage /></PageTransition>} />
+        </Routes>
+      </AnimatePresence>
     </div>
   )
 }
