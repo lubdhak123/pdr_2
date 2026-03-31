@@ -55,18 +55,18 @@ function extractEntity(narration = '') {
     .slice(0, 30);
 }
 
-const FLAG_META = {
-  circular: { color: '#ef4444', bg: '#fef2f2', label: 'Circular Loop', icon: 'sync' },
-  bounce:   { color: '#f97316', bg: '#fff7ed', label: 'Bounce Charge', icon: 'money_off' },
-  round:    { color: '#eab308', bg: '#fefce8', label: 'Round Number', icon: 'toll' },
-  spike:    { color: '#8b5cf6', bg: '#f5f3ff', label: 'Income Spike', icon: 'trending_up' },
-};
+const getFlagMeta = (isDark) => ({
+  circular: { color: isDark ? '#f87171' : '#ef4444', bg: isDark ? 'rgba(239, 68, 68, 0.15)' : '#fef2f2', label: 'Circular Loop', icon: 'sync' },
+  bounce:   { color: isDark ? '#fb923c' : '#f97316', bg: isDark ? 'rgba(249, 115, 22, 0.15)' : '#fff7ed', label: 'Bounce Charge', icon: 'money_off' },
+  round:    { color: isDark ? '#facc15' : '#eab308', bg: isDark ? 'rgba(234, 179, 8, 0.15)' : '#fefce8', label: 'Round Number', icon: 'toll' },
+  spike:    { color: isDark ? '#a78bfa' : '#8b5cf6', bg: isDark ? 'rgba(139, 92, 246, 0.15)' : '#f5f3ff', label: 'Income Spike', icon: 'trending_up' },
+});
 
-const rowBg = (flags) => {
-  if (flags.includes('circular')) return '#fef2f2';
-  if (flags.includes('bounce'))   return '#fff7ed';
-  if (flags.includes('round'))    return '#fefce8';
-  if (flags.includes('spike'))    return '#f5f3ff';
+const rowBg = (flags, isDark) => {
+  if (flags.includes('circular')) return isDark ? 'rgba(239, 68, 68, 0.08)' : '#fef2f2';
+  if (flags.includes('bounce'))   return isDark ? 'rgba(249, 115, 22, 0.08)' : '#fff7ed';
+  if (flags.includes('round'))    return isDark ? 'rgba(234, 179, 8, 0.08)' : '#fefce8';
+  if (flags.includes('spike'))    return isDark ? 'rgba(139, 92, 246, 0.08)' : '#f5f3ff';
   return 'transparent';
 };
 
@@ -76,7 +76,7 @@ export const FRAUD_FLAGS = ['P2P_CIRCULAR_LOOP', 'ROUND_NUMBER_TRANSACTIONS',
   'LATE_UTILITY_PAYMENTS', 'NEW_SIM_RISK'];
 
 // ── Main component ────────────────────────────────────────────
-export default function TransactionForensics({ transactions }) {
+export default function TransactionForensics({ transactions, isDark = false }) {
   const chartRef = useRef(null);
 
   const annotated = useMemo(() => annotate(transactions || []), [transactions]);
@@ -155,11 +155,11 @@ export default function TransactionForensics({ transactions }) {
       <h2 className="r-section-title">
         Transaction Forensics
         {totalFlagged > 0 ? (
-          <span className="r-section-badge" style={{ background: '#fee2e2', color: '#991b1b' }}>
+          <span className="r-section-badge" style={{ background: isDark ? 'rgba(153, 27, 27, 0.2)' : '#fee2e2', color: isDark ? '#f87171' : '#991b1b' }}>
             {totalFlagged} flagged transactions
           </span>
         ) : (
-          <span className="r-section-badge" style={{ background: '#dcfce7', color: '#166534' }}>
+          <span className="r-section-badge" style={{ background: isDark ? 'rgba(22, 101, 52, 0.2)' : '#dcfce7', color: isDark ? '#4ade80' : '#166534' }}>
             All clean
           </span>
         )}
@@ -173,7 +173,7 @@ export default function TransactionForensics({ transactions }) {
       {/* Signal summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 24 }}>
         {summaryCards.map(card => {
-          const meta = FLAG_META[card.key];
+          const meta = getFlagMeta(isDark)[card.key];
           return (
             <div key={card.key} style={{
               background: meta.bg,
@@ -186,7 +186,7 @@ export default function TransactionForensics({ transactions }) {
                 <span className="material-symbols-outlined" style={{ fontSize: 18, color: meta.color }}>{meta.icon}</span>
                 <span style={{ fontSize: 22, fontWeight: 800, color: meta.color }}>{card.count}</span>
               </div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>{card.label}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a', marginBottom: 2 }}>{card.label}</div>
               <div style={{ fontSize: 11, color: '#64748b' }}>{card.desc}</div>
             </div>
           );
@@ -195,13 +195,13 @@ export default function TransactionForensics({ transactions }) {
 
       {/* Stacked bar chart */}
       <div style={{
-        background: '#fff',
-        border: '1px solid #e2e8f0',
+        background: isDark ? '#1e293b' : '#fff',
+        border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
         borderRadius: 12,
         padding: '16px 20px',
         marginBottom: 24,
       }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 12 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a', marginBottom: 12 }}>
           Transaction Timeline — Flagged vs Normal
         </div>
         <div style={{ height: 200 }}>
@@ -213,12 +213,12 @@ export default function TransactionForensics({ transactions }) {
       </div>
 
       {/* Annotated transaction table */}
-      <div style={{ overflowX: 'auto', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+      <div style={{ overflowX: 'auto', borderRadius: 12, border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}` }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
           <thead>
-            <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+            <tr style={{ background: isDark ? '#0f172a' : '#f8fafc', borderBottom: `2px solid ${isDark ? '#334155' : '#e2e8f0'}` }}>
               {['Date', 'Narration', 'Amount', 'Balance', 'Fraud Signal'].map(h => (
-                <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#475569', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: isDark ? '#cbd5e1' : '#475569', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   {h}
                 </th>
               ))}
@@ -227,20 +227,20 @@ export default function TransactionForensics({ transactions }) {
           <tbody>
             {annotated.map((tx, idx) => {
               const isClean = tx.flags.length === 0;
-              const bg = rowBg(tx.flags);
+              const bg = rowBg(tx.flags, isDark);
               return (
-                <tr key={idx} style={{ background: bg, borderBottom: '1px solid #f1f5f9' }}>
+                <tr key={idx} style={{ background: bg, borderBottom: `1px solid ${isDark ? '#1e293b' : '#f1f5f9'}` }}>
                   <td style={{ padding: '9px 14px', color: '#64748b', whiteSpace: 'nowrap' }}>{tx.date}</td>
-                  <td style={{ padding: '9px 14px', color: isClean ? '#475569' : '#0f172a', fontWeight: isClean ? 400 : 600, maxWidth: 280 }}>
+                  <td style={{ padding: '9px 14px', color: isClean ? (isDark ? '#cbd5e1' : '#475569') : (isDark ? '#f8fafc' : '#0f172a'), fontWeight: isClean ? 400 : 600, maxWidth: 280 }}>
                     {tx.narration}
                   </td>
                   <td style={{
                     padding: '9px 14px',
                     fontWeight: 700,
                     whiteSpace: 'nowrap',
-                    color: tx.flags.includes('circular') ? '#ef4444'
-                         : tx.flags.includes('spike') ? '#8b5cf6'
-                         : tx.amount > 0 ? '#16a34a' : '#475569',
+                    color: tx.flags.includes('circular') ? (isDark ? '#f87171' : '#ef4444')
+                         : tx.flags.includes('spike') ? (isDark ? '#a78bfa' : '#8b5cf6')
+                         : tx.amount > 0 ? (isDark ? '#4ade80' : '#16a34a') : (isDark ? '#cbd5e1' : '#475569'),
                   }}>
                     {tx.amount > 0 ? '+' : ''}₹{Math.abs(tx.amount).toLocaleString('en-IN')}
                   </td>
@@ -251,7 +251,7 @@ export default function TransactionForensics({ transactions }) {
                     {tx.flags.length > 0 ? (
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                         {tx.flags.map(f => {
-                          const m = FLAG_META[f];
+                          const m = getFlagMeta(isDark)[f];
                           return (
                             <span key={f} style={{
                               background: m.bg,

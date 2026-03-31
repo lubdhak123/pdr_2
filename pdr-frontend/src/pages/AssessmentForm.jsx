@@ -6,6 +6,7 @@ import Results from '../components/Results';
 import demoData from '../../../demo_users.json';
 import ThemeToggle from '../components/ThemeToggle';
 import StarField from '../components/StarField';
+import NavUser from '../components/NavUser';
 
 // Maps demo_users.json form_fields (snake_case) → React NTC state keys (camelCase)
 const NTC_FIELD_MAP = {
@@ -408,7 +409,7 @@ function AssessmentForm() {
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <button className="text-slate-600 dark:text-slate-300 font-medium hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300 active:scale-95">Login</button>
+            <NavUser />
             <button className="text-white px-6 py-2.5 rounded-full font-semibold active:scale-95 transition-transform duration-200 text-sm bg-[#00662A]">Request Demo</button>
           </div>
         </div>

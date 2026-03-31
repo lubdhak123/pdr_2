@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import demoData from '../../../demo_users.json';
 import ThemeToggle from '../components/ThemeToggle';
 import StarField from '../components/StarField';
+import NavUser from '../components/NavUser';
 
 const gradeColors = {
   A: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
@@ -99,6 +100,7 @@ function DemoProfiles() {
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
+            <NavUser />
             <Link to="/solutions" className="gradient-cta text-white px-6 py-2.5 rounded-lg font-semibold active:scale-95 transition-transform duration-200">Score a Business</Link>
           </div>
         </div>

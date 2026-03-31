@@ -113,10 +113,10 @@ export default function XaiTransparencySection({ userProfile }) {
   if (isPassed && isNTC) forensicDetail = "No circular transaction loops detected via Graph Theory.";
 
   return (
-    <div className='w-full mt-8 p-6 bg-slate-50 rounded-xl border border-slate-200 shadow-sm text-slate-800 transition-all'>
+    <div className='w-full mt-8 p-6 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm text-slate-800 dark:text-slate-200 transition-all'>
       <div className='flex items-center gap-2 mb-6'>
-        <Activity className='w-6 h-6 text-indigo-600' />
-        <h2 className='text-xl font-bold m-0 text-slate-800' style={{ margin: 0, padding: 0 }}>Layer 4: Explainable AI Transparency</h2>
+        <Activity className='w-6 h-6 text-indigo-600 dark:text-indigo-400' />
+        <h2 className='text-xl font-bold m-0 text-slate-800 dark:text-slate-100' style={{ margin: 0, padding: 0 }}>Layer 4: Explainable AI Transparency</h2>
       </div>
 
       {/* SECTION A: SHAP Force Plot */}
@@ -125,9 +125,9 @@ export default function XaiTransparencySection({ userProfile }) {
           <BarChart2 className='w-4 h-4' /> Feature Attribution (Tug-of-War)
         </h3>
         
-        <div className='relative w-full h-12 bg-white rounded-lg border border-slate-200 overflow-visible flex items-center mb-2 shadow-inner'>
-           <div className='absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-400 z-10' />
-           <div className='absolute left-1/2 top-[-10px] -ml-8 text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-white px-1 z-20 rounded border border-slate-200 shadow-sm'>Base Risk</div>
+        <div className='relative w-full h-12 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-visible flex items-center mb-2 shadow-inner'>
+           <div className='absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-400 dark:bg-slate-600 z-10' />
+           <div className='absolute left-1/2 top-[-10px] -ml-8 text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 px-1 z-20 rounded border border-slate-200 dark:border-slate-700 shadow-sm'>Base Risk</div>
 
            {/* Left side (Positive / Strength) */}
            <div className='w-1/2 h-full flex justify-end items-center px-1 z-0 relative'>
@@ -172,7 +172,7 @@ export default function XaiTransparencySection({ userProfile }) {
 
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
         {/* SECTION B: Human-Readable Reason Codes */}
-        <div className='bg-white p-5 rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md'>
+        <div className='bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-shadow hover:shadow-md'>
           <h3 className='text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-4 flex items-center gap-2'>
             <Info className='w-4 h-4' /> Plain-English Reason Codes
           </h3>
@@ -193,27 +193,27 @@ export default function XaiTransparencySection({ userProfile }) {
         </div>
 
         {/* SECTION C: Trust Intelligence "Forensic Check" Badge */}
-        <div className='bg-white p-5 rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md flex flex-col items-center justify-center text-center'>
+        <div className='bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-shadow hover:shadow-md flex flex-col items-center justify-center text-center'>
           <h3 className='text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-4 w-full text-left'>
             Trust Intelligence Layer
           </h3>
           
           <div className={`flex flex-col items-center justify-center p-4 rounded-lg border w-full h-full transition-colors
-            ${isPassed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+            ${isPassed ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800/30' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/30'}`}>
             
             {isPassed ? (
-              <ShieldCheck className='w-12 h-12 text-green-600 mb-3 drop-shadow-sm' strokeWidth={1.5} />
+              <ShieldCheck className='w-12 h-12 text-green-600 dark:text-green-500 mb-3 drop-shadow-sm' strokeWidth={1.5} />
             ) : (
-              <ShieldAlert className='w-12 h-12 text-red-600 mb-3 drop-shadow-sm' strokeWidth={1.5} />
+              <ShieldAlert className='w-12 h-12 text-red-600 dark:text-red-500 mb-3 drop-shadow-sm' strokeWidth={1.5} />
             )}
             
             <div className={`text-sm font-bold mb-2 tracking-wide
-              ${isPassed ? 'text-green-700' : 'text-red-700'}`}>
+              ${isPassed ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
               STATUS: {isPassed ? 'PASSED' : 'FLAG TRIGGERED'}
             </div>
             
             <p className={`text-xs max-w-[250px] m-0
-              ${isPassed ? 'text-green-800' : 'text-red-800'}`}>
+              ${isPassed ? 'text-green-800 dark:text-green-300' : 'text-red-800 dark:text-red-300'}`}>
               {forensicDetail}
             </p>
           </div>

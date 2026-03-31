@@ -7,6 +7,7 @@ import { pageVariants, slideInVariants, blurVariants } from './animations/animat
 import LandingPage from './pages/LandingPage'
 import AssessmentForm from './pages/AssessmentForm'
 import DemoProfiles from './pages/DemoProfiles'
+import LoginPage from './pages/LoginPage'
 import UserSelect from './components/UserSelect'
 import Results from './components/Results'
 import GlobalChatButton from './components/GlobalChatButton'
@@ -168,6 +169,7 @@ function App() {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<PageTransition variant="blur"><LandingPage /></PageTransition>} />
+          <Route path="/login" element={<PageTransition variant="blur"><LoginPage /></PageTransition>} />
           <Route path="/solutions" element={<PageTransition variant="slide"><AssessmentForm /></PageTransition>} />
           <Route path="/demo" element={<PageTransition variant="default"><DemoProfiles /></PageTransition>} />
           <Route path="/demo-scoring" element={<PageTransition variant="slide"><DemoFlow /></PageTransition>} />

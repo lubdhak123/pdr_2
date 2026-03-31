@@ -3,7 +3,7 @@ import axios from 'axios'
 
 const BACKEND = 'http://localhost:8000'
 
-export default function ChatPanel({ applicantId, applicantName, decision }) {
+export default function ChatPanel({ applicantId, applicantName, decision, isDark = false }) {
   const [messages, setMessages]       = useState([])
   const [input, setInput]             = useState('')
   const [loading, setLoading]         = useState(false)
@@ -85,10 +85,10 @@ export default function ChatPanel({ applicantId, applicantName, decision }) {
   return (
     <div style={{
       marginTop: 48,
-      border: '1.5px solid #e2e8f0',
+      border: `1.5px solid ${isDark ? '#334155' : '#e2e8f0'}`,
       borderRadius: 16,
       overflow: 'visible',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
+      boxShadow: isDark ? '0 2px 12px rgba(0,0,0,0.5)' : '0 2px 12px rgba(0,0,0,0.07)',
     }}>
       {/* ── Header ── */}
       <div style={{
@@ -116,8 +116,8 @@ export default function ChatPanel({ applicantId, applicantName, decision }) {
       {/* ── Quick actions + Compare ── */}
       <div style={{
         padding: '10px 16px',
-        background: '#f8fafc',
-        borderBottom: '1px solid #e2e8f0',
+        background: isDark ? '#1e293b' : '#f8fafc',
+        borderBottom: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
         display: 'flex',
         flexWrap: 'wrap',
         gap: 7,
@@ -131,17 +131,17 @@ export default function ChatPanel({ applicantId, applicantName, decision }) {
             style={{
               padding: '5px 13px',
               borderRadius: 20,
-              border: '1.5px solid #e2e8f0',
-              background: '#fff',
-              color: '#374151',
+              border: `1.5px solid ${isDark ? '#475569' : '#e2e8f0'}`,
+              background: isDark ? '#0f172a' : '#fff',
+              color: isDark ? '#cbd5e1' : '#374151',
               fontSize: 12,
               fontWeight: 500,
               cursor: loading ? 'not-allowed' : 'pointer',
               opacity: loading ? 0.5 : 1,
               transition: 'background 0.12s',
             }}
-            onMouseEnter={e => { if (!loading) e.currentTarget.style.background = '#f1f5f9' }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#fff' }}
+            onMouseEnter={e => { if (!loading) e.currentTarget.style.background = isDark ? '#334155' : '#f1f5f9' }}
+            onMouseLeave={e => { e.currentTarget.style.background = isDark ? '#0f172a' : '#fff' }}
           >
             {qa.label}
           </button>
@@ -156,7 +156,7 @@ export default function ChatPanel({ applicantId, applicantName, decision }) {
               padding: '5px 13px',
               borderRadius: 20,
               border: '1.5px solid #6366f1',
-              background: compareOpen ? '#6366f1' : '#fff',
+              background: compareOpen ? '#6366f1' : (isDark ? '#0f172a' : '#fff'),
               color: compareOpen ? '#fff' : '#6366f1',
               fontSize: 12,
               fontWeight: 600,
@@ -172,10 +172,10 @@ export default function ChatPanel({ applicantId, applicantName, decision }) {
               top: 'calc(100% + 6px)',
               left: 0,
               zIndex: 200,
-              background: '#fff',
-              border: '1px solid #e2e8f0',
+              background: isDark ? '#1e293b' : '#fff',
+              border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
               borderRadius: 12,
-              boxShadow: '0 8px 28px rgba(0,0,0,0.13)',
+              boxShadow: isDark ? '0 8px 28px rgba(0,0,0,0.5)' : '0 8px 28px rgba(0,0,0,0.13)',
               minWidth: 240,
             }}>
               <div style={{ padding: '8px 14px 6px', fontSize: 11, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -194,20 +194,20 @@ export default function ChatPanel({ applicantId, applicantName, decision }) {
                       width: '100%',
                       padding: '9px 14px',
                       border: 'none',
-                      borderBottom: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none',
+                      borderBottom: i < arr.length - 1 ? `1px solid ${isDark ? '#334155' : '#f1f5f9'}` : 'none',
                       background: 'transparent',
                       cursor: 'pointer',
                       textAlign: 'left',
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                    onMouseEnter={e => e.currentTarget.style.background = isDark ? '#0f172a' : '#f8fafc'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: isDark ? '#f8fafc' : '#0f172a' }}>
                       {a.name}
                     </span>
                     <span style={{
                       fontSize: 11,
-                      color: a.grade === 'E' || a.grade === 'D' ? '#991b1b' : a.grade === 'A' || a.grade === 'B' ? '#166534' : '#92400e',
+                      color: a.grade === 'E' || a.grade === 'D' ? (isDark ? '#f87171' : '#991b1b') : a.grade === 'A' || a.grade === 'B' ? (isDark ? '#4ade80' : '#166534') : (isDark ? '#fbbf24' : '#92400e'),
                       fontWeight: 700,
                       marginLeft: 10,
                     }}>
@@ -226,7 +226,7 @@ export default function ChatPanel({ applicantId, applicantName, decision }) {
         maxHeight: 460,
         overflowY: 'auto',
         padding: '16px',
-        background: '#fff',
+        background: isDark ? '#1e293b' : '#fff',
       }}>
         {messages.length === 0 && (
           <div style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>
@@ -249,13 +249,13 @@ export default function ChatPanel({ applicantId, applicantName, decision }) {
               maxWidth: '92%',
               padding: msg.role === 'user' ? '9px 14px' : '14px 16px',
               borderRadius: msg.role === 'user' ? '14px 14px 4px 14px' : '4px 14px 14px 14px',
-              background: msg.role === 'user' ? '#0f172a' : msg.role === 'error' ? '#fef2f2' : '#f8fafc',
-              color: msg.role === 'user' ? '#f1f5f9' : msg.role === 'error' ? '#991b1b' : '#1e293b',
+              background: msg.role === 'user' ? (isDark ? '#3b82f6' : '#0f172a') : msg.role === 'error' ? (isDark ? 'rgba(153, 27, 27, 0.2)' : '#fef2f2') : (isDark ? '#334155' : '#f8fafc'),
+              color: msg.role === 'user' ? '#f1f5f9' : msg.role === 'error' ? (isDark ? '#f87171' : '#991b1b') : (isDark ? '#f8fafc' : '#1e293b'),
               fontSize: msg.role === 'analyst' ? 12 : 13,
               lineHeight: 1.65,
               whiteSpace: 'pre-wrap',
               fontFamily: msg.role === 'analyst' ? "'Courier New', Courier, monospace" : 'inherit',
-              border: msg.role === 'analyst' ? '1px solid #e2e8f0' : 'none',
+              border: msg.role === 'analyst' ? `1px solid ${isDark ? '#475569' : '#e2e8f0'}` : 'none',
             }}>
               {msg.text}
             </div>
@@ -276,8 +276,8 @@ export default function ChatPanel({ applicantId, applicantName, decision }) {
       {/* ── Input bar ── */}
       <div style={{
         padding: '12px 14px',
-        borderTop: '1px solid #e2e8f0',
-        background: '#f8fafc',
+        borderTop: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+        background: isDark ? '#0f172a' : '#f8fafc',
         borderRadius: '0 0 14px 14px',
         display: 'flex',
         gap: 8,
@@ -292,11 +292,11 @@ export default function ChatPanel({ applicantId, applicantName, decision }) {
             flex: 1,
             padding: '10px 14px',
             borderRadius: 10,
-            border: '1.5px solid #e2e8f0',
+            border: `1.5px solid ${isDark ? '#334155' : '#e2e8f0'}`,
             fontSize: 13,
-            background: '#fff',
+            background: isDark ? '#1e293b' : '#fff',
             outline: 'none',
-            color: '#0f172a',
+            color: isDark ? '#f8fafc' : '#0f172a',
           }}
         />
         <button
@@ -306,8 +306,8 @@ export default function ChatPanel({ applicantId, applicantName, decision }) {
             padding: '10px 22px',
             borderRadius: 10,
             border: 'none',
-            background: loading || !input.trim() ? '#e2e8f0' : '#0f172a',
-            color: loading || !input.trim() ? '#94a3b8' : '#fff',
+            background: loading || !input.trim() ? (isDark ? '#334155' : '#e2e8f0') : (isDark ? '#f8fafc' : '#0f172a'),
+            color: loading || !input.trim() ? '#94a3b8' : (isDark ? '#0f172a' : '#fff'),
             fontSize: 13,
             fontWeight: 700,
             cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',

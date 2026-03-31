@@ -606,9 +606,9 @@ export default function Results({ result, error, onBack, transactions, selectedU
                 gap: 8,
                 padding: '10px 20px',
                 borderRadius: 10,
-                border: '1.5px solid #e2e8f0',
-                background: showForensics ? '#0f172a' : '#fff',
-                color: showForensics ? '#f1f5f9' : '#0f172a',
+                border: `1.5px solid ${isDark ? '#334155' : '#e2e8f0'}`,
+                background: showForensics ? (isDark ? '#334155' : '#0f172a') : (isDark ? '#1e293b' : '#fff'),
+                color: showForensics ? '#f1f5f9' : (isDark ? '#f8fafc' : '#0f172a'),
                 fontSize: 13,
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -621,8 +621,9 @@ export default function Results({ result, error, onBack, transactions, selectedU
               {showForensics ? 'Hide Transaction Forensics' : 'View Transaction Forensics'}
               {result.active_flags?.some(f => FRAUD_FLAGS.includes(f)) && (
                 <span style={{
-                  background: '#fef2f2', color: '#991b1b',
-                  border: '1px solid #fecaca',
+                  background: isDark ? 'rgba(153, 27, 27, 0.2)' : '#fef2f2',
+                  color: isDark ? '#f87171' : '#991b1b',
+                  border: `1px solid ${isDark ? '#7f1d1d' : '#fecaca'}`,
                   borderRadius: 20, padding: '1px 8px', fontSize: 10, fontWeight: 700,
                 }}>
                   Signals detected
@@ -633,7 +634,7 @@ export default function Results({ result, error, onBack, transactions, selectedU
         )}
 
         {showForensics && (
-          <TransactionForensics transactions={transactions} />
+          <TransactionForensics transactions={transactions} isDark={isDark} />
         )}
 
         <XaiTransparencySection
@@ -653,11 +654,11 @@ export default function Results({ result, error, onBack, transactions, selectedU
             <div className="r-section">
               <h2 className="r-section-title">
                 Indicative Loan Offer
-                <span className="r-section-badge" style={{ background: '#dcfce7', color: '#166534' }}>Grade {grade}</span>
+                <span className="r-section-badge" style={isDark ? { background: 'rgba(22, 101, 52, 0.2)', color: '#4ade80' } : { background: '#dcfce7', color: '#166534' }}>Grade {grade}</span>
               </h2>
               <div style={{
-                background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-                border: '1px solid #86efac',
+                background: isDark ? 'linear-gradient(135deg, rgba(22, 101, 52, 0.1) 0%, rgba(22, 101, 52, 0.2) 100%)' : 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                border: `1px solid ${isDark ? '#166534' : '#86efac'}`,
                 borderRadius: 16,
                 padding: '24px 28px',
                 display: 'grid',
@@ -665,32 +666,32 @@ export default function Results({ result, error, onBack, transactions, selectedU
                 gap: 20,
               }}>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Interest Rate</div>
-                  <div style={{ fontSize: 26, fontWeight: 800, color: '#15803d' }}>{result.loan_offer.interest_rate_display}</div>
-                  <div style={{ fontSize: 12, color: '#4ade80', marginTop: 2 }}>Reducing balance</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#4ade80' : '#166534', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Interest Rate</div>
+                  <div style={{ fontSize: 26, fontWeight: 800, color: isDark ? '#22c55e' : '#15803d' }}>{result.loan_offer.interest_rate_display}</div>
+                  <div style={{ fontSize: 12, color: isDark ? '#22c55e' : '#4ade80', marginTop: 2 }}>Reducing balance</div>
                 </div>
                 {result.loan_offer.max_loan_amount && (
                   <div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Max Loan Amount</div>
-                    <div style={{ fontSize: 26, fontWeight: 800, color: '#15803d' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#4ade80' : '#166534', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Max Loan Amount</div>
+                    <div style={{ fontSize: 26, fontWeight: 800, color: isDark ? '#22c55e' : '#15803d' }}>
                       ₹{result.loan_offer.max_loan_amount >= 100000
                         ? `${(result.loan_offer.max_loan_amount / 100000).toFixed(1)}L`
                         : `${(result.loan_offer.max_loan_amount / 1000).toFixed(0)}K`}
                     </div>
-                    <div style={{ fontSize: 12, color: '#4ade80', marginTop: 2 }}>Based on income × multiplier</div>
+                    <div style={{ fontSize: 12, color: isDark ? '#22c55e' : '#4ade80', marginTop: 2 }}>Based on income × multiplier</div>
                   </div>
                 )}
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Tenure Options</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#4ade80' : '#166534', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Tenure Options</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
                     {result.loan_offer.tenure_options_months.map(t => (
-                      <span key={t} style={{ background: '#bbf7d0', color: '#166534', borderRadius: 20, padding: '3px 10px', fontSize: 12, fontWeight: 600 }}>{t}M</span>
+                      <span key={t} style={{ background: isDark ? 'rgba(34, 197, 94, 0.2)' : '#bbf7d0', color: isDark ? '#4ade80' : '#166534', borderRadius: 20, padding: '3px 10px', fontSize: 12, fontWeight: 600 }}>{t}M</span>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Product</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#166534', lineHeight: 1.4 }}>{result.loan_offer.recommended_product}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: isDark ? '#4ade80' : '#166534', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Product</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: isDark ? '#4ade80' : '#166534', lineHeight: 1.4 }}>{result.loan_offer.recommended_product}</div>
                 </div>
               </div>
               <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 10 }}>
@@ -702,7 +703,7 @@ export default function Results({ result, error, onBack, transactions, selectedU
             <div className="r-section">
               <h2 className="r-section-title">
                 Declined → Alternative Path
-                <span className="r-section-badge" style={{ background: '#fef3c7', color: '#92400e' }}>Referral Options</span>
+                <span className="r-section-badge" style={isDark ? { background: 'rgba(146, 64, 14, 0.2)', color: '#fbbf24' } : { background: '#fef3c7', color: '#92400e' }}>Referral Options</span>
               </h2>
               <p style={{ fontSize: 14, color: '#64748b', marginBottom: 20, lineHeight: 1.6 }}>
                 This applicant does not qualify for conventional lending. The following alternative financial products may be suitable based on the risk profile.
@@ -710,8 +711,8 @@ export default function Results({ result, error, onBack, transactions, selectedU
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
                 {result.loan_offer.alternative_products.map((prod, i) => (
                   <div key={i} style={{
-                    background: 'var(--surface-container-lowest, #fff)',
-                    border: '1px solid #e2e8f0',
+                    background: isDark ? '#1e293b' : 'var(--surface-container-lowest, #fff)',
+                    border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
                     borderRadius: 14,
                     padding: '20px 18px',
                     display: 'flex',
@@ -720,7 +721,7 @@ export default function Results({ result, error, onBack, transactions, selectedU
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span className="material-symbols-outlined" style={{ fontSize: 22, color: '#f59e0b' }}>{prod.icon}</span>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>{prod.name}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? '#f8fafc' : '#0f172a' }}>{prod.name}</div>
                     </div>
                     <div style={{ fontSize: 20, fontWeight: 800, color: '#f59e0b' }}>{prod.rate}</div>
                     <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>
@@ -744,6 +745,7 @@ export default function Results({ result, error, onBack, transactions, selectedU
           applicantId={(result?.user_id || '').toLowerCase()}
           applicantName={profile?.name || result?.user_id || 'Applicant'}
           decision={result?.outcome || ''}
+          isDark={isDark}
         />
 
         <div style={{ height: 100 }} />

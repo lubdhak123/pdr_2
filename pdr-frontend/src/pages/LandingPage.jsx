@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import ThemeToggle from '../components/ThemeToggle';
 import StarField from '../components/StarField';
+import NavUser from '../components/NavUser';
 
 function LandingPage() {
   const [activeCard, setActiveCard] = useState(null);
@@ -40,7 +41,7 @@ function LandingPage() {
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <button className="text-[#565e74] dark:text-slate-300 font-medium hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300 active:scale-95">Login</button>
+            <NavUser />
             <Link to="/solutions" className="gradient-cta text-white px-6 py-2.5 rounded-lg font-semibold active:scale-95 transition-transform duration-200">Request Demo</Link>
           </div>
         </div>
@@ -160,7 +161,7 @@ function LandingPage() {
         </section>
 
         {/* SECTION 2: ₹28 TRILLION BLIND SPOT */}
-        <section className="py-24 bg-surface dark:bg-slate-950/85 border-t border-outline-variant/10" id="problem-statement">
+        <section className="py-24 bg-surface dark:bg-slate-950/85" id="problem-statement">
           <div className="max-w-7xl mx-auto px-6 text-center">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -437,7 +438,7 @@ function LandingPage() {
         </section>
 
         {/* EXPLORE DEMO PROFILES */}
-        <section className="py-20 bg-surface-container-low dark:bg-slate-900/50 border-t border-outline-variant/10 dark:border-slate-800">
+        <section className="py-20 bg-surface-container-low dark:bg-slate-900/50">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
