@@ -68,6 +68,10 @@ class MiddlemanScoreRequest(BaseModel):
 class ChatbotRequest(BaseModel):
     query: str
 
+class ManagerStatusUpdate(BaseModel):
+    outcome: str
+    remarks: str
+
 # ─────────────────────────────────────────────
 # APP + MIDDLEWARE
 # ─────────────────────────────────────────────
@@ -603,6 +607,34 @@ def chatbot_stats():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# ─────────────────────────────────────────────
+# DASHBOARD ENDPOINTS
+# ─────────────────────────────────────────────
+
+@app.get('/api/manager/applicants')
+def get_all_applicants():
+    try:
+        from context_layer import search_applicants
+        return search_applicants(CHATBOT_DB, {})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put('/api/manager/applicant/{applicant_id}/status')
+def update_status(applicant_id: str, req: ManagerStatusUpdate):
+    try:
+        from context_layer import update_applicant_status
+        update_applicant_status(CHATBOT_DB, applicant_id, req.outcome, req.remarks)
+        return {"status": "success", "message": f"Updated {applicant_id}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get('/api/user/status/{applicant_id}')
+def get_user_status(applicant_id: str):
+    from context_layer import fetch_applicant_status
+    status = fetch_applicant_status(CHATBOT_DB, applicant_id)
+    if not status:
+        raise HTTPException(status_code=404, detail="Applicant not found")
+    return status
 
 if __name__ == '__main__':
     uvicorn.run('main:app', host='0.0.0.0', port=8000, reload=True)

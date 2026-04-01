@@ -11,6 +11,9 @@ import LoginPage from './pages/LoginPage'
 import UserSelect from './components/UserSelect'
 import Results from './components/Results'
 import GlobalChatButton from './components/GlobalChatButton'
+import ManagerPortal from './pages/ManagerPortal'
+import ManagerDashboard from './pages/ManagerDashboard'
+import UserStatus from './pages/UserStatus'
 import demoData from '../../demo_users.json'
 
 // Animated page wrapper for cinematic transitions
@@ -175,6 +178,9 @@ function App() {
           <Route path="/demo-scoring" element={<PageTransition variant="slide"><DemoFlow /></PageTransition>} />
           <Route path="/demo/result/:userId" element={<PageTransition variant="default"><DemoFlow /></PageTransition>} />
           <Route path="/docs" element={<PageTransition variant="blur"><DocsPage /></PageTransition>} />
+          <Route path="/manager-login" element={<PageTransition variant="blur"><ManagerPortal /></PageTransition>} />
+          <Route path="/manager-dashboard" element={<PageTransition variant="slide"><ManagerDashboard /></PageTransition>} />
+          <Route path="/user-status" element={<PageTransition variant="blur"><UserStatus /></PageTransition>} />
         </Routes>
       </AnimatePresence>
       {/* Global floating analyst — available on every page */}

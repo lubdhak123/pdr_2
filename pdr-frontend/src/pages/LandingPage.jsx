@@ -32,17 +32,16 @@ function LandingPage() {
       <nav className="bg-[#f7f9fb]/80 dark:bg-slate-950/80 backdrop-blur-xl top-0 sticky z-50 shadow-sm shadow-slate-200/50 dark:shadow-none font-['Manrope'] antialiased tracking-tight">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center w-full">
           <div className="text-xl font-bold tracking-tighter text-slate-900 dark:text-slate-50">Paise Do Re (PDR)</div>
-          <div className="hidden md:flex items-center gap-x-8">
+          <div className="hidden md:flex items-center gap-x-6 lg:gap-x-8">
             <a className="text-slate-900 dark:text-white font-semibold border-b-2 border-slate-900 dark:border-slate-50 pb-1 hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300" href="#problem-statement">About Us</a>
             <Link to="/solutions" className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300">Solutions</Link>
-            <a className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300" href="#trust-pipeline">Trust Pipeline</a>
-            <a className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300" href="#intelligence">Compliance</a>
             <a className="text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:text-white dark:hover:text-white transition-all duration-300" href="https://github.com/lubdhak123/pdr_2" target="_blank" rel="noopener noreferrer">Documentation</a>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <ThemeToggle />
-            <NavUser />
-            <Link to="/solutions" className="gradient-cta text-white px-6 py-2.5 rounded-lg font-semibold active:scale-95 transition-transform duration-200">Request Demo</Link>
+            <Link to="/user-status" className="text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-primary transition-colors border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-lg hidden lg:block">Applicant Login</Link>
+            <Link to="/manager-login" className="text-sm font-semibold text-white bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 shadow-md transition-colors px-4 py-2 rounded-lg">Manager Portal</Link>
+            <Link to="/solutions" className="gradient-cta text-white px-5 py-2 rounded-lg font-semibold active:scale-95 transition-transform duration-200">Request Demo</Link>
           </div>
         </div>
       </nav>

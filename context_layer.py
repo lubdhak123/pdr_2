@@ -1,11 +1,11 @@
-﻿import sqlite3, json, logging, re
+import sqlite3, json, logging, re
 from datetime import datetime, timezone
 from typing import Any
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] context_layer: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 log = logging.getLogger(__name__)
 
-_DDL_APPLICANT_CARDS = '''CREATE TABLE IF NOT EXISTS applicant_cards (id INTEGER PRIMARY KEY AUTOINCREMENT, applicant_id TEXT NOT NULL UNIQUE, name TEXT, city TEXT, business_type TEXT, grade TEXT NOT NULL, outcome TEXT NOT NULL, default_probability REAL NOT NULL, decision_source TEXT DEFAULT 'model', primary_reason TEXT, pre_layer_rule TEXT, is_deleted INTEGER NOT NULL DEFAULT 0, score_date TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);'''
+_DDL_APPLICANT_CARDS = '''CREATE TABLE IF NOT EXISTS applicant_cards (id INTEGER PRIMARY KEY AUTOINCREMENT, applicant_id TEXT NOT NULL UNIQUE, name TEXT, city TEXT, business_type TEXT, grade TEXT NOT NULL, outcome TEXT NOT NULL, default_probability REAL NOT NULL, decision_source TEXT DEFAULT 'model', primary_reason TEXT, pre_layer_rule TEXT, manager_remarks TEXT, is_deleted INTEGER NOT NULL DEFAULT 0, score_date TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);'''
 _DDL_APPLICANT_FEATURES = '''CREATE TABLE IF NOT EXISTS applicant_features (id INTEGER PRIMARY KEY AUTOINCREMENT, applicant_id TEXT NOT NULL REFERENCES applicant_cards(applicant_id) ON DELETE CASCADE, feature_name TEXT NOT NULL, feature_value REAL, updated_at TEXT NOT NULL, UNIQUE(applicant_id, feature_name));'''
 _DDL_APPLICANT_SHAP = '''CREATE TABLE IF NOT EXISTS applicant_shap_explanations (id INTEGER PRIMARY KEY AUTOINCREMENT, applicant_id TEXT NOT NULL REFERENCES applicant_cards(applicant_id) ON DELETE CASCADE, rank INTEGER NOT NULL, feature TEXT NOT NULL, reason TEXT, shap_value REAL, direction TEXT, impact TEXT, updated_at TEXT NOT NULL, UNIQUE(applicant_id, rank));'''
 _DDL_APPLICANT_LOAN_OFFERS = '''CREATE TABLE IF NOT EXISTS applicant_loan_offers (id INTEGER PRIMARY KEY AUTOINCREMENT, applicant_id TEXT NOT NULL REFERENCES applicant_cards(applicant_id) ON DELETE CASCADE UNIQUE, eligible INTEGER NOT NULL DEFAULT 0, interest_rate_min REAL, interest_rate_max REAL, max_loan_amount REAL, tenure_options_json TEXT, recommended_product TEXT, alternative_products_json TEXT, updated_at TEXT NOT NULL);'''
@@ -31,6 +31,10 @@ def init_database(db_path):
         conn.execute(_DDL_APPLICANT_CARDS); conn.execute(_DDL_APPLICANT_FEATURES)
         conn.execute(_DDL_APPLICANT_SHAP); conn.execute(_DDL_APPLICANT_LOAN_OFFERS)
         for idx in _DDL_INDEXES: conn.execute(idx)
+        try:
+            conn.execute("ALTER TABLE applicant_cards ADD COLUMN manager_remarks TEXT;")
+        except sqlite3.OperationalError:
+            pass
         conn.commit()
     log.info('Database initialised.')
 
@@ -81,7 +85,7 @@ def fetch_applicant_card(db_path, applicant_id):
     if offer_row:
         loan_offer_out = {'eligible': bool(offer_row['eligible']), 'interest_rate': f"{offer_row['interest_rate_min']}-{offer_row['interest_rate_max']}% p.a." if offer_row['interest_rate_min'] and offer_row['interest_rate_max'] else 'N/A', 'max_loan': offer_row['max_loan_amount'], 'tenures': json.loads(offer_row['tenure_options_json'] or '[]'), 'recommended_product': offer_row['recommended_product']}
         alt_products_out = json.loads(offer_row['alternative_products_json'] or '[]')
-    return {'applicant_id': card_row['applicant_id'], 'name': card_row['name'], 'city': card_row['city'], 'business_type': card_row['business_type'], 'score_date': card_row['score_date'], 'grade': card_row['grade'], 'decision': card_row['outcome'], 'default_probability': card_row['default_probability'], 'decision_source': card_row['decision_source'], 'primary_reason': card_row['primary_reason'], 'pre_layer_rule': card_row['pre_layer_rule'], 'top_shap_factors': [{'rank': r['rank'], 'feature': r['feature'], 'reason': r['reason'], 'shap_value': r['shap_value'], 'direction': r['direction'], 'impact': r['impact']} for r in shap_rows], 'all_features': {r['feature_name']: r['feature_value'] for r in feat_rows}, 'loan_offer': loan_offer_out, 'alternative_products': alt_products_out}
+    return {'applicant_id': card_row['applicant_id'], 'name': card_row['name'], 'city': card_row['city'], 'business_type': card_row['business_type'], 'score_date': card_row['score_date'], 'grade': card_row['grade'], 'decision': card_row['outcome'], 'default_probability': card_row['default_probability'], 'decision_source': card_row['decision_source'], 'primary_reason': card_row['primary_reason'], 'manager_remarks': card_row['manager_remarks'], 'pre_layer_rule': card_row['pre_layer_rule'], 'top_shap_factors': [{'rank': r['rank'], 'feature': r['feature'], 'reason': r['reason'], 'shap_value': r['shap_value'], 'direction': r['direction'], 'impact': r['impact']} for r in shap_rows], 'all_features': {r['feature_name']: r['feature_value'] for r in feat_rows}, 'loan_offer': loan_offer_out, 'alternative_products': alt_products_out}
 
 def search_applicants(db_path, filters):
     conditions = ['is_deleted=0']; params = []
@@ -93,10 +97,24 @@ def search_applicants(db_path, filters):
     if 'date_to' in filters: conditions.append('score_date<=?'); params.append(filters['date_to'])
     for col in ('name','city','business_type'):
         if col in filters: conditions.append(f'{col} LIKE ?'); params.append(f'%{filters[col]}%')
-    sql = f"SELECT applicant_id,name,city,business_type,grade,outcome,default_probability,primary_reason,score_date FROM applicant_cards WHERE {' AND '.join(conditions)} ORDER BY score_date DESC"
+    sql = f"SELECT applicant_id,name,city,business_type,grade,outcome,default_probability,primary_reason,manager_remarks,score_date FROM applicant_cards WHERE {' AND '.join(conditions)} ORDER BY score_date DESC"
     with _connect(db_path) as conn:
         rows = conn.execute(sql, params).fetchall()
-    return [{'applicant_id': r['applicant_id'], 'name': r['name'], 'city': r['city'], 'business_type': r['business_type'], 'grade': r['grade'], 'decision': r['outcome'], 'default_probability': r['default_probability'], 'primary_reason': r['primary_reason'], 'score_date': r['score_date']} for r in rows]
+    return [{'applicant_id': r['applicant_id'], 'name': r['name'], 'city': r['city'], 'business_type': r['business_type'], 'grade': r['grade'], 'decision': r['outcome'], 'default_probability': r['default_probability'], 'primary_reason': r['primary_reason'], 'manager_remarks': r['manager_remarks'], 'score_date': r['score_date']} for r in rows]
+
+def update_applicant_status(db_path, applicant_id, outcome, remarks):
+    _validate_applicant_id(applicant_id)
+    with _connect(db_path) as conn:
+        conn.execute("UPDATE applicant_cards SET outcome=?, manager_remarks=?, updated_at=? WHERE applicant_id=?", 
+                     (outcome, remarks, _now(), applicant_id))
+        conn.commit()
+
+def fetch_applicant_status(db_path, applicant_id):
+    _validate_applicant_id(applicant_id)
+    with _connect(db_path) as conn:
+        row = conn.execute("SELECT applicant_id, name, grade, outcome, primary_reason, manager_remarks, score_date FROM applicant_cards WHERE applicant_id=? AND is_deleted=0", (applicant_id,)).fetchone()
+        if not row: return None
+        return dict(row)
 
 def delete_applicant_card(db_path, applicant_id):
     _validate_applicant_id(applicant_id); now = _now()
